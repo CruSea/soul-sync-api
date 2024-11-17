@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Change this if using a different DB
+  url      = env("DATABASE_URL") // Define your database connection here
+}
+
+model GlobalUser {
+  id        Int      @id @default(autoincrement()) // Primary key, auto-incremented
+  email     String   @unique // Unique user email
+  password  String // Hashed password
+  createdAt DateTime @default(now()) // Auto-sets to the current timestamp
+  updatedAt DateTime @updatedAt // Auto-updated on record update
+
+  // Relationships
+  organizations Organization[] // A user can own multiple organizations
+  messages      Message[] // Messages sent by the user
+}
+
+model Organization {
+  id        Int      @id @default(autoincrement()) // Primary key, auto-incremented
+  name      String // Organization name
+  createdAt DateTime @default(now()) // Creation timestamp
+  ownerId   Int // Foreign key referencing the owner (GlobalUser)
+
+  // Relationships
+  owner   GlobalUser @relation(fields: [ownerId], references: [id]) // User who owns the organization
+  mentors Mentor[] // Mentors in the organization
+  admins  Admin[] // Admins in the organization
+  threads Thread[]
+
+  // Indexed field for faster queries (optional but recommended for FK relations)
+  @@index([ownerId])
+}
+
+model Mentor {
+  id             Int     @id @default(autoincrement()) // Primary key
+  name           String // Mentor name
+  organizationId Int // FK to Organization table
+  available      Boolean @default(false) // Availability status of the mentor
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id]) // Organization association
+  messages     Message[] // Messages assigned to mentors
+}
+
+model Admin {
+  id             Int    @id @default(autoincrement()) // Primary key
+  name           String // Admin name
+  organizationId Int // FK to Organization table
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id]) // Organization association
+}
+
+model Thread {
+  id             Int      @id @default(autoincrement()) // Primary key
+  title          String // Title or purpose of the thread
+  createdAt      DateTime @default(now()) // Creation timestamp
+  organizationId Int // FK to Organization table
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id]) // Organization association
+  messages     Message[] // Messages in this thread
+}
+
+model Message {
+  id       Int      @id @default(autoincrement()) // Primary key
+  content  String // The actual message content
+  sentAt   DateTime @default(now()) // Timestamp of the message being sent
+  threadId Int // FK to Threads
+  senderId Int // FK to GlobalUser (the sender)
+  mentorId Int? // Optional FK to Mentor if assigned
+
+  // Relationships
+  thread Thread     @relation(fields: [threadId], references: [id]) // Associated thread
+  sender GlobalUser @relation(fields: [senderId], references: [id]) // User who sent the message
+  mentor Mentor?    @relation(fields: [mentorId], references: [id]) // Optional mentor for the message
+
+  @@index([threadId]) // Index for faster lookups
+}

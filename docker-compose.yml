@@ -1,0 +1,14 @@
+services:
+  soul-sync:
+    image: postgres:14.13
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: soulsync
+    networks:
+      - freecodecamp
+
+networks:
+  freecodecamp:
