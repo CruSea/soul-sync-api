@@ -1,9 +1,12 @@
+<<<<<<< HEAD
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+=======
+>>>>>>> Jerusalem
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,6 +16,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+<<<<<<< HEAD
 
 model User {
   id        String   @id @default(uuid()) @db.Uuid
@@ -21,3 +25,54 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+=======
+model User {
+  uuid      String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account? @relation("UserAccount")
+}
+
+model Account {
+  uuid      String    @id @default(uuid()) @db.Uuid
+  name      String    @unique
+  userId    String    @unique @db.Uuid
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation("UserAccount", fields: [userId], references: [uuid])
+  channels  Channel[]
+  roles     Role[]
+}
+
+model Role {
+  uuid      String   @id @default(uuid()) @db.Uuid
+  accountId String   @db.Uuid
+  name      String
+  isDefault Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account  @relation(fields: [accountId], references: [uuid])
+}
+
+model Channel {
+  uuid      String    @id @default(uuid()) @db.Uuid
+  accountId String    @db.Uuid
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  account   Account   @relation(fields: [accountId], references: [uuid])
+  messages  Message[]
+}
+
+model Message {
+  uuid      String   @id @default(uuid()) @db.Uuid
+  channelId String   @db.Uuid
+  address   String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  channel   Channel  @relation(fields: [channelId], references: [uuid])
+}
+>>>>>>> Jerusalem
