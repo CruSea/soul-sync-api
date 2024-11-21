@@ -17,7 +17,54 @@ datasource db {
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique
-  name      String?
+  image_url String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relations
+  Account Account[]
+}
+
+model Account {
+  id        String   @id @default(uuid()) @db.Uuid // Primary key
+  Account_name String?
+  user_id     String?
+
+  // Relations
+  User   User?   @relation(fields: [user_id], references: [id])
+  Channel Channel[]
+
+  Role Role[]
+}
+
+
+
+model Role {
+  id        String   @id @default(uuid()) @db.Uuid // Primary key
+  account_id String  // Foreign key to Account
+  name       String
+  isDefault  Boolean
+
+  // Relations
+  Account Account @relation(fields: [account_id], references: [id])
+}
+
+model Channel {
+  id        String   @id @default(uuid()) @db.Uuid // Primary key
+  account_id String // Foreign key to Account
+  name       String
+
+  // Relations
+  Account Account @relation(fields: [account_id], references: [id])
+  Message Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid // Primary key
+  channel_id String // Foreign key to Channel
+  address    String
+  body       String
+
+  // Relations
+  Channel Channel @relation(fields: [channel_id], references: [id])
 }
