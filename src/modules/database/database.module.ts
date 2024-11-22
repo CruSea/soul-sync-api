@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 import { DatabaseService } from './database.service';
 
-@Global() //To import it once and not every other time
+@Global() 
 @Module({
   providers: [DatabaseService],
   exports: [DatabaseService]
