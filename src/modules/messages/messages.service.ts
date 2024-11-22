@@ -14,8 +14,12 @@ export class MessagesService {
     return this.databaseService.message.findMany({});
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
+  findOne(uuid: string) {
+    return this.databaseService.message.findUnique({
+      where: {
+        uuid,
+      },
+    });
   }
 
   // update(id: number, updateMessageDto: UpdateMessageDto) {
