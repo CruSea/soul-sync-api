@@ -29,7 +29,9 @@ export class MessagesService {
     });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} message`;
+  async remove(uuid: string) {
+    return this.databaseService.message.delete({
+      where: {uuid}
+    });
   }
 }

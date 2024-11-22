@@ -27,8 +27,8 @@ export class MessagesController {
     return this.messagesService.update(id, updateMessageDto);
   }
 
-  @Delete(':id')
+  @Delete('/delete/:id')
   remove(@Param('id') id: string) {
-    return this.messagesService.remove(+id);
+    return this.messagesService.remove(id);
   }
 }
