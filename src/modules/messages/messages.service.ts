@@ -22,9 +22,12 @@ export class MessagesService {
     });
   }
 
-  // update(id: number, updateMessageDto: UpdateMessageDto) {
-  //   return `This action updates a #${id} message`;
-  // }
+  async update(uuid: string, updateMessageDto: Prisma.MessageUpdateInput) {
+    return this.databaseService.message.update({
+      where: { uuid },
+      data: updateMessageDto,
+    });
+  }
 
   remove(id: number) {
     return `This action removes a #${id} message`;

@@ -21,10 +21,11 @@ export class MessagesController {
     return this.messagesService.findOne(id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-  //   return this.messagesService.update(+id, updateMessageDto);
-  // }
+  @Patch('/update/:id')
+  update(@Param('id') id: string, 
+  @Body() updateMessageDto: Prisma.MessageUpdateInput) {
+    return this.messagesService.update(id, updateMessageDto);
+  }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
