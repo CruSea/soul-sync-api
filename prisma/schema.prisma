@@ -9,62 +9,53 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  image_url String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  Account Account[]
+  provider = "postgresql" 
+  url      = env("DATABASE_URL") 
 }
 
 model Account {
-  id        String   @id @default(uuid()) @db.Uuid // Primary key
-  Account_name String?
-  user_id     String?
-
-  // Relations
-  User   User?   @relation(fields: [user_id], references: [id])
-  Channel Channel[]
-
-  Role Role[]
+  uuid          String    @id @default(uuid())
+  Account_name  String
+  channels      Channel[]
+  accountUsers  AccountUser[]
 }
 
-
+model User {
+  uuid         String       @id @default(uuid())
+  email        String       @unique
+  image_url    String?
+  accountUsers AccountUser[]
+}
 
 model Role {
-  id        String   @id @default(uuid()) @db.Uuid // Primary key
-  account_id String  // Foreign key to Account
-  name       String
-  isDefault  Boolean
-
-  // Relations
-  Account Account @relation(fields: [account_id], references: [id])
+  uuid         String       @id @default(uuid())
+  isDefault    Boolean
+  name         String
+  accountUsers AccountUser[]
 }
 
 model Channel {
-  id        String   @id @default(uuid()) @db.Uuid // Primary key
-  account_id String // Foreign key to Account
-  name       String
-
-  // Relations
-  Account Account @relation(fields: [account_id], references: [id])
-  Message Message[]
+  uuid        String    @id @default(uuid())
+  account_id  String
+  name        String
+  account     Account   @relation(fields: [account_id], references: [uuid])
+  messages    Message[]
 }
 
 model Message {
-  id        String   @id @default(uuid()) @db.Uuid // Primary key
-  channel_id String // Foreign key to Channel
-  address    String
-  body       String
+  uuid        String    @id @default(uuid())
+  channel_id  String
+  address     String
+  body        String
+  channel     Channel   @relation(fields: [channel_id], references: [uuid])
+}
 
-  // Relations
-  Channel Channel @relation(fields: [channel_id], references: [id])
+model AccountUser {
+  uuid        String @id @default(uuid())
+  account_id  String
+  user_id     String
+  role_id     String
+  account     Account @relation(fields: [account_id], references: [uuid])
+  user        User    @relation(fields: [user_id], references: [uuid])
+  role        Role    @relation(fields: [role_id], references: [uuid])
 }
