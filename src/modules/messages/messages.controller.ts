@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { MessagesService } from './messages.service';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { Prisma } from '@prisma/client';
 
 @Controller('messages')
@@ -12,7 +11,7 @@ export class MessagesController {
     return this.messagesService.create(createMessageDto);
   }
 
-  @Get()
+  @Get('/fetch_all')
   findAll() {
     return this.messagesService.findAll();
   }
@@ -22,10 +21,10 @@ export class MessagesController {
     return this.messagesService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messagesService.update(+id, updateMessageDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
+  //   return this.messagesService.update(+id, updateMessageDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
