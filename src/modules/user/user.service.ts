@@ -5,27 +5,14 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOrCreateUser(userInfo: { email: string; imageUrl: string }) {
-    if (!userInfo.email) {
-      throw new Error('Email is required to find or create a user');
-    }
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: userInfo.email },
-    });
-    console.log('Received User Info:', userInfo);
+  async findUserByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
+  }
 
-    if (existingUser) {
-      // Update the imageUrl if it has changed
-      if (existingUser.imageUrl !== userInfo.imageUrl) {
-        return this.prisma.user.update({
-          where: { email: userInfo.email },
-          data: { imageUrl: userInfo.imageUrl },
-        });
-      }
-      return existingUser;
-    }
-
-    // Create user if not found
+  async CreateUser(
+    userInfo: { email: string; imageUrl: string },
+    accountName?: string,
+  ) {
     const newUser = await this.prisma.user.create({
       data: {
         email: userInfo.email,
@@ -33,42 +20,50 @@ export class UserService {
       },
     });
 
-    // Generate an account name
-    const accountName = await this.generateAccountName();
+    const account = await this.createAccount(accountName);
+    const role = await this.createDefaultRole();
 
-    // Create an account for the user
-    const newAccount = await this.prisma.account.create({
-      data: { name: accountName },
-    });
-
-    // Create a default role
-    const defaultRole = await this.prisma.role.create({
-      data: {
-        name: 'Owner',
-        isDefault: true,
-      },
-    });
-
-    // Link account and user with the role
-    await this.prisma.accountUser.create({
-      data: {
-        accountId: newAccount.uuid,
-        userId: newUser.uuid,
-        roleId: defaultRole.uuid,
-      },
-    });
+    await this.linkUserToAccount(newUser.uuid, account.uuid, role.uuid);
 
     return newUser;
   }
 
-  async generateAccountName(): Promise<string> {
+  private async createAccount(accountName?: string) {
+    if (!accountName) {
+      accountName = `user-${await this.generateAccountName()}`;
+    }
+
+    return this.prisma.account.create({ data: { name: accountName } });
+  }
+
+  private async createDefaultRole() {
+    return this.prisma.role.create({
+      data: { name: 'Owner', isDefault: true },
+    });
+  }
+
+  private async linkUserToAccount(
+    userId: string,
+    accountId: string,
+    roleId: string,
+  ) {
+    return this.prisma.accountUser.create({
+      data: {
+        userId,
+        accountId,
+        roleId,
+      },
+    });
+  }
+
+  private async generateAccountName(): Promise<string> {
     const lastAccount = await this.prisma.account.findFirst({
       orderBy: { createdAt: 'desc' },
     });
 
-    const lastAccountName = lastAccount ? parseInt(lastAccount.name, 10) : 0;
-    const newAccountName = (lastAccountName + 1).toString().padStart(3, '0');
-
-    return newAccountName;
+    const lastAccountNumber = lastAccount
+      ? parseInt(lastAccount.name.split('-')[1] || '0', 10)
+      : 0;
+    return (lastAccountNumber + 1).toString().padStart(3, '0');
   }
 }
