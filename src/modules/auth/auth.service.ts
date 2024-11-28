@@ -17,33 +17,22 @@ export class AuthService {
   ) {}
 
   private async fetchUserInfoFromGoogle(authCode: string) {
-    console.log('Received Auth Code:', authCode);
-    try {
-      const tokenResponse = await this.googleClient.getToken(authCode);
-      const idToken = tokenResponse.tokens.id_token;
+    const tokenResponse = await this.googleClient.getToken(authCode);
+    const idToken = tokenResponse.tokens.id_token;
 
-      if (!idToken) {
-        throw new Error('Invalid auth code or missing id_token');
-      }
-      console.log('ID Token:', idToken);
-      console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-      console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
-
-      const ticket = await this.googleClient.verifyIdToken({
-        idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-
-      return ticket.getPayload();
-    } catch (error) {
-      console.error('Error fetching user info from Google:', error.message);
-
-      throw new Error('Failed to authenticate with Google');
+    if (!idToken) {
+      throw new Error('Invalid auth code or missing id_token');
     }
+
+    const ticket = await this.googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    return ticket.getPayload();
   }
 
-  async handleGoogleSignin(authCode: string) {
-    // Fetch user info from Google
+  async handleGoogleSignup(authCode: string, accountName?: string) {
     const userInfo = await this.fetchUserInfoFromGoogle(authCode);
 
     const email = userInfo?.email;
@@ -53,10 +42,41 @@ export class AuthService {
       throw new Error('Google account does not have an email address');
     }
 
-    // Check if user exists or create a new one
-    const user = await this.userService.findOrCreateUser({ email, imageUrl });
+    const user = await this.userService.CreateUser(
+      { email, imageUrl },
+      accountName,
+    );
 
-    // Generate an access token
+    const accessToken = this.jwtService.sign(
+      {
+        userId: user.uuid,
+        email: user.email,
+      },
+      {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXPIRATION,
+      },
+    );
+    console.log(user);
+    return {
+      user,
+      accessToken,
+    };
+  }
+
+  async handleLogin(authCode: string) {
+    const userInfo = await this.fetchUserInfoFromGoogle(authCode);
+    const email = userInfo?.email;
+
+    if (!email) {
+      throw new Error('Google account does not have an email address');
+    }
+
+    const user = await this.userService.findUserByEmail(email);
+    if (!user) {
+      throw new Error('User not found. Please sign up first.');
+    }
+
     const accessToken = this.jwtService.sign(
       {
         userId: user.uuid,
