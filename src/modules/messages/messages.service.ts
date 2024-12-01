@@ -1,24 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from 'src/modules/database/database.service';
 import { Prisma } from '@prisma/client';
-import { ProducerService } from '../queue/producer.service';
+//import { ProducerService } from '../queue/producer.service';
 
 @Injectable()
 export class MessagesService {
   constructor(
     private readonly databaseService: DatabaseService,
-    private readonly producerService: ProducerService,
+    //private readonly producerService: ProducerService,
   ) {}
 
   async create(data: Prisma.MessageCreateInput) {
     try {
-      // Add message to the RabbitMQ queue
-      await this.producerService.addToQueue(data);
+      // Save the message directly to the database
+      const savedMessage = await this.databaseService.message.create({
+        data,
+      });
 
-      // Optionally return an acknowledgment
-      return { status: 'Message added to queue successfully!' };
+      Logger.log(`Message saved!`, 'MessageService');
+      return { status: 'Message saved successfully!', savedMessage };
     } catch (error) {
-      throw error; // Handle the error (e.g., log it)
+      Logger.error(
+        'Failed to save message to the database',
+        error,
+        'MessageService',
+      );
+      throw new HttpException(
+        'Failed to save message',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

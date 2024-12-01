@@ -32,5 +32,5 @@ Content-Type: application/json
 }
 
 ###
-DELETE http://localhost:3000/messages/delete/6d0ba999-32cf-4183-b40d-3c2b0dcd0118
+DELETE http://localhost:3000/messages/delete/042a35fd-0682-4690-b0b0-647e1e53c282
 
