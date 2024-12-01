@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -13,11 +14,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Account {
+  uuid          String    @id @default(uuid())
+  Account_name  String
+  channels      Channel[]
+  accountUsers  AccountUser[]
+}
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  uuid         String       @id @default(uuid())
+  email        String       @unique
+  image_url    String?
+  accountUsers AccountUser[]
+}
+
+model Role {
+  uuid         String       @id @default(uuid())
+  isDefault    Boolean
+  name         String
+  accountUsers AccountUser[]
+}
+
+model Channel {
+  uuid        String    @id @default(uuid())
+  account_id  String
+  name        String
+  account     Account   @relation(fields: [account_id], references: [uuid])
+  messages    Message[]
+}
+
+model Message {
+  uuid        String    @id @default(uuid())
+  channel_id  String
+  address     String
+  body        String
+  channel     Channel   @relation(fields: [channel_id], references: [uuid])
+}
+
+model AccountUser {
+  uuid        String @id @default(uuid())
+  account_id  String
+  user_id     String
+  role_id     String
+  account     Account @relation(fields: [account_id], references: [uuid])
+  user        User    @relation(fields: [user_id], references: [uuid])
+  role        Role    @relation(fields: [role_id], references: [uuid])
 }

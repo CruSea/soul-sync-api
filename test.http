@@ -1,0 +1,36 @@
+GET http://localhost:3000
+
+###
+POST http://localhost:3000/messages/create
+Content-Type: application/json
+
+{
+  "address": "locate123",
+  "body": "Hello World!",
+  "channel_id": "some-channel-id"
+}
+
+###
+GET http://localhost:3000/messages/fetch_all
+
+###
+PATCH http://localhost:3000/messages/e4474dda-8ca2-48bd-974a-bc0a4c8c4d31
+Content-Type: application/json
+
+{
+  "address": "I AM BILLIONAIRE",
+  "body": "I AM BILLIONAIRE"
+}
+
+###
+PATCH http://localhost:3000/messages/b3f47040-ffc3-4bf1-94f3-0f4a0fee4e4a
+Content-Type: application/json
+
+{
+  "address": "Updated Address",
+  "body": "Updated Body"
+}
+
+###
+DELETE http://localhost:3000/messages/delete/6d0ba999-32cf-4183-b40d-3c2b0dcd0118
+
