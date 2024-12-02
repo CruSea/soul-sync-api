@@ -1,29 +1,29 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "windows"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql" 
-  url      = env("DATABASE_URL") 
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Account {
-  uuid          String    @id @default(uuid())
-  Account_name  String
-  channels      Channel[]
-  accountUsers  AccountUser[]
+  uuid             String        @id @default(uuid())
+  account_name     String
+  isDeleted        Boolean        @default(false) 
+  provider         String
+  
+  messages         Message[]     @relation("SenderAccount") // Messages sent by this account
+  receivedMessages Message[]     @relation("RecipientAccount") // Messages received by this account
+  channels         Channel[]
+  accountUsers     AccountUser[]
 }
 
 model User {
   uuid         String       @id @default(uuid())
   email        String       @unique
+  isDeleted        Boolean        @default(false)
   image_url    String?
   accountUsers AccountUser[]
 }
@@ -31,7 +31,7 @@ model User {
 model Role {
   uuid         String       @id @default(uuid())
   isDefault    Boolean
-  name         String
+  name         String       @default("owner")
   accountUsers AccountUser[]
 }
 
@@ -39,6 +39,7 @@ model Channel {
   uuid        String    @id @default(uuid())
   account_id  String
   name        String
+  isDeleted        Boolean        @default(false)
   account     Account   @relation(fields: [account_id], references: [uuid])
   messages    Message[]
 }
@@ -46,17 +47,25 @@ model Channel {
 model Message {
   uuid        String    @id @default(uuid())
   channel_id  String
-  address     String
+  from_address String    // Sender's account ID
+  to_address  String    // Recipient's account ID
   body        String
+  isDeleted   Boolean        @default(false)
+
   channel     Channel   @relation(fields: [channel_id], references: [uuid])
+  sender      Account   @relation("SenderAccount", fields: [from_address], references: [uuid])
+  recipient   Account   @relation("RecipientAccount", fields: [to_address], references: [uuid])
 }
 
 model AccountUser {
-  uuid        String @id @default(uuid())
-  account_id  String
+  uuid        String   @id @default(uuid())
+  account_id  String?
   user_id     String
   role_id     String
-  account     Account @relation(fields: [account_id], references: [uuid])
-  user        User    @relation(fields: [user_id], references: [uuid])
-  role        Role    @relation(fields: [role_id], references: [uuid])
+  isDeleted   Boolean  @default(false)
+  
+  account     Account? @relation(fields: [account_id], references: [uuid])
+  user        User     @relation(fields: [user_id], references: [uuid])
+  role        Role     @relation(fields: [role_id], references: [uuid])
+  accountName String?  // Add this field
 }
