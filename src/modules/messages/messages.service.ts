@@ -17,7 +17,7 @@ export class MessagesService {
 
   async create(createMessageDto: { to_address: string; body: string }, userId: string): Promise<Message> {
     // Hardcoded channel ID
-    const channelId = "channel_id"; // Replace with your actual channel ID
+    const channelId = "channel_id"; // This will be replaced as we go on but for now it is hard coded with a record from the database 
 
     // Validate required fields
     const { to_address, body } = createMessageDto;
