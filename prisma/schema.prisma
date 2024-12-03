@@ -13,11 +13,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique
-  name      String?
+  image_url String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relations
+  Account   Account[]
+}
+
+model Account {
+  id           String   @id @default(uuid()) @db.Uuid
+  Account_name String 
+
+  // Relations
+  User         User?    @relation(fields: [user_id], references: [id])
+  user_id      String   @db.Uuid
+  Channel      Channel[]
+  Role         Role[]
+}
+
+model Role {
+  id        String   @id @default(uuid()) @db.Uuid
+  name       String
+  isDefault  Boolean
+
+  // Relations
+  Account    Account @relation(fields: [account_id], references: [id])
+  account_id String   // Foreign key to Account
+}
+
+model Channel {
+  id        String   @id @default(uuid()) @db.Uuid
+  name       String
+
+  // Relations
+  Account   Account @relation(fields: [account_id], references: [id])
+  account_id String   // Foreign key to Account
+  Message   Message[]
+}
+
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  address    String
+  body       String
+
+  // Relations
+  Channel   Channel @relation(fields: [channel_id], references: [id])
+  channel_id String  // Foreign key to Channel
 }
