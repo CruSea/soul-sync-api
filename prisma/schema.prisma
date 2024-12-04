@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -21,46 +22,46 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  Account   Account[]
+  Account Account[]
 }
 
 model Account {
-  id           String   @id @default(uuid()) @db.Uuid
-  Account_name String 
+  id           String @id @default(uuid()) @db.Uuid
+  Account_name String
 
   // Relations
-  User         User?    @relation(fields: [user_id], references: [id])
-  user_id      String   @db.Uuid
-  Channel      Channel[]
-  Role         Role[]
+  User    User?     @relation(fields: [user_id], references: [id])
+  user_id String    @db.Uuid
+  Channel Channel[]
+  Role    Role[]
 }
 
 model Role {
-  id        String   @id @default(uuid()) @db.Uuid
-  name       String
-  isDefault  Boolean
+  id        String  @id @default(uuid()) @db.Uuid
+  name      String
+  isDefault Boolean
 
   // Relations
   Account    Account @relation(fields: [account_id], references: [id])
-  account_id String   // Foreign key to Account
+  account_id String // Foreign key to Account
 }
 
 model Channel {
-  id        String   @id @default(uuid()) @db.Uuid
-  name       String
+  id   String @id @default(uuid()) @db.Uuid
+  name String
 
   // Relations
-  Account   Account @relation(fields: [account_id], references: [id])
-  account_id String   // Foreign key to Account
-  Message   Message[]
+  Account    Account   @relation(fields: [account_id], references: [id])
+  account_id String // Foreign key to Account
+  Message    Message[]
 }
 
 model Message {
-  id        String   @id @default(uuid()) @db.Uuid
-  address    String
-  body       String
+  id      String @id @default(uuid()) @db.Uuid
+  address String
+  body    String
 
   // Relations
-  Channel   Channel @relation(fields: [channel_id], references: [id])
-  channel_id String  // Foreign key to Channel
+  Channel    Channel @relation(fields: [channel_id], references: [id])
+  channel_id String // Foreign key to Channel
 }
