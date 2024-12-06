@@ -5,62 +5,102 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" 
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  image_url String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  Account   Account[]
+model Account {
+  uuid     String    @id @default(cuid()) @db.Uuid 
+  name     String    @db.VarChar(255)
+  isDeleted  Boolean   @default(false)
+  
+  accountUsers AccountUser[]
+  channels     Channel[]
 }
 
-model Account {
-  id           String   @id @default(uuid()) @db.Uuid
-  Account_name String 
+model User {
+  uuid      String   @id @default(cuid()) @db.Uuid 
+  email     String   @unique @db.VarChar(255)
+  isDeleted    Boolean  @default(false)
+  imageUrl   String?  @db.VarChar(255)
 
-  // Relations
-  User         User?    @relation(fields: [user_id], references: [id])
-  user_id      String   @db.Uuid
-  Channel      Channel[]
-  Role         Role[]
+  accountUsers AccountUser[]
 }
 
 model Role {
-  id        String   @id @default(uuid()) @db.Uuid
-  name       String
-  isDefault  Boolean
+  uuid      String   @id @default(cuid()) @db.Uuid 
+  isDefault Boolean   @default(false)
+  name      String   @unique @db.VarChar(100)     
 
-  // Relations
-  Account    Account @relation(fields: [account_id], references: [id])
-  account_id String   // Foreign key to Account
+  accountUsers AccountUser[]
+}
+
+model AccountUser {
+  uuid       String   @id @default(cuid()) @db.Uuid 
+  accountId  String   @db.Uuid 
+  userId     String   @db.Uuid 
+  roleId     String   @db.Uuid 
+
+  account    Account   @relation(fields: [accountId], references: [uuid])
+  user       User      @relation(fields: [userId], references: [uuid])
+  role       Role      @relation(fields: [roleId], references: [uuid])
+
+  Mentor Mentor[]
+}
+
+model Mentor {
+  uuid       String   @id @default(cuid()) @db.Uuid 
+  name       String    @db.VarChar(255)
+  expertise   String?   
+  accountUserId String? @db.Uuid
+  isDeleted  Boolean   @default(false)
+  availableFrom String?
+  availableTo   String? 
+
+  accountUser AccountUser? @relation(fields: [accountUserId], references: [uuid])
+
+  Thread Thread[]
 }
 
 model Channel {
-  id        String   @id @default(uuid()) @db.Uuid
-  name       String
+  uuid      String   @id @default(cuid()) @db.Uuid 
+  accountId String?   @db.Uuid 
+  name      String    @db.VarChar(255)
+  isDeleted Boolean   @default(false)
 
-  // Relations
-  Account   Account @relation(fields: [account_id], references: [id])
-  account_id String   // Foreign key to Account
-  Message   Message[]
+  account    Account?   @relation(fields: [accountId], references: [uuid])
+  
+  threads    Thread[]
+}
+
+model Thread {
+  uuid       String   @id @default(cuid()) @db.Uuid 
+  channelId  String?   @db.Uuid 
+  title      String    @db.VarChar(255)
+  isDeleted   Boolean   @default(false)
+  
+  mentorId   String?   @db.Uuid  
+
+  channel    Channel?   @relation(fields: [channelId], references: [uuid])
+  
+  mentor     Mentor?    @relation(fields: [mentorId], references: [uuid]) 
+   
+  messages    Message[] 
 }
 
 model Message {
-  id        String   @id @default(uuid()) @db.Uuid
-  address    String
-  body       String
+  uuid        String    @id @default(cuid()) @db.Uuid 
+  threadId    String    @db.Uuid  
+  fromAddress String    @db.VarChar(255)
+  toAddress   String    @db.VarChar(255)
+  
+  body        String    
+ isDeleted   Boolean    @default(false)
 
-  // Relations
-  Channel   Channel @relation(fields: [channel_id], references: [id])
-  channel_id String  // Foreign key to Channel
+ thread      Thread       @relation(fields: [threadId], references: [uuid]) 
 }
