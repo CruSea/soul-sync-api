@@ -10,86 +10,97 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" 
   url      = env("DATABASE_URL")
 }
 
-model Role {
-  uuid      String    @id @default(uuid()) @db.Uuid
-  isDefault Boolean   @default(false)
-  name      String    @unique @db.VarChar(100)
-  users     User[]
+model Account {
+  uuid     String    @id @default(cuid()) @db.Uuid 
+  name     String    @db.VarChar(255)
+  isDeleted  Boolean   @default(false)
+  
+  accountUsers AccountUser[]
+  channels     Channel[]
 }
 
 model User {
-  uuid      String    @id @default(uuid()) @db.Uuid
-  email     String    @unique @db.VarChar(255)
-  deleted   Boolean   @default(false)
-  imageUrl  String?   @db.VarChar(255)
-  roleId    String?   @db.Uuid
-  
-  role      Role?     @relation(fields: [roleId], references: [uuid])
-  accounts  Account[]
-  mentors   Mentor[]
-  threads   Thread[]
+  uuid      String   @id @default(cuid()) @db.Uuid 
+  email     String   @unique @db.VarChar(255)
+  isDeleted    Boolean  @default(false)
+  imageUrl   String?  @db.VarChar(255)
+
+  accountUsers AccountUser[]
 }
 
-model Account {
-  uuid      String    @id @default(uuid()) @db.Uuid
-  name      String    @db.VarChar(255)
-  deleted   Boolean   @default(false)
-  ownerId   String?   @db.Uuid
+model Role {
+  uuid      String   @id @default(cuid()) @db.Uuid 
+  isDefault Boolean   @default(false)
+  name      String   @unique @db.VarChar(100)     
 
-  owner     User?     @relation(fields: [ownerId], references: [uuid])
-  channels  Channel[]
-  mentors   Mentor[]
+  accountUsers AccountUser[]
+}
+
+model AccountUser {
+  uuid       String   @id @default(cuid()) @db.Uuid 
+  accountId  String   @db.Uuid 
+  userId     String   @db.Uuid 
+  roleId     String   @db.Uuid 
+
+  account    Account   @relation(fields: [accountId], references: [uuid])
+  user       User      @relation(fields: [userId], references: [uuid])
+  role       Role      @relation(fields: [roleId], references: [uuid])
+
+  Mentor Mentor[]
 }
 
 model Mentor {
-  uuid       String   @id @default(uuid()) @db.Uuid
-  userId     String   @db.Uuid
-  isActive   Boolean  @default(true)
-  name       String   @db.VarChar(255)
-  expertise  String?
-  accountId  String?  @db.Uuid
+  uuid       String   @id @default(cuid()) @db.Uuid 
+  name       String    @db.VarChar(255)
+  expertise   String?   
+  accountUserId String? @db.Uuid
+  isDeleted  Boolean   @default(false)
+  availableFrom String?
+  availableTo   String? 
 
-  user       User     @relation(fields: [userId], references: [uuid])
-  account    Account? @relation(fields: [accountId], references: [uuid])
-  threads    Thread[]
+  accountUser AccountUser? @relation(fields: [accountUserId], references: [uuid])
+
+  Thread Thread[]
 }
 
 model Channel {
-  uuid      String    @id @default(uuid()) @db.Uuid
-  accountId String?   @db.Uuid
+  uuid      String   @id @default(cuid()) @db.Uuid 
+  accountId String?   @db.Uuid 
   name      String    @db.VarChar(255)
   isDeleted Boolean   @default(false)
 
-  account   Account?  @relation(fields: [accountId], references: [uuid])
-  threads   Thread[]
+  account    Account?   @relation(fields: [accountId], references: [uuid])
+  
+  threads    Thread[]
 }
 
 model Thread {
-  uuid       String   @id @default(uuid()) @db.Uuid
-  channelId  String?  @db.Uuid
-  title      String   @db.VarChar(255)
-  isDeleted  Boolean  @default(false)
-  mentorId   String?  @db.Uuid
-  menteeId   String?  @db.Uuid
+  uuid       String   @id @default(cuid()) @db.Uuid 
+  channelId  String?   @db.Uuid 
+  title      String    @db.VarChar(255)
+  isDeleted   Boolean   @default(false)
+  
+  mentorId   String?   @db.Uuid  
 
-  channel    Channel? @relation(fields: [channelId], references: [uuid])
-  mentor     Mentor?  @relation(fields: [mentorId], references: [uuid], onDelete: SetNull)
-  mentee     User?    @relation(fields: [menteeId], references: [uuid], onDelete: SetNull)
-
-  messages   Message[]
+  channel    Channel?   @relation(fields: [channelId], references: [uuid])
+  
+  mentor     Mentor?    @relation(fields: [mentorId], references: [uuid]) 
+   
+  messages    Message[] 
 }
 
 model Message {
-  uuid        String   @id @default(uuid()) @db.Uuid
-  threadId    String   @db.Uuid
-  fromAddress String   @db.VarChar(255)
-  toAddress   String   @db.VarChar(255)
-  body        String
-  isDeleted   Boolean  @default(false)
+  uuid        String    @id @default(cuid()) @db.Uuid 
+  threadId    String    @db.Uuid  
+  fromAddress String    @db.VarChar(255)
+  toAddress   String    @db.VarChar(255)
+  
+  body        String    
+ isDeleted   Boolean    @default(false)
 
-  thread      Thread   @relation(fields: [threadId], references: [uuid])
+ thread      Thread       @relation(fields: [threadId], references: [uuid]) 
 }
