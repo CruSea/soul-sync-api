@@ -14,54 +14,82 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  image_url String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Role {
+  uuid      String    @id @default(uuid()) @db.Uuid
+  isDefault Boolean   @default(false)
+  name      String    @unique @db.VarChar(100)
+  users     User[]
+}
 
-  // Relations
-  Account Account[]
+model User {
+  uuid      String    @id @default(uuid()) @db.Uuid
+  email     String    @unique @db.VarChar(255)
+  deleted   Boolean   @default(false)
+  imageUrl  String?   @db.VarChar(255)
+  roleId    String?   @db.Uuid
+  
+  role      Role?     @relation(fields: [roleId], references: [uuid])
+  accounts  Account[]
+  mentors   Mentor[]
+  threads   Thread[]
 }
 
 model Account {
-  id           String @id @default(uuid()) @db.Uuid
-  Account_name String
+  uuid      String    @id @default(uuid()) @db.Uuid
+  name      String    @db.VarChar(255)
+  deleted   Boolean   @default(false)
+  ownerId   String?   @db.Uuid
 
-  // Relations
-  User    User?     @relation(fields: [user_id], references: [id])
-  user_id String    @db.Uuid
-  Channel Channel[]
-  Role    Role[]
+  owner     User?     @relation(fields: [ownerId], references: [uuid])
+  channels  Channel[]
+  mentors   Mentor[]
 }
 
-model Role {
-  id        String  @id @default(uuid()) @db.Uuid
-  name      String
-  isDefault Boolean
+model Mentor {
+  uuid       String   @id @default(uuid()) @db.Uuid
+  userId     String   @db.Uuid
+  isActive   Boolean  @default(true)
+  name       String   @db.VarChar(255)
+  expertise  String?
+  accountId  String?  @db.Uuid
 
-  // Relations
-  Account    Account @relation(fields: [account_id], references: [id])
-  account_id String // Foreign key to Account
+  user       User     @relation(fields: [userId], references: [uuid])
+  account    Account? @relation(fields: [accountId], references: [uuid])
+  threads    Thread[]
 }
 
 model Channel {
-  id   String @id @default(uuid()) @db.Uuid
-  name String
+  uuid      String    @id @default(uuid()) @db.Uuid
+  accountId String?   @db.Uuid
+  name      String    @db.VarChar(255)
+  isDeleted Boolean   @default(false)
 
-  // Relations
-  Account    Account   @relation(fields: [account_id], references: [id])
-  account_id String // Foreign key to Account
-  Message    Message[]
+  account   Account?  @relation(fields: [accountId], references: [uuid])
+  threads   Thread[]
+}
+
+model Thread {
+  uuid       String   @id @default(uuid()) @db.Uuid
+  channelId  String?  @db.Uuid
+  title      String   @db.VarChar(255)
+  isDeleted  Boolean  @default(false)
+  mentorId   String?  @db.Uuid
+  menteeId   String?  @db.Uuid
+
+  channel    Channel? @relation(fields: [channelId], references: [uuid])
+  mentor     Mentor?  @relation(fields: [mentorId], references: [uuid], onDelete: SetNull)
+  mentee     User?    @relation(fields: [menteeId], references: [uuid], onDelete: SetNull)
+
+  messages   Message[]
 }
 
 model Message {
-  id      String @id @default(uuid()) @db.Uuid
-  address String
-  body    String
+  uuid        String   @id @default(uuid()) @db.Uuid
+  threadId    String   @db.Uuid
+  fromAddress String   @db.VarChar(255)
+  toAddress   String   @db.VarChar(255)
+  body        String
+  isDeleted   Boolean  @default(false)
 
-  // Relations
-  Channel    Channel @relation(fields: [channel_id], references: [id])
-  channel_id String // Foreign key to Channel
+  thread      Thread   @relation(fields: [threadId], references: [uuid])
 }
