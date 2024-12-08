@@ -15,7 +15,7 @@ datasource db {
 }
 
 model Account {
-  uuid     String    @id @default(cuid()) @db.Uuid 
+  uuid     String    @id @default(uuid()) @db.Uuid 
   name     String    @db.VarChar(255)
   isDeleted  Boolean   @default(false)
   
@@ -24,7 +24,7 @@ model Account {
 }
 
 model User {
-  uuid      String   @id @default(cuid()) @db.Uuid 
+  uuid      String   @id @default(uuid()) @db.Uuid 
   email     String   @unique @db.VarChar(255)
   isDeleted    Boolean  @default(false)
   imageUrl   String?  @db.VarChar(255)
@@ -33,7 +33,7 @@ model User {
 }
 
 model Role {
-  uuid      String   @id @default(cuid()) @db.Uuid 
+  uuid      String   @id @default(uuid()) @db.Uuid 
   isDefault Boolean   @default(false)
   name      String   @unique @db.VarChar(100)     
 
@@ -41,7 +41,7 @@ model Role {
 }
 
 model AccountUser {
-  uuid       String   @id @default(cuid()) @db.Uuid 
+  uuid       String   @id @default(uuid()) @db.Uuid 
   accountId  String   @db.Uuid 
   userId     String   @db.Uuid 
   roleId     String   @db.Uuid 
@@ -54,7 +54,7 @@ model AccountUser {
 }
 
 model Mentor {
-  uuid       String   @id @default(cuid()) @db.Uuid 
+  uuid       String   @id @default(uuid()) @db.Uuid 
   name       String    @db.VarChar(255)
   expertise   String?   
   accountUserId String? @db.Uuid
@@ -68,7 +68,7 @@ model Mentor {
 }
 
 model Channel {
-  uuid      String   @id @default(cuid()) @db.Uuid 
+  uuid      String   @id @default(uuid()) @db.Uuid 
   accountId String?   @db.Uuid 
   name      String    @db.VarChar(255)
   isDeleted Boolean   @default(false)
@@ -79,7 +79,7 @@ model Channel {
 }
 
 model Thread {
-  uuid       String   @id @default(cuid()) @db.Uuid 
+  uuid       String   @id @default(uuid()) @db.Uuid 
   channelId  String?   @db.Uuid 
   title      String    @db.VarChar(255)
   isDeleted   Boolean   @default(false)
@@ -94,7 +94,7 @@ model Thread {
 }
 
 model Message {
-  uuid        String    @id @default(cuid()) @db.Uuid 
+  uuid        String    @id @default(uuid()) @db.Uuid 
   threadId    String    @db.Uuid  
   fromAddress String    @db.VarChar(255)
   toAddress   String    @db.VarChar(255)
