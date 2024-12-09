@@ -73,3 +73,11 @@ model AccountUser {
   user        User    @relation(fields: [userId], references: [uuid])
   role        Role    @relation(fields: [roleId], references: [uuid])
 }
+
+model SmsLog {
+    id        String   @id @default(uuid())
+    phoneNumber String
+    message     String
+    status      String
+    createdAt   DateTime @default(now())
+}

@@ -1,0 +1,11 @@
+### Authenticate User
+POST https://api.negarit.net/api/authenticate
+Content-Type: application/x-www-form-urlencoded
+
+email=bnmmarkos@gmail.com&password=12344321
+
+
+### Test SMS Telegram Bot Endpoint
+GET https://api.negarit.net/api/sms_ports/telegram_bots
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjYwMSwiaXNzIjoiaHR0cHM6Ly9hcGkubmVnYXJpdC5uZXQvYXBpL2F1dGhlbnRpY2F0ZSIsImlhdCI6MTczMzc2NTUzNiwiZXhwIjoxNzMzNzY5MTM2LCJuYmYiOjE3MzM3NjU1MzYsImp0aSI6Ik4zR0c3YTdQTUVGRjRGR00ifQ.u4BoHoMFQWJAkOlLU5I9klwpsvIfT53YOzwoVsA_L2U
+Content-Type: application/json
