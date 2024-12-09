@@ -27,7 +27,7 @@ model Account {
   uuid      String    @id @default(uuid())
   name      String    
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime?  @updatedAt
   channels      Channel[]
   accountUsers  AccountUser[]
 
@@ -47,9 +47,9 @@ model Channel {
   uuid      String    @id @default(uuid())
   accountId String    
   name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  account   Account   @relation(fields: [accountId], references: [uuid])
+  createdAt DateTime   @default(now())
+  updatedAt DateTime?  @updatedAt
+  account   Account    @relation(fields: [accountId], references: [uuid])
   messages  Message[]
 }
 
@@ -58,10 +58,10 @@ model Message {
   channelId String   
   senderId  String
   body      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  channel   Channel  @relation(fields: [channelId], references: [uuid])
-  sender    Account  @relation(fields: [senderId], references: [uuid])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  channel   Channel   @relation(fields: [channelId], references: [uuid])
+  sender    Account   @relation(fields: [senderId], references: [uuid])
 }
 
 model AccountUser {
@@ -72,12 +72,4 @@ model AccountUser {
   account     Account @relation(fields: [accountId], references: [uuid])
   user        User    @relation(fields: [userId], references: [uuid])
   role        Role    @relation(fields: [roleId], references: [uuid])
-}
-
-model SmsLog {
-    id        String   @id @default(uuid())
-    phoneNumber String
-    message     String
-    status      String
-    createdAt   DateTime @default(now())
 }

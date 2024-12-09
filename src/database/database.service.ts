@@ -6,6 +6,7 @@ export class DatabaseService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  [x: string]: any;
   constructor() {
     super();
   }

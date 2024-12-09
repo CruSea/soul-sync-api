@@ -31,6 +31,8 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
+/*************  ✨ Codeium Command ⭐  *************/
+/******  208ac29b-31ed-4248-8d38-ab0664eb5759  *******/
   private extractTokenFromHeader(request: any): string | undefined {
     const authorizationHeader = request.headers['authorization'];
     if (authorizationHeader?.startsWith('Bearer ')) {
