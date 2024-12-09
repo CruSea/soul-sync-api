@@ -5,102 +5,68 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql" 
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Account {
-  uuid     String    @id @default(uuid()) @db.Uuid 
-  name     String    @db.VarChar(255)
-  isDeleted  Boolean   @default(false)
-  
+model User {
+  uuid         String       @id @default(uuid())
+  email        String       @unique
+  imageUrl     String?
   accountUsers AccountUser[]
-  channels     Channel[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model User {
-  uuid      String   @id @default(uuid()) @db.Uuid 
-  email     String   @unique @db.VarChar(255)
-  isDeleted    Boolean  @default(false)
-  imageUrl   String?  @db.VarChar(255)
-
-  accountUsers AccountUser[]
+model Account {
+  uuid      String    @id @default(uuid())
+  name      String    
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  channels      Channel[]
+  accountUsers  AccountUser[]
 }
 
 model Role {
-  uuid      String   @id @default(uuid()) @db.Uuid 
-  isDefault Boolean   @default(false)
-  name      String   @unique @db.VarChar(100)     
-
+  uuid      String   @id @default(uuid())
+  name      String
+  isDefault Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   accountUsers AccountUser[]
 }
 
-model AccountUser {
-  uuid       String   @id @default(uuid()) @db.Uuid 
-  accountId  String   @db.Uuid 
-  userId     String   @db.Uuid 
-  roleId     String   @db.Uuid 
-
-  account    Account   @relation(fields: [accountId], references: [uuid])
-  user       User      @relation(fields: [userId], references: [uuid])
-  role       Role      @relation(fields: [roleId], references: [uuid])
-
-  Mentor Mentor[]
-}
-
-model Mentor {
-  uuid       String   @id @default(uuid()) @db.Uuid 
-  name       String    @db.VarChar(255)
-  expertise   String?   
-  accountUserId String? @db.Uuid
-  isDeleted  Boolean   @default(false)
-  availableFrom String?
-  availableTo   String? 
-
-  accountUser AccountUser? @relation(fields: [accountUserId], references: [uuid])
-
-  Thread Thread[]
-}
-
 model Channel {
-  uuid      String   @id @default(uuid()) @db.Uuid 
-  accountId String?   @db.Uuid 
-  name      String    @db.VarChar(255)
-  isDeleted Boolean   @default(false)
-
-  account    Account?   @relation(fields: [accountId], references: [uuid])
-  
-  threads    Thread[]
-}
-
-model Thread {
-  uuid       String   @id @default(uuid()) @db.Uuid 
-  channelId  String?   @db.Uuid 
-  title      String    @db.VarChar(255)
-  isDeleted   Boolean   @default(false)
-  
-  mentorId   String?   @db.Uuid  
-
-  channel    Channel?   @relation(fields: [channelId], references: [uuid])
-  
-  mentor     Mentor?    @relation(fields: [mentorId], references: [uuid]) 
-   
-  messages    Message[] 
+  uuid      String    @id @default(uuid())
+  accountId String    
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  account   Account   @relation(fields: [accountId], references: [uuid])
+  messages  Message[]
 }
 
 model Message {
-  uuid        String    @id @default(uuid()) @db.Uuid 
-  threadId    String    @db.Uuid  
-  fromAddress String    @db.VarChar(255)
-  toAddress   String    @db.VarChar(255)
-  
-  body        String    
- isDeleted   Boolean    @default(false)
+  uuid      String   @id @default(uuid())
+  channelId String   
+  address   String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  channel   Channel  @relation(fields: [channelId], references: [uuid])
+}
 
- thread      Thread       @relation(fields: [threadId], references: [uuid]) 
+model AccountUser {
+  uuid        String @id @default(uuid())
+  accountId   String
+  userId      String
+  roleId     String
+  account     Account @relation(fields: [accountId], references: [uuid])
+  user        User    @relation(fields: [userId], references: [uuid])
+  role        Role    @relation(fields: [roleId], references: [uuid])
 }

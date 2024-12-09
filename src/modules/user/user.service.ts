@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: DatabaseService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findUserByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
@@ -13,36 +13,57 @@ export class UserService {
     userInfo: { email: string; imageUrl: string },
     accountName?: string,
   ) {
-    const user = await this.prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email: userInfo.email,
         imageUrl: userInfo.imageUrl,
       },
     });
 
-    // Create Account
-    const generatedAccountName =
-      accountName || `Account-${user.uuid.slice(0, 6)}`;
-    const account = await this.prisma.account.create({
-      data: { name: generatedAccountName },
-    });
+    const account = await this.createAccount(accountName);
+    const role = await this.createDefaultRole();
 
-    // Assign Role (owner)
-    const ownerRole = await this.prisma.role.findFirst({
-      where: { name: 'owner' },
-    });
-    if (!ownerRole) {
-      throw new Error('Role "owner" not found');
+    await this.linkUserToAccount(newUser.uuid, account.uuid, role.uuid);
+
+    return newUser;
+  }
+
+  private async createAccount(accountName?: string) {
+    if (!accountName) {
+      accountName = `user-${await this.generateAccountName()}`;
     }
 
-    await this.prisma.accountUser.create({
+    return this.prisma.account.create({ data: { name: accountName } });
+  }
+
+  private async createDefaultRole() {
+    return this.prisma.role.create({
+      data: { name: 'Owner', isDefault: true },
+    });
+  }
+
+  private async linkUserToAccount(
+    userId: string,
+    accountId: string,
+    roleId: string,
+  ) {
+    return this.prisma.accountUser.create({
       data: {
-        accountId: account.uuid,
-        userId: user.uuid,
-        roleId: ownerRole.uuid,
+        userId,
+        accountId,
+        roleId,
       },
     });
+  }
 
-    return user;
+  private async generateAccountName(): Promise<string> {
+    const lastAccount = await this.prisma.account.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const lastAccountNumber = lastAccount
+      ? parseInt(lastAccount.name.split('-')[1] || '0', 10)
+      : 0;
+    return (lastAccountNumber + 1).toString().padStart(3, '0');
   }
 }
