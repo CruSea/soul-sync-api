@@ -1,12 +1,20 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, RoleType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
   await prisma.role.createMany({
     data: [
-      { name: 'owner', isDefault: false },
-      { name: 'mentor', isDefault: false },
+      {
+        name: 'Owner',
+        type: RoleType.OWNER,
+        isDefault: true,
+      },
+      {
+        name: 'Mentor',
+        type: RoleType.MENTOR,
+        isDefault: true,
+      },
     ],
     skipDuplicates: true, // Prevent duplicate seeding
   });
