@@ -1,44 +1,42 @@
-import { Controller, Post, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { SignInUserDto } from './dto/sign-in-auth.dto';
+import { SignUpUserDto } from './dto/sign-up-auth.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+import { AuthDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @Post('signup')
-  async googleSignup(
-    @Body('authCode') authCode: string,
-    @Body('accountName') accountName?: string,
-  ) {
-    if (!authCode) {
-      throw new Error('Auth code is required');
-    }
-    const result = await this.authService.handleGoogleSignup(
-      authCode,
-      accountName,
-    );
-    return result;
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req, @Res() res: Response) {
+    res.redirect(`http://localhost:5000/auth?token=${req.user}`);
   }
 
-  @Post('login')
-  async login(
-    @Body('authCode') authCode: string,
-    @Query('role') role?: string,
-    @Query('accountUser') accountUserUuid?: string, // For mentor login
-  ) {
-    if (!authCode) {
-      throw new Error('Auth code is required');
-    }
+  @Post('sign-in')
+  async signIn(@Body() signInUserDto: SignInUserDto): Promise<AuthDto> {
+    return await this.authService.signIn(signInUserDto);
+  }
 
-    if (role === 'mentor' && accountUserUuid) {
-      const result = await this.authService.handleMentorLogin(
-        authCode,
-        accountUserUuid,
-      );
-      return result;
-    }
-
-    const result = await this.authService.handleLogin(authCode);
-    return result;
+  @Post('sign-up')
+  async signUp(@Body() signUpUserDto: SignUpUserDto): Promise<AuthDto> {
+    const ben = await this.authService.signUp(signUpUserDto);
+    console.log('ben', ben);
+    return ben;
   }
 }
