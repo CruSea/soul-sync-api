@@ -30,6 +30,8 @@ model Account {
   updatedAt DateTime  @updatedAt
   channels      Channel[]
   accountUsers  AccountUser[]
+
+  Message Message[]
 }
 
 model Role {
@@ -54,11 +56,12 @@ model Channel {
 model Message {
   uuid      String   @id @default(uuid())
   channelId String   
-  address   String
+  senderId  String
   body      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   channel   Channel  @relation(fields: [channelId], references: [uuid])
+  sender    Account  @relation(fields: [senderId], references: [uuid])
 }
 
 model AccountUser {
