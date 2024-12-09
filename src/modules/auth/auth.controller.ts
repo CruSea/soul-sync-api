@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -21,9 +21,21 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body('authCode') authCode: string) {
+  async login(
+    @Body('authCode') authCode: string,
+    @Query('role') role?: string,
+    @Query('accountUser') accountUserUuid?: string, // For mentor login
+  ) {
     if (!authCode) {
       throw new Error('Auth code is required');
+    }
+
+    if (role === 'mentor' && accountUserUuid) {
+      const result = await this.authService.handleMentorLogin(
+        authCode,
+        accountUserUuid,
+      );
+      return result;
     }
 
     const result = await this.authService.handleLogin(authCode);
