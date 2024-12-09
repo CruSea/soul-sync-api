@@ -49,7 +49,7 @@ export class AuthService {
   async signInOrUp(signUpUserDto: SignUpUserDto) {
     const { email, name, password } = signUpUserDto;
 
-    let user = await this.prisma.user.findFirst({ where: { email } });
+    const user = await this.prisma.user.findFirst({ where: { email } });
     if (user) {
       return user;
     }

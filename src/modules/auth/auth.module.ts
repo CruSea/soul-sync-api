@@ -18,7 +18,14 @@ import { AuthService } from './auth.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, RefreshStrategy, PrismaService, JwtService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    RefreshStrategy,
+    PrismaService,
+    JwtService,
+  ],
   exports: [PassportModule],
 })
 export class AuthModule {}

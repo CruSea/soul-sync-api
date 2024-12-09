@@ -8,10 +8,11 @@ import { UserDto } from './dto/user.dto';
 export class UserService {
   constructor(private prisma: PrismaService) {}
   create(createUserDto: CreateUserDto) {
+    console.log('createUserDto', createUserDto);
     return 'This action adds a new user';
   }
 
-  async findAll({ user: any }): Promise<UserDto[]> {
+  async findAll(): Promise<UserDto[]> {
     const users = await this.prisma.user.findMany({ where: {} });
     return users.map((user) => new UserDto(user));
   }
