@@ -8,6 +8,7 @@ import { GoogleStrategy } from './strategy/google.starategy';
 import { RefreshStrategy } from './strategy/refresh.strategy';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
+import { AuthGuard } from './guard/auth.guard';
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -25,6 +26,7 @@ import { AuthService } from './auth.service';
     RefreshStrategy,
     PrismaService,
     JwtService,
+    AuthGuard,
   ],
   exports: [PassportModule],
 })

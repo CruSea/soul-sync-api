@@ -5,10 +5,11 @@ import { AllExceptionsFilter } from './common/filter/all-exception-filter';
 import { ResponseFormatterInterceptor } from './common/interceptor/response-interceptor';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
   app.enableCors({

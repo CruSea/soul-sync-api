@@ -4,6 +4,7 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
 
@@ -25,9 +26,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : (exceptionResponse as any).message || message;
     }
 
+    console.log('exception', exception);
+
     if (exception instanceof Error) {
       status = HttpStatus.NOT_FOUND;
       message = exception.message;
+    }
+
+    if (exception instanceof BadRequestException) {
+      status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
+      message =
+        typeof exceptionResponse === 'string'
+          ? exceptionResponse
+          : (exceptionResponse as any).message || message;
     }
 
     const formattedResponse = {
