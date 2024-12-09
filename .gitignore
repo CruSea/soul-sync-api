@@ -17,7 +17,7 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
-
+.env
 # IDEs and editors
 /.idea
 .project
@@ -32,7 +32,7 @@ lerna-debug.log*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
-!.vscode/extensions.json
+!.vscode/extensions.json.env
 
 docker-script.sh
 test.http
