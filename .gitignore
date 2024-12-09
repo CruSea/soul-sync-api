@@ -13,10 +13,12 @@ lerna-debug.log*
 
 # OS
 .DS_Store
-
+/test.http
+/
 # Tests
 /coverage
 /.nyc_output
+.env
 .env
 # IDEs and editors
 /.idea
@@ -33,6 +35,3 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json.env
-
-docker-script.sh
-test.http

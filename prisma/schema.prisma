@@ -5,8 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -15,53 +15,58 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  image_url String?
+  uuid         String       @id @default(uuid())
+  email        String       @unique
+  imageUrl     String?
+  accountUsers AccountUser[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  Account Account[]
 }
 
 model Account {
-  id           String @id @default(uuid()) @db.Uuid
-  Account_name String
-
-  // Relations
-  User    User?     @relation(fields: [user_id], references: [id])
-  user_id String    @db.Uuid
-  Channel Channel[]
-  Role    Role[]
+  uuid      String    @id @default(uuid())
+  name      String    
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  channels      Channel[]
+  accountUsers  AccountUser[]
 }
 
 model Role {
-  id        String  @id @default(uuid()) @db.Uuid
+  uuid      String   @id @default(uuid())
   name      String
   isDefault Boolean
-
-  // Relations
-  Account    Account @relation(fields: [account_id], references: [id])
-  account_id String // Foreign key to Account
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accountUsers AccountUser[]
 }
 
 model Channel {
-  id   String @id @default(uuid()) @db.Uuid
-  name String
-
-  // Relations
-  Account    Account   @relation(fields: [account_id], references: [id])
-  account_id String // Foreign key to Account
-  Message    Message[]
+  uuid      String    @id @default(uuid())
+  accountId String    
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  account   Account   @relation(fields: [accountId], references: [uuid])
+  messages  Message[]
 }
 
 model Message {
-  id      String @id @default(uuid()) @db.Uuid
-  address String
-  body    String
+  uuid      String   @id @default(uuid())
+  channelId String   
+  address   String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  channel   Channel  @relation(fields: [channelId], references: [uuid])
+}
 
-  // Relations
-  Channel    Channel @relation(fields: [channel_id], references: [id])
-  channel_id String // Foreign key to Channel
+model AccountUser {
+  uuid        String @id @default(uuid())
+  accountId   String
+  userId      String
+  roleId     String
+  account     Account @relation(fields: [accountId], references: [uuid])
+  user        User    @relation(fields: [userId], references: [uuid])
+  role        Role    @relation(fields: [roleId], references: [uuid])
 }
