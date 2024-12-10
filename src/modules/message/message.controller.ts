@@ -1,10 +1,9 @@
-// messages.controller.ts
 import { Controller, Post, Body } from '@nestjs/common';
-import { TelegramService } from './Telegram.service';
+import { MessageService } from './message.service';
 
 @Controller('messages')
-export class TelegramController {
-  constructor(private readonly messagesService: TelegramService) {}
+export class MessageController {
+  constructor(private readonly messagesService: MessageService) {}
 
   @Post()
   async sendMessage(@Body() body: { senderId: string; channelId: string; message: string; menteeChatId: number }) {

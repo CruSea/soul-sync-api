@@ -1,0 +1,9 @@
+### Test Sending a Message to Telegram
+POST http://localhost:3000/messages
+Content-Type: application/json
+
+{
+  "text": "Hello from my Telegram bot!",
+  "channelId": "5b657559-f772-4a0d-b975-b690175d05aa", 
+  "senderId": "c694e13f-9a7b-4152-9bab-90729400ea4b"    
+}

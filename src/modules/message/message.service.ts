@@ -1,9 +1,8 @@
-// messages.service.ts
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 
 @Injectable()
-export class TelegramService {
+export class MessageService {
   private readonly apiUrl = process.env.TELEGRAM_BOT_API_URL;
 
   async sendMessageToTelegram({ senderId, channelId, message, menteeChatId }: { senderId: string; channelId: string; message: string; menteeChatId: number }) {
