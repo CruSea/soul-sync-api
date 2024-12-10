@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+  private readonly saltRounds = 10;
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -21,6 +22,10 @@ export class AuthService {
     });
     if (!user) {
       throw new Error('User not found');
+    }
+
+    if (!(await bcrypt.compare(signInUserDto.password, user.password))) {
+      throw new Error('Invalid password');
     }
 
     const token = await this.jwtService.signAsync(user, {
@@ -74,7 +79,7 @@ export class AuthService {
         throw new Error('Default owner role not found');
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, this.saltRounds);
 
       return tx.user.create({
         data: {

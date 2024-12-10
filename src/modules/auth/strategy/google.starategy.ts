@@ -28,7 +28,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const user = await this.authService.signInOrUp({
       email: emails[0].value,
       name: name.givenName,
-      password: photos[0].value,
+      password: emails[0].value,
+      imageUrl: photos[0].value,
     });
     const token = this.jwtService.signAsync(user, {
       secret: process.env.JWT_SECRET,
