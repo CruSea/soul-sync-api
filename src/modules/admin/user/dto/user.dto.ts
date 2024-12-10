@@ -16,6 +16,8 @@ export class UserDto {
   @Expose()
   updatedAt: Date;
 
+  roles: string[];
+
   constructor(partial: Partial<UserDto>) {
     this.id = partial.id;
     this.name = partial.name;
