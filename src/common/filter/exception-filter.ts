@@ -26,8 +26,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : (exceptionResponse as any).message || message;
     }
 
-    console.log('exception', exception);
-
     if (exception instanceof Error) {
       status = HttpStatus.NOT_FOUND;
       message = exception.message;
