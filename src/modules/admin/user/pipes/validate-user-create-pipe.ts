@@ -1,7 +1,6 @@
 import { Injectable, PipeTransform, Inject } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { User } from '../entities/user.entity';
-import { CreateUserDto } from '../dto/create-user.dto';
 
 @Injectable()
 export class ValidateUserCreatePipe implements PipeTransform {
@@ -10,7 +9,7 @@ export class ValidateUserCreatePipe implements PipeTransform {
     @Inject('REQUEST') private readonly request: any,
   ) {}
 
-  async transform(value: CreateUserDto) {
+  async transform(value: any) {
     const user: User = this.request.user;
     const account = await this.prisma.account.findFirst({
       where: {
@@ -20,6 +19,6 @@ export class ValidateUserCreatePipe implements PipeTransform {
     if (!account) {
       throw new Error('Account not found!');
     }
-    return { ...value, userId: user.id };
+    return value;
   }
 }
