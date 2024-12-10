@@ -5,6 +5,8 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
 import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
 export class UserService {
@@ -12,9 +14,27 @@ export class UserService {
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
   ) {}
-  create(createUserDto: CreateUserDto) {
-    console.log('createUserDto', createUserDto);
-    return 'This action adds a new user';
+  async create(createUserDto: CreateUserDto) {
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      AuthService.saltRounds,
+    );
+
+    const userData = await this.prisma.user.create({
+      data: {
+        name: createUserDto.name,
+        email: createUserDto.email,
+        password: hashedPassword,
+        accountUser: {
+          create: {
+            accountId: createUserDto.accountId,
+            roleId: createUserDto.roleId,
+          },
+        },
+      },
+    });
+
+    return new UserDto(userData);
   }
 
   async findAll(): Promise<UserDto[]> {

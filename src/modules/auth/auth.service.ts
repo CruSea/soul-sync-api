@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  private readonly saltRounds = 10;
+  public static readonly saltRounds = 10;
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -20,6 +20,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: signInUserDto.email },
     });
+
     if (!user) {
       throw new Error('User not found');
     }
@@ -31,9 +32,14 @@ export class AuthService {
     const token = await this.jwtService.signAsync(user, {
       secret: process.env.JWT_SECRET,
     });
+
+    const roles = await this.prisma.role.findMany({
+      where: { AccountUser: { some: { userId: user.id } } },
+    });
+
     return {
       token,
-      user: { ...user },
+      user: { ...user, roles: roles.map((role) => role.id) },
     };
   }
 
@@ -79,7 +85,10 @@ export class AuthService {
         throw new Error('Default owner role not found');
       }
 
-      const hashedPassword = await bcrypt.hash(password, this.saltRounds);
+      const hashedPassword = await bcrypt.hash(
+        password,
+        AuthService.saltRounds,
+      );
 
       return tx.user.create({
         data: {
