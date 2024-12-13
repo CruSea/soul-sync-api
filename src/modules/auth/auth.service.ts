@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthDto } from './dto/auth.dto';
 import { UserDto } from '../admin/user/dto/user.dto';
 import { RoleType } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -34,12 +34,16 @@ export class AuthService {
     });
 
     const roles = await this.prisma.role.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
+      where: { accountUsers: { some: { userId: user.id } } },
     });
 
     return {
       token,
-      user: { ...user, roles: roles.map((role) => role.id) },
+      user: {
+        ...user, roles: roles.map((role) => role.id),
+        createdAt: new Date(),
+        updatedAt: undefined
+      },
     };
   }
 
@@ -95,10 +99,11 @@ export class AuthService {
           name,
           email,
           password: hashedPassword,
-          accountUser: {
+          accountUsers: {
             create: {
               accountId: account.id,
               roleId: role.id,
+              isDeleted: false,
             },
           },
         },

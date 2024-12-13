@@ -18,7 +18,7 @@ import { Roles } from 'src/modules/auth/auth.decorator';
 
 @Controller('admin/user')
 @UseGuards(AuthGuard)
-@Roles('ADMIN')
+@Roles('OWNER')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

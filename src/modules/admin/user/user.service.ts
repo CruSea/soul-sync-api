@@ -5,7 +5,7 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
 import { User } from './entities/user.entity';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
@@ -25,10 +25,11 @@ export class UserService {
         name: createUserDto.name,
         email: createUserDto.email,
         password: hashedPassword,
-        accountUser: {
+        accountUsers: {
           create: {
             accountId: createUserDto.accountId,
             roleId: createUserDto.roleId,
+            isDeleted: false,
           },
         },
       },
@@ -40,7 +41,7 @@ export class UserService {
   async findAll(): Promise<UserDto[]> {
     const user: User = this.request.user;
     const users = await this.prisma.user.findMany({
-      where: { accountUser: { some: { userId: user.id } } },
+      where: { accountUsers: { some: { userId: user.id } } },
     });
     return users.map((user) => new UserDto(user));
   }
@@ -48,7 +49,7 @@ export class UserService {
   async findOne(id: string): Promise<UserDto> {
     const user: User = this.request.user;
     const userData = await this.prisma.user.findFirst({
-      where: { id, accountUser: { some: { userId: user.id } } },
+      where: { id, accountUsers: { some: { userId: user.id } } },
     });
 
     if (!userData) {
@@ -61,7 +62,7 @@ export class UserService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     const user: User = this.request.user;
     const userData = await this.prisma.user.update({
-      where: { id, accountUser: { some: { userId: user.id } } },
+      where: { id, accountUsers: { some: { userId: user.id } } },
       data: updateUserDto,
     });
 
