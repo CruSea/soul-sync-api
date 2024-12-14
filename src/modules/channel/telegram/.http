@@ -1,7 +1,0 @@
-POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook
-Content-Type: application/x-www-form-urlencoded
-
-url=https://wise-spoons-hammer.loca.lt/telegram/webhook
-
-###
-GET https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getWebhookInfo

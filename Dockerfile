@@ -1,6 +1,9 @@
 # Use Node.js image
 FROM node:20-alpine
 
+# Install OpenSSL dependencies
+RUN apk add --no-cache openssl
+
 # Set working directory
 WORKDIR /app
 
@@ -9,6 +12,12 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm install
+
+# Copy Prisma schema
+COPY prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Copy application code
 COPY . .
