@@ -1,7 +1,7 @@
 import { Inject, Injectable, PipeTransform } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { User } from '../../entities/user.entity';
-import { CreateUserDto } from '../../dto/create-user.dto';
+import { User } from 'src/modules/admin/user/entities/user.entity';
+import { CreateMentorDto } from '../../dto/create-mentor.dto';
 
 @Injectable()
 export class CreatePipe implements PipeTransform {
@@ -9,7 +9,7 @@ export class CreatePipe implements PipeTransform {
     private readonly prisma: PrismaService,
     @Inject('REQUEST') private readonly request: any,
   ) {}
-  async transform(value: CreateUserDto) {
+  async transform(value: CreateMentorDto) {
     const user: User = this.request.user;
     if (!value.accountId) {
       throw new Error('accountId: Account id is required!');
@@ -17,14 +17,7 @@ export class CreatePipe implements PipeTransform {
 
     const account = await this.prisma.account.findFirst({
       where: {
-        id: value.accountId,
-        AccountUser: {
-          some: {
-            userId: user.id, // Ensure the user's ID is matched
-            accountId: value.accountId,
-            // Optional: Add further checks like roles if necessary
-          },
-        },
+        AccountUser: { some: { userId: user.id, accountId: value.accountId } },
       },
     });
 

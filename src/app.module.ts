@@ -3,6 +3,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
+import { MentorModule } from 'src/modules/admin/mentor/mentor.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
     }),
     AuthModule,
     AdminModule,
+    MentorModule,
   ],
   providers: [PrismaService],
 })

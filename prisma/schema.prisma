@@ -13,15 +13,23 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
+enum RoleType {
+  OWNER
+  ADMIN
+  USER
+  MENTOR
+}
 model User {
   id           String       @id @default(uuid())
   name         String
   email        String       @unique
   password     String
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   mentors      Mentor[]     @relation("UserToMentors")
-  accountUsers AccountUser[]
+  accountUser AccountUser[]
 }
 
 model Mentor {
@@ -53,12 +61,13 @@ model Conversation {
 model Role {
   id           String        @id @default(uuid())
   name         String
-  isDefault    Boolean
+  isDefault    Boolean      @default(false)
   type         RoleType
   accountId    String?
-
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   account      Account?      @relation(fields: [accountId], references: [id])
-  accountUsers AccountUser[]
+  AccountUser AccountUser[]
 }
 
 model AccountUser {
@@ -67,7 +76,8 @@ model AccountUser {
   isDeleted    Boolean
   roleId       String
   accountId    String
-
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   account      Account    @relation(fields: [accountId], references: [id])
   user         User       @relation(fields: [userId], references: [id])
   role         Role       @relation(fields: [roleId], references: [id])
@@ -85,10 +95,11 @@ model Thread {
 model Account {
   id            String        @id @default(uuid())
   name          String
-
-  roles         Role[]
-  accountUsers  AccountUser[]
-  channels      Channel[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  Role         Role[]
+  AccountUser  AccountUser[]
+  Channel      Channel[]
 }
 
 model Channel {
@@ -98,7 +109,9 @@ model Channel {
   metadata       Json
   configuration  Json
   isDeleted      Boolean
-
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
   account        Account        @relation(fields: [accountId], references: [id])
   conversations  Conversation[]
   messages       Message[]
@@ -109,15 +122,12 @@ model Message {
   channelId      String
   address        String
   type           String
-  content        String
+  body           String
   isDeleted      Boolean
-
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   channel        Channel       @relation(fields: [channelId], references: [id])
   threads        Thread[]
 }
 
-enum RoleType {
-  OWNER
-  MENTOR
-  GUEST
-}
+

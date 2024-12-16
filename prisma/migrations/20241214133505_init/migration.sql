@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "RoleType" AS ENUM ('OWNER', 'MENTOR', 'GUEST');
+CREATE TYPE "RoleType" AS ENUM ('OWNER', 'ADMIN', 'USER', 'MENTOR');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -7,6 +7,9 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "imageUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -40,9 +43,11 @@ CREATE TABLE "Conversation" (
 CREATE TABLE "Role" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "isDefault" BOOLEAN NOT NULL,
+    "isDefault" BOOLEAN NOT NULL DEFAULT false,
     "type" "RoleType" NOT NULL,
     "accountId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
 );
@@ -54,6 +59,8 @@ CREATE TABLE "AccountUser" (
     "isDeleted" BOOLEAN NOT NULL,
     "roleId" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "AccountUser_pkey" PRIMARY KEY ("id")
 );
@@ -71,6 +78,8 @@ CREATE TABLE "Thread" (
 CREATE TABLE "Account" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
 );
@@ -83,6 +92,8 @@ CREATE TABLE "Channel" (
     "metadata" JSONB NOT NULL,
     "configuration" JSONB NOT NULL,
     "isDeleted" BOOLEAN NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Channel_pkey" PRIMARY KEY ("id")
 );
@@ -93,8 +104,10 @@ CREATE TABLE "Message" (
     "channelId" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "type" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
+    "body" TEXT NOT NULL,
     "isDeleted" BOOLEAN NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );

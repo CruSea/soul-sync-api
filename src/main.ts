@@ -13,7 +13,10 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://rl1s5vc7-3000.uks1.devtunnels.ms',
+    ],
     credentials: true,
     allowedHeaders: 'Authorization, Content-Type',
   });
