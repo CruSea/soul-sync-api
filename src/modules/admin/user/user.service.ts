@@ -29,6 +29,7 @@ export class UserService {
           create: {
             accountId: createUserDto.accountId,
             roleId: createUserDto.roleId,
+            isDeleted: false
           },
         },
       },
