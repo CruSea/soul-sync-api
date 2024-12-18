@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { IsJSON, IsString, IsBoolean, IsOptional } from 'class-validator';
+import { IsJSON, IsString, IsOptional } from 'class-validator';
 
 export class CreateChannelDto {
   @IsString()
