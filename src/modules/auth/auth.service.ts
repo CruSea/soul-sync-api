@@ -127,8 +127,16 @@ export class AuthService {
 
   async getUserAccounts(userId: string) {
     return this.prisma.accountUser.findMany({
-      where: { userId },
-      include: { account: true },
+      where: { userId: userId },
+      include: {
+        account: {
+          select: {
+            id: true,
+            name: true,
+            domain: true, // Ensure 'domain' is explicitly selected
+          },
+        },
+      },
     });
   }
 }

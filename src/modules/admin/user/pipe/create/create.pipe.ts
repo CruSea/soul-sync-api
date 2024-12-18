@@ -20,9 +20,8 @@ export class CreatePipe implements PipeTransform {
         id: value.accountId,
         AccountUser: {
           some: {
-            userId: user.id, // Ensure the user's ID is matched
+            userId: user.id,
             accountId: value.accountId,
-            // Optional: Add further checks like roles if necessary
           },
         },
       },

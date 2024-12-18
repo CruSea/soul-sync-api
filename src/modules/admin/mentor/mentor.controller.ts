@@ -27,21 +27,32 @@ export class MentorController {
   async createMentor(@Body() createMentorDto: CreateMentorDto) {
     return this.mentorService.createMentor(createMentorDto);
   }
-
-  @Get()
-  async findMentors() {
-    return this.mentorService.findAllMentors();
+  @Get(':accountId/all')
+  async findMentors(@Param('accountId') accountId: string) {
+    return this.mentorService.findAllMentors(accountId);
   }
 
-  @Patch(':id')
+  @Get(':accountId/mentor/:id')
+  async findMentorById(
+    @Param('accountId') accountId: string,
+    @Param('id') id: string,
+  ) {
+    return this.mentorService.findMentorById(accountId, id);
+  }
+
+  @Patch(':accountId/mentor/:id')
   async updateMentor(
+    @Param('accountId') accountId: string,
     @Param('id') id: string,
     @Body() updateMentorDto: UpdateMentorDto,
   ) {
-    return this.mentorService.updateMentor(id, updateMentorDto);
+    return this.mentorService.updateMentor(accountId, id, updateMentorDto);
   }
-  @Delete(':id')
-  async removeMentor(@Param('id') id: string) {
-    return this.mentorService.removeMentor(id);
+  @Delete(':accountId/mentor/:id')
+  async removeMentor(
+    @Param('accountId') accountId: string,
+    @Param('id') id: string,
+  ) {
+    return this.mentorService.deleteMentor(accountId, id);
   }
 }

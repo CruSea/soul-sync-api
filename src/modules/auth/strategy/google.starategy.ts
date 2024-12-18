@@ -44,6 +44,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         accounts: accounts.map((acc) => ({
           id: acc.account.id,
           name: acc.account.name,
+          domain: acc.account.domain,
         })),
         roles: roles.map((role) => role.type),
       };

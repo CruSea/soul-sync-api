@@ -15,7 +15,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 import { CreatePipe } from './pipe/create/create.pipe';
 import { Roles } from 'src/modules/auth/auth.decorator';
-import { RoleType } from '@prisma/client';
 
 @Controller('admin/user')
 @UseGuards(AuthGuard)
@@ -23,36 +22,36 @@ import { RoleType } from '@prisma/client';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
+  @Post(':accountId')
   @UsePipes(CreatePipe)
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  create(
+    @Param('accountId') accountId: string,
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    return this.userService.create(accountId, createUserDto);
   }
 
-  @Get()
-  async findAll() {
-    return await this.userService.findAll();
+  @Get(':accountId/all')
+  async findAll(@Param('accountId') accountId: string) {
+    return this.userService.findAllUsers(accountId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  @Get(':accountId/user/:id')
+  findOne(@Param('accountId') accountId: string, @Param('id') id: string) {
+    return this.userService.findOne(accountId, id);
   }
 
-  @Get('role/:role')
-  async findUsersByRole(@Param('role') role: string) {
-    return await this.userService.findUsersByRole(
-      role.toUpperCase() as RoleType,
-    );
+  @Patch(':accountId/user/:id')
+  update(
+    @Param('accountId') accountId: string,
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.updateUser(accountId, id, updateUserDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  @Delete(':accountId/user/:id')
+  remove(@Param('accountId') accountId: string, @Param('id') id: string) {
+    return this.userService.remove(accountId, id);
   }
 }

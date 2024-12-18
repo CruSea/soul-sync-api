@@ -12,7 +12,10 @@ export class AccountIdPipe implements PipeTransform {
     const user: User = this.request.user;
     const account = await this.prisma.account.findFirst({
       where: {
-        AccountUser: { some: { userId: user.id, accountId: value } },
+        id: value.accountId,
+        AccountUser: {
+          some: { userId: user.id },
+        },
       },
     });
 

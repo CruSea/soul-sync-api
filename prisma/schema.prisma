@@ -95,6 +95,7 @@ model Thread {
 model Account {
   id            String        @id @default(uuid())
   name          String
+  domain        String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   Role         Role[]
