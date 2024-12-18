@@ -7,7 +7,7 @@ export class ChannelDto {
 
   @Expose()
   accountId: string;
-
+ 
   @Expose()
   name: string;
 
@@ -25,7 +25,7 @@ export class ChannelDto {
 
   constructor(partial: Partial<ChannelDto>) {
     this.id = partial.id;
-    this.accountId = partial.id;
+    this.accountId = partial.accountId;
     this.name = partial.name;
     this.metadata = partial.metadata;
     this.configuration = partial.configuration;

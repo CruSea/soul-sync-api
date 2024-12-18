@@ -11,13 +11,13 @@ export class ChannelService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
-  async create(createChannelDto: CreateChannelDto) {
+  async create(createChannelDto: CreateChannelDto, accountId: any) {
     const channelData = await this.prisma.channel.create({
       data: {
         name: createChannelDto.name,
-        accountId: createChannelDto.accountId,
+        accountId: accountId,
         metadata:
           typeof createChannelDto.metadata === 'string'
             ? JSON.parse(createChannelDto.metadata)
@@ -33,8 +33,13 @@ export class ChannelService {
     return new ChannelDto(channelData);
   }
 
-  async findAll(): Promise<ChannelDto[]> {
-    const channels = await this.prisma.channel.findMany();
+  async findAll(accountId: string): Promise<ChannelDto[]> {
+    if (!accountId) {
+      throw new Error('accountId is required');
+    }
+    const channels = await this.prisma.channel.findMany({
+      where: { accountId: accountId }
+    });
     return channels.map((channel) => new ChannelDto(channel));
   }
 
@@ -52,16 +57,33 @@ export class ChannelService {
     id: string,
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelDto> {
-    const channel = await this.prisma.channel.update({
-      where: { id },
-      data: {
-        name: updateChannelDto.name,
-      },
-    });
-    if (!channel) {
-      throw new NotFoundException(`Channel with id ${id} not found`);
+
+    try {
+      const channel = await this.prisma.channel.update({
+        where: { id },
+        data: {
+          name: updateChannelDto.name,
+          metadata:
+            typeof updateChannelDto.metadata === 'string'
+              ? JSON.parse(updateChannelDto.metadata)
+              : updateChannelDto.metadata,
+          configuration:
+            typeof updateChannelDto.configuration === 'string'
+              ? JSON.parse(updateChannelDto.configuration)
+              : updateChannelDto.configuration,
+          isDeleted: false,
+        },
+      });
+      if (!channel) {
+        throw new NotFoundException(`Channel with id ${id} not found`);
+      }
+      return new ChannelDto(channel);
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Channel with id ${id} not found`);
+      }
+      throw error;
     }
-    return new ChannelDto(channel);
   }
 
   async remove(id: string): Promise<void> {
@@ -72,4 +94,5 @@ export class ChannelService {
       throw new NotFoundException(`Channel with id ${id} not found`);
     }
   }
+
 }

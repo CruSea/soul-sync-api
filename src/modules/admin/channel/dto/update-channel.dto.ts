@@ -1,12 +1,11 @@
-import { IsString, IsJSON, IsBoolean } from 'class-validator';
+import { IsString, IsJSON } from 'class-validator';
+import { Prisma } from '@prisma/client';
 
 export class UpdateChannelDto {
   @IsString()
   name: string;
   @IsJSON()
-  metadata: JSON;
+  metadata: Prisma.JsonValue;
   @IsJSON()
-  configuration: JSON;
-  @IsBoolean()
-  isDeleted: boolean;
+  configuration: Prisma.JsonValue;
 }
