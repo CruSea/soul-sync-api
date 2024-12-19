@@ -50,8 +50,21 @@ export class ChannelController {
 
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.channelService.findOne(id);
+  async findOne(@Param('id') id: string, @Req() request: any) {
+    const token = request.headers.authorization?.split(' ')[1];
+    const { accountId } = await extractAccountIdFromToken(token, this.jwtService, this.prisma);
+
+    if (!accountId) {
+      throw new NotFoundException('No accountId provided');
+    }
+
+    const channel = await this.channelService.findOne(id, accountId);
+
+    if (channel.accountId !== accountId) {
+      throw new NotFoundException('Channel not found for this account');
+    }
+
+    return channel;
   }
 
   @Patch(':id')

@@ -38,14 +38,21 @@ export class ChannelService {
       throw new Error('accountId is required');
     }
     const channels = await this.prisma.channel.findMany({
-      where: { accountId: accountId }
+      where: {
+        accountId: accountId,
+        isDeleted: false,
+      }
     });
     return channels.map((channel) => new ChannelDto(channel));
   }
 
-  async findOne(id: string): Promise<ChannelDto> {
-    const channel = await this.prisma.channel.findUnique({
-      where: { id },
+  async findOne(id: string, accountId: string): Promise<ChannelDto> {
+    const channel = await this.prisma.channel.findFirst({
+      where: {
+        id,
+        accountId,
+        isDeleted: false,
+      },
     });
     if (!channel) {
       throw new NotFoundException(`Channel with id ${id} not found`);
@@ -86,13 +93,16 @@ export class ChannelService {
     }
   }
 
-  async remove(id: string): Promise<void> {
-    const channel = await this.prisma.channel.delete({
+  async remove(id: string): Promise<{ message: string }> {
+    const channel = await this.prisma.channel.update({
       where: { id },
+      data: { isDeleted: true },
     });
     if (!channel) {
       throw new NotFoundException(`Channel with id ${id} not found`);
     }
+
+    return { message: 'Channel deleted successfully' };
   }
 
 }
