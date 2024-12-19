@@ -9,10 +9,10 @@ export class MentorsService {
     private prisma: PrismaService,
   ) {}
   async findMentorById(id: string) {
-    const mentor = await this.prisma.mentor.findUnique({
+    const mentor = await this.prisma.user.findUnique({
       where: { id },
       include: {
-        user: true,
+        mentors: true,
       },
     });
 
@@ -26,16 +26,28 @@ export class MentorsService {
   async updateMentor(id: string, updateData: UpdateMentorDto) {
     const { availability, ...otherData } = updateData;
 
-    const mentor = await this.prisma.mentor.update({
+    const mentor = await this.prisma.user.update({
       where: { id },
       data: {
-        ...otherData,
-        availability: availability
-          ? {
-              startDate: availability.startDate,
-              endDate: availability.endDate,
-            }
-          : undefined,
+        mentors: {
+          update: {
+            where: {
+              userId: id,
+            },
+            data: {
+              ...otherData,
+              availability: availability
+                ? {
+                    startDate: availability.startDate,
+                    endDate: availability.endDate,
+                  }
+                : undefined,
+            },
+          },
+        },
+      },
+      include: {
+        mentors: true,
       },
     });
 

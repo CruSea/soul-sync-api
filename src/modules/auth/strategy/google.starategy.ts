@@ -52,6 +52,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       // Generate JWT token
       const token = await this.jwtService.signAsync(payload, {
         secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXPIRATION,
       });
 
       done(null, token);
