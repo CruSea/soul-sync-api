@@ -54,6 +54,7 @@ model Conversation {
   address   String
   channelId String
   isActive  Boolean
+  isDeleted Boolean @default(false)
 
   mentor  Mentor   @relation(fields: [mentorId], references: [id])
   channel Channel  @relation(fields: [channelId], references: [id])
