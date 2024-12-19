@@ -1,10 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
-import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from 'src/modules/auth/auth.service';
 
@@ -14,7 +13,9 @@ export class UserService {
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
   ) {}
-  async create(createUserDto: CreateUserDto) {
+  async create(accountId: string, createUserDto: CreateUserDto) {
+    await this.validateAccountAccess(accountId);
+
     const hashedPassword = await bcrypt.hash(
       createUserDto.password,
       AuthService.saltRounds,
@@ -27,52 +28,121 @@ export class UserService {
         password: hashedPassword,
         accountUser: {
           create: {
-            accountId: createUserDto.accountId,
+            accountId: accountId,
             roleId: createUserDto.roleId,
+            isDeleted: false,
           },
         },
+      },
+      include: {
+        accountUser: true,
       },
     });
 
     return new UserDto(userData);
   }
 
-  async findAll(): Promise<UserDto[]> {
-    const user: User = this.request.user;
-    const users = await this.prisma.user.findMany({
-      where: { accountUser: { some: { userId: user.id } } },
-    });
-    return users.map((user) => new UserDto(user));
-  }
+  async findOne(accountId: string, id: string): Promise<UserDto> {
+    await this.validateAccountAccess(accountId);
 
-  async findOne(id: string): Promise<UserDto> {
-    const user: User = this.request.user;
     const userData = await this.prisma.user.findFirst({
-      where: { id, accountUser: { some: { userId: user.id } } },
+      where: {
+        id,
+        accountUser: {
+          some: {
+            accountId,
+            isDeleted: false,
+          },
+        },
+      },
+      include: {
+        accountUser: true,
+      },
     });
 
     if (!userData) {
-      throw new Error('User not found');
+      throw new Error('User not found or access is restricted');
     }
 
     return new UserDto(userData);
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    const user: User = this.request.user;
-    const userData = await this.prisma.user.update({
-      where: { id, accountUser: { some: { userId: user.id } } },
-      data: updateUserDto,
+  async findAllUsers(accountId: string) {
+    await this.validateAccountAccess(accountId);
+
+    return this.prisma.user.findMany({
+      where: {
+        accountUser: {
+          some: {
+            accountId: accountId,
+            isDeleted: false,
+          },
+        },
+      },
     });
-
-    if (!userData) {
-      throw new Error('User not found');
-    }
-
-    return new UserDto(userData);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async updateUser(
+    accountId: string,
+    userId: string,
+    updateUserDto: UpdateUserDto,
+  ) {
+    await this.validateAccountAccess(accountId);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { ...updateUserDto },
+    });
+  }
+
+  async remove(accountId: string, id: string): Promise<UserDto> {
+    await this.validateAccountAccess(accountId);
+
+    const userToDelete = await this.prisma.user.findFirst({
+      where: {
+        id,
+        accountUser: {
+          some: {
+            accountId,
+            isDeleted: false,
+          },
+        },
+      },
+      include: { accountUser: true },
+    });
+
+    if (!userToDelete) {
+      throw new Error('User not found or you do not have access.');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        accountUser: {
+          updateMany: {
+            where: { accountId },
+            data: { isDeleted: true },
+          },
+        },
+      },
+      include: { accountUser: true },
+    });
+
+    return new UserDto(updatedUser);
+  }
+
+  private async validateAccountAccess(accountId: string) {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        AccountUser: { some: { userId: this.request.user.id } },
+      },
+    });
+
+    if (!account) {
+      throw new ForbiddenException('You do not have access to this account.');
+    }
+
+    return account;
   }
 }

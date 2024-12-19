@@ -99,6 +99,7 @@ export class AuthService {
             create: {
               accountId: account.id,
               roleId: role.id,
+              isDeleted: false,
             },
           },
         },
@@ -117,5 +118,25 @@ export class AuthService {
       });
     }
     return { userId: email };
+  }
+  async getUserRoles(userId: string) {
+    return this.prisma.role.findMany({
+      where: { AccountUser: { some: { userId } } },
+    });
+  }
+
+  async getUserAccounts(userId: string) {
+    return this.prisma.accountUser.findMany({
+      where: { userId: userId },
+      include: {
+        account: {
+          select: {
+            id: true,
+            name: true,
+            domain: true, // Ensure 'domain' is explicitly selected
+          },
+        },
+      },
+    });
   }
 }
