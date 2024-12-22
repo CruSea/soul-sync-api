@@ -1,0 +1,12 @@
+### Send a message via Telegram bot
+POST http://localhost:3000/telegram/send
+Content-Type: application/json
+
+{
+    "chatId": "5209941226",
+    "message": "my name is biniyam"
+}
+
+
+###
+# https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
