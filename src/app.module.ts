@@ -3,7 +3,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
-import { TelegramModule } from './modules/admin/channel/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -13,7 +12,7 @@ import { TelegramModule } from './modules/admin/channel/telegram/telegram.module
     }),
     AuthModule,
     AdminModule,
-    TelegramModule
+    
   ],
   providers: [PrismaService],
 })
