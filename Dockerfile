@@ -13,11 +13,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Generate Prisma client
-RUN npx prisma generate
-
 # Copy application code
 COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Build the NestJS application
 RUN npm run build

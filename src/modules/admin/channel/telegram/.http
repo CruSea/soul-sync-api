@@ -4,9 +4,9 @@ Content-Type: application/json
 
 {
     "chatId": "5209941226",
-    "message": "my name is biniyam"
+    "message": "how are you doing"
 }
 
 
 ###
-# https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
+POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
