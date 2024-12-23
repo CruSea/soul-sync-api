@@ -133,7 +133,7 @@ export class AuthService {
           select: {
             id: true,
             name: true,
-            domain: true, // Ensure 'domain' is explicitly selected
+           // domain: true, // Ensure 'domain' is explicitly selected
           },
         },
       },
