@@ -1,5 +1,5 @@
 ### Send a message via Telegram bot
-POST http://localhost:3000/telegram/send
+POST http://localhost:3000/message/tg-send
 Content-Type: application/json
 
 {
@@ -12,7 +12,7 @@ Content-Type: application/json
 POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
 
 ### setting up a webhook
-POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook?url=https://true-moles-taste.loca.lt/telegram/webhook
+POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook?url=https://chubby-worlds-warn.loca.lt/telegram/webhook
 
 ### deleete webhook
 POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/deleteWebhook

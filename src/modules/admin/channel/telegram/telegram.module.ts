@@ -5,5 +5,6 @@ import { TelegramController } from './telegram.controller';
 @Module({
   controllers: [TelegramController],
   providers: [TelegramService],
+  exports: [TelegramService]
 })
 export class TelegramModule {}
