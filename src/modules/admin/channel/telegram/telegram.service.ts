@@ -16,7 +16,6 @@ export class TelegramService implements OnModuleInit {
 
     async onModuleInit() {
         await this.connectToRabbitMQ();
-        this.startConsumer(); // Start the consumer when the module initializes
         this.bot.on('message', async (ctx) => {
             await this.handleUpdate(ctx.update);
         });
@@ -72,21 +71,5 @@ export class TelegramService implements OnModuleInit {
         } catch (error) {
             console.error('Error sending message:', error);``   
         }
-    }
-
-    private startConsumer() {
-        this.channel.consume(this.queue, async (msg) => {
-            if (msg !== null) {
-                const messageContent = msg.content.toString();
-                console.log('Received from RabbitMQ:', messageContent);
-
-                
-                const { chatId, text } = JSON.parse(messageContent);
-                await this.sendMessage(chatId, text); // Send the message back to Telegram
-
-                
-                this.channel.ack(msg);
-            }
-        }, { noAck: false });
     }
 }

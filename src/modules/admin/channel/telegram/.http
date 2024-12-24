@@ -12,7 +12,7 @@ Content-Type: application/json
 POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
 
 ### setting up a webhook
-POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook?url=https://chubby-worlds-warn.loca.lt/telegram/webhook
+POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook?url=https://public-mirrors-camp.loca.lt/telegram/webhook
 
 ### deleete webhook
 POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/deleteWebhook
