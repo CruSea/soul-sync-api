@@ -28,7 +28,7 @@ export class AccountService {
       return await this.prisma.account.create({
         data: {
           name: createAccountDto.name,
-          AccountUser: { create: { userId: user.id, roleId: role.id } },
+          AccountUser: { create: { userId: user.id, roleId: role.id, isDeleted: false } },
         },
       });
     });
