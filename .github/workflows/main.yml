@@ -1,0 +1,27 @@
+name: Deploy to Digital Ocean
+
+on:
+  push:
+    branches:
+      - release-01
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to Digital Ocean
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/soul-sync-api
+            git fetch origin release-01
+            git checkout release-01
+            git pull origin release-01
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
