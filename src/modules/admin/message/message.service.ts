@@ -1,31 +1,21 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as amqp from 'amqplib';
 import axios from 'axios';
+import { RabbitService } from '../channel/rabbit/rabbit.service';
 
 @Injectable()
 export class MessageService implements OnModuleInit{
-    private channel: amqp.Channel;
-    private queue = 'telegram_messages';
+    constructor(private readonly rabbitService: RabbitService) {}
+   
 
     async onModuleInit() {
-        await this.connectToRabbitMQ();
-        this.startConsumer(); // Start the consumer when the module initializes
+        await this.rabbitService.connectToRabbitMQ();
+        this.startConsumer(); 
         
     }
 
-    private async connectToRabbitMQ() {
-            try {
-                const connection = await amqp.connect('amqp://user:password@rabbitmq:5672'); // Connect to RabbitMQ server
-                this.channel = await connection.createChannel();
-                await this.channel.assertQueue(this.queue, { durable: true }); // Ensure the queue exists
-                console.log('Connected to RabbitMQ');
-            } catch (error) {
-                console.error('Error connecting to RabbitMQ:', error);
-            }
-    }
 
     private startConsumer() {
-        this.channel.consume(this.queue, async (msg) => {
+        this.rabbitService.channel.consume(this.rabbitService.queue, async (msg) => {
             if (msg !== null) {
                 const messageContent = msg.content.toString();
                 console.log('Received from RabbitMQ:', messageContent);
@@ -38,7 +28,7 @@ export class MessageService implements OnModuleInit{
                 });
 
                 
-                this.channel.ack(msg);
+                this.rabbitService.channel.ack(msg);
             }
         }, { noAck: false });
     }
