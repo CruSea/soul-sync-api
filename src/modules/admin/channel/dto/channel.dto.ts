@@ -18,6 +18,9 @@ export class ChannelDto {
   configuration: Prisma.JsonValue;
 
   @Expose()
+  isDeleted: boolean;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()
@@ -29,6 +32,7 @@ export class ChannelDto {
     this.name = partial.name;
     this.metadata = partial.metadata;
     this.configuration = partial.configuration;
+    this.isDeleted = partial.isDeleted;
     this.createdAt = partial.createdAt;
     this.updatedAt = partial.updatedAt;
   }
