@@ -8,12 +8,12 @@ import { RabbitService } from '../rabbit/rabbit.service';
 export class TelegramService implements OnModuleInit {
     private bot: Bot;
 
-    constructor(private readonly rabbitService: RabbitService) {
+    constructor(private readonly telegramRabbitService: RabbitService) {
         this.bot = new Bot(process.env.TELEGRAM_BOT_TOKEN); 
     }
 
     async onModuleInit() {
-        await this.rabbitService.connectToRabbitMQ();
+        await this.telegramRabbitService.connectToRabbitMQ();
         this.bot.on('message', async (ctx) => {
             await this.handleUpdate(ctx.update);
         });
@@ -24,7 +24,7 @@ export class TelegramService implements OnModuleInit {
 
     async handleUpdate(update: any) {
         const chatId = update.message.chat.id;
-        const text = "Hello there! Welcome to SoulSync! We are here to help you with your questions and concerns.";
+        const text = "wow this is amazing!!!!";
 
         // Send a reply back to the user
         await axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -33,14 +33,13 @@ export class TelegramService implements OnModuleInit {
         });
 
         // Prepare message for RabbitMQ
-
         const message = {
-            chatId: chatId,
+            chatId: update.message.chat.id,
             text: update.message.text,
         };
 
         // Send message to RabbitMQ
-        this.rabbitService.channel.sendToQueue(this.rabbitService.queue, Buffer.from(JSON.stringify(message)), { persistent: true });
+        this.telegramRabbitService.channel.sendToQueue(this.telegramRabbitService.queue, Buffer.from(JSON.stringify(message)), { persistent: true });
         
         console.log('Message sent to RabbitMQ:', message);
         

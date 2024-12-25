@@ -3,8 +3,8 @@ POST http://localhost:3000/message/tg-send
 Content-Type: application/json
 
 {
-    "chatId": "5209941226",
-    "message": "how are you doing"
+    "chatId": "411270067",
+    "message": "This is magic"
 }
 
 
@@ -12,8 +12,8 @@ Content-Type: application/json
 POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
 
 ### setting up a webhook
-POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook?url=https://public-mirrors-camp.loca.lt/telegram/webhook
+POST https://api.telegram.org/bot7723589454:AAHeCHL0ujCQb13RZyvquXBTA0SmYfzsY1A/setWebhook?url=https://fancy-groups-behave.loca.lt/telegram/webhook
 
 ### deleete webhook
-POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/deleteWebhook
+POST https://api.telegram.org/bot7723589454:AAHeCHL0ujCQb13RZyvquXBTA0SmYfzsY1A/deleteWebhook
 

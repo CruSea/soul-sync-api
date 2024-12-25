@@ -1,123 +1,140 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String       @id @default(uuid())
-  name         String
-  email        String       @unique
-  password     String
-
-  mentors      Mentor[]     @relation("UserToMentors")
-  accountUsers AccountUser[]
-}
-
-model Mentor {
-  id             String          @id @default(uuid())
-  userId         String          @unique
-  expertise      String
-  availability   Json
-  age            Int
-  gender         String
-  location       String
-  isActive       Boolean
-
-  user           User            @relation("UserToMentors", fields: [userId], references: [id])
-  conversations  Conversation[]
-}
-
-model Conversation {
-  id             String         @id @default(uuid())
-  mentorId       String
-  address        String
-  channelId      String
-  isActive       Boolean
-
-  mentor         Mentor         @relation(fields: [mentorId], references: [id])
-  channel        Channel        @relation(fields: [channelId], references: [id])
-  threads        Thread[]
-}
-
-model Role {
-  id           String        @id @default(uuid())
-  name         String
-  isDefault    Boolean
-  type         RoleType
-  accountId    String?
-
-  account      Account?      @relation(fields: [accountId], references: [id])
-  accountUsers AccountUser[]
-}
-
-model AccountUser {
-  id           String     @id @default(uuid())
-  userId       String
-  isDeleted    Boolean
-  roleId       String
-  accountId    String
-
-  account      Account    @relation(fields: [accountId], references: [id])
-  user         User       @relation(fields: [userId], references: [id])
-  role         Role       @relation(fields: [roleId], references: [id])
-}
-
-model Thread {
-  id             String        @id @default(uuid())
-  conversationId String
-  messageId      String
-
-  conversation   Conversation  @relation(fields: [conversationId], references: [id])
-  message        Message       @relation(fields: [messageId], references: [id])
+enum RoleType {
+  ADMIN
+  MENTOR
+  MENTEE
 }
 
 model Account {
-  id            String        @id @default(uuid())
-  name          String
+  id              String       @id @default(uuid())
+  name            String
+  createdAt       String
+  isDeleted       Boolean      @default(false)
+  
+  roles           Role[]
+  users           AccountUser[]
+  channels        Channel[]
+}
 
-  roles         Role[]
-  accountUsers  AccountUser[]
-  channels      Channel[]
+model Role {
+  id              String        @id @default(uuid())
+  name            String
+  isDefault       Boolean
+  type            RoleType
+  accountId       String
+
+  account         Account       @relation(fields: [accountId], references: [id])
+  AccountUser     AccountUser[]
+}
+
+model User {
+  id              String        @id @default(uuid())
+  name            String
+  userName        String
+  password        String
+  imageUrl        String
+  createdAt       String
+  isDeleted       Boolean       @default(false)
+
+  accountUsers    AccountUser[]
+  mentor          Mentor?
+  mentee          Mentee?
+}
+
+model AccountUser {
+  id               String         @id @default(uuid())
+  userId           String
+  isDeleted        Boolean        @default(false)
+  roleId           String
+  accountId        String
+  createdAt        String
+
+  account          Account        @relation(fields: [accountId], references: [id])
+  role             Role           @relation(fields: [roleId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
 }
 
 model Channel {
-  id             String         @id @default(uuid())
-  accountId      String
-  name           String
-  metadata       Json
-  configuration  Json
-  isDeleted      Boolean
+  id                String        @id @default(uuid())
+  accountId         String
+  name              String
+  configuration     Json
+  isDeleted         Boolean       @default(false)
+  createdAt         String
 
-  account        Account        @relation(fields: [accountId], references: [id])
-  conversations  Conversation[]
-  messages       Message[]
+  account           Account        @relation(fields: [accountId], references: [id])
+  mentees           Mentee[]
+  conversations     Conversation[]
+  messages          Message[]
+}
+
+model Mentor {
+  id                String         @id @default(uuid())
+  userId            String         @unique
+  specialization    String
+  whenAvailable     Json
+  age               String
+  gender            String
+  location          String
+  status            Boolean
+  phone             String
+  createdAt         String
+  isDeleted         Boolean         @default(false)
+
+  user              User            @relation(fields: [userId], references: [id])
+  conversations     Conversation[]
+}
+
+model Mentee {
+  id                String          @id @default(uuid())
+  userId            String          @unique
+  channelId         String
+  metaData          Json
+  createdAt         String
+  isDeleted         Boolean         @default(false)
+
+  user              User            @relation(fields: [userId], references: [id])
+  channel           Channel         @relation(fields: [channelId], references: [id])
+  conversations     Conversation[]  @relation("MenteeConversation")
+}
+
+model Conversation {
+  id                String          @id @default(uuid())
+  mentorId          String
+  menteeId          String
+  address           String
+  channelId         String
+  status            Boolean
+  createdAt         String
+  endedAt           String
+
+  threads           Thread[]
+  mentor            Mentor          @relation(fields: [mentorId], references: [id])
+  channel           Channel         @relation(fields: [channelId], references: [id])
+  mentee            Mentee          @relation("MenteeConversation", fields: [menteeId], references: [id])
 }
 
 model Message {
-  id             String        @id @default(uuid())
-  channelId      String
-  address        String
-  type           String
-  content        String
-  isDeleted      Boolean
+  id                String          @id @default(uuid())
+  channelId         String
+  type              String
+  content           String
+  isDeleted         Boolean         @default(false)
+  createdAt         String
 
-  channel        Channel       @relation(fields: [channelId], references: [id])
-  threads        Thread[]
+  thread            Thread?
+  channel           Channel         @relation(fields: [channelId], references: [id])
 }
 
-enum RoleType {
-  OWNER
-  MENTOR
-  GUEST
+model Thread {
+  id                String          @id @default(uuid())
+  conversationId    String  
+  messageId         String          @unique
+
+  conversation      Conversation    @relation(fields: [conversationId], references: [id])
+  message           Message         @relation(fields: [messageId], references: [id])
 }

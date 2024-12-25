@@ -4,18 +4,18 @@ import { RabbitService } from '../channel/rabbit/rabbit.service';
 
 @Injectable()
 export class MessageService implements OnModuleInit{
-    constructor(private readonly rabbitService: RabbitService) {}
+    constructor(private readonly messagerabbitService: RabbitService) {}
    
 
     async onModuleInit() {
-        await this.rabbitService.connectToRabbitMQ();
+        await this.messagerabbitService.connectToRabbitMQ();
         this.startConsumer(); 
         
     }
 
 
     private startConsumer() {
-        this.rabbitService.channel.consume(this.rabbitService.queue, async (msg) => {
+        this.messagerabbitService.channel.consume(this.messagerabbitService.queue, async (msg) => {
             if (msg !== null) {
                 const messageContent = msg.content.toString();
                 console.log('Received from RabbitMQ:', messageContent);
@@ -28,7 +28,7 @@ export class MessageService implements OnModuleInit{
                 });
 
                 
-                this.rabbitService.channel.ack(msg);
+                this.messagerabbitService.channel.ack(msg);
             }
         }, { noAck: false });
     }
