@@ -19,6 +19,7 @@ model Account {
   name            String
   createdAt       String
   isDeleted       Boolean      @default(false)
+  domain          String
   
   roles           Role[]
   users           AccountUser[]
@@ -48,6 +49,7 @@ model User {
   accountUsers    AccountUser[]
   mentor          Mentor?
   mentee          Mentee?
+  Admin Admin[]
 }
 
 model AccountUser {
@@ -93,6 +95,19 @@ model Mentor {
   user              User            @relation(fields: [userId], references: [id])
   conversations     Conversation[]
 }
+
+model Admin {
+  id                String         @id @default(uuid())
+  userId            String         @unique
+  gender            String
+  age               String
+  location          String
+  phone             String
+  isDeleted         Boolean         @default(false)
+  createdAt         String
+
+  user              User            @relation(fields: [userId], references: [id])
+  }
 
 model Mentee {
   id                String          @id @default(uuid())
