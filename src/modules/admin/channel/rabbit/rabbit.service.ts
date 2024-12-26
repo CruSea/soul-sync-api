@@ -4,15 +4,14 @@ import * as amqp from 'amqplib';
 @Injectable()
 export class RabbitService {
 
-    channel: amqp.Channel;
-    queue = 'telegram_messages';
+    channel: amqp.Channel; 
 
-     async connectToRabbitMQ() {
+
+     async connectToRabbitMQ(queueName: string ): Promise<void> {
         try {
-            const connection = await amqp.connect('amqp://user:password@rabbitmq:5672'); // Connect to RabbitMQ server
+            const connection = await amqp.connect('amqp://user:password@rabbitmq:5672'); 
             this.channel = await connection.createChannel();
-            await this.channel.assertQueue(this.queue, { durable: true }); // Ensure the queue exists
-            console.log('Connected to RabbitMQ');
+            await this.channel.assertQueue(queueName, { durable: true }); 
         } catch (error) {
             console.error('Error connecting to RabbitMQ:', error);
         }

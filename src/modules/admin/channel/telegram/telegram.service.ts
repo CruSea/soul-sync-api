@@ -13,7 +13,7 @@ export class TelegramService implements OnModuleInit {
     }
 
     async onModuleInit() {
-        await this.telegramRabbitService.connectToRabbitMQ();
+        await this.telegramRabbitService.connectToRabbitMQ('telegram');
         this.bot.on('message', async (ctx) => {
             await this.handleUpdate(ctx.update);
         });
@@ -39,7 +39,7 @@ export class TelegramService implements OnModuleInit {
         };
 
         // Send message to RabbitMQ
-        this.telegramRabbitService.channel.sendToQueue(this.telegramRabbitService.queue, Buffer.from(JSON.stringify(message)), { persistent: true });
+        this.telegramRabbitService.channel.sendToQueue('telegram', Buffer.from(JSON.stringify(message)), { persistent: true });
         
         console.log('Message sent to RabbitMQ:', message);
         

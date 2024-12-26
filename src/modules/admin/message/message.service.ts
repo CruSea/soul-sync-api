@@ -8,14 +8,14 @@ export class MessageService implements OnModuleInit{
    
 
     async onModuleInit() {
-        await this.messagerabbitService.connectToRabbitMQ();
+        await this.messagerabbitService.connectToRabbitMQ('telegram');
         this.startConsumer(); 
         
     }
 
 
     private startConsumer() {
-        this.messagerabbitService.channel.consume(this.messagerabbitService.queue, async (msg) => {
+        this.messagerabbitService.channel.consume('telegram', async (msg) => {
             if (msg !== null) {
                 const messageContent = msg.content.toString();
                 console.log('Received from RabbitMQ:', messageContent);
