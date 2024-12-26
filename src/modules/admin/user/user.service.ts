@@ -73,7 +73,8 @@ export class UserService {
     return new UserDto(userData);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  remove(id: string) {
+    this.request.user.isDeleted = true;
+    return 'User deleted successfully!'; 
   }
 }

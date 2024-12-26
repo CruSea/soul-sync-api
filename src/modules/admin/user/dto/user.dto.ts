@@ -16,6 +16,12 @@ export class UserDto {
   @Expose()
   updatedAt: Date;
 
+  @Expose()
+  imageUrl:  String
+  
+  @Expose()
+  isDeleted: Boolean
+  
   roles: string[];
 
   constructor(partial: Partial<UserDto>) {

@@ -40,10 +40,11 @@ export class AuthService {
     return {
       token,
       user: {
-        ...user, roles: roles.map((role) => role.id),
+        ...user, 
+        roles: roles.map((role) => role.id),
         createdAt: new Date(),
         updatedAt: undefined,
-        username: ''
+        username: user.username
       },
     };
   }
@@ -63,9 +64,14 @@ export class AuthService {
   }
 
   async signInOrUp(signUpUserDto: SignUpUserDto) {
-    const { username: email, name, password } = signUpUserDto;
+    const { username, name, password, referenceAccountId } = signUpUserDto;
 
-    const user = await this.prisma.user.findFirst({ where: { username: email } });
+
+    const user = await this.prisma.user.findFirst({ 
+      where: { 
+        username: username,
+        isDeleted: false,
+      } });
     if (user) {
       return user;
     }
@@ -78,8 +84,15 @@ export class AuthService {
       if (!account) {
         throw new Error('Failed to create account');
       }
-
-      const role = await tx.role.findFirst({
+      const checkUsername = await this.isValidEmail(username);
+       
+      
+      const role = !password && !checkUsername ? await tx.role.findFirst({
+        where: {
+          type: RoleType.MENTEE,
+          isDefault: true,
+        },
+      }) : await tx.role.findFirst({
         where: {
           type: RoleType.OWNER,
           isDefault: true,
@@ -90,15 +103,32 @@ export class AuthService {
         throw new Error('Default owner role not found');
       }
 
-      const hashedPassword = await bcrypt.hash(
+      const hashedPassword = !password? '' : await bcrypt.hash(
         password,
         AuthService.saltRounds,
       );
 
+      if (!hashedPassword) {
+        return tx.user.create({
+          data: {
+            name,
+            username,
+            password: '',
+            accountUsers: {
+              create: {
+                accountId: referenceAccountId,
+                roleId: role.id,
+                isDeleted: false,
+              },
+            },
+          },
+        });
+      }
+
       return tx.user.create({
         data: {
           name,
-          username: email,
+          username,
           password: hashedPassword,
           accountUsers: {
             create: {
@@ -110,6 +140,11 @@ export class AuthService {
         },
       });
     });
+  }
+
+  async isValidEmail(username: string): Promise<boolean> {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(username);
   }
 
   async getUserIfRefreshTokenMatches(email: string) {

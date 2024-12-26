@@ -11,8 +11,18 @@ async function main() {
         isDefault: true,
       },
       {
+        name: 'Admin',
+        type: RoleType.ADMIN,
+        isDefault: true,
+      },
+      {
         name: 'Mentor',
         type: RoleType.MENTOR,
+        isDefault: true,
+      },
+      {
+        name: 'Mentee',
+        type: RoleType.MENTEE,
         isDefault: true,
       },
     ],
