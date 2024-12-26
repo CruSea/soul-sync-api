@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import axios from 'axios';
-import { RabbitService } from '../channel/rabbit/rabbit.service';
+import { RabbitService } from './rabbit/rabbit.service';
 
 @Injectable()
 export class MessageService implements OnModuleInit{

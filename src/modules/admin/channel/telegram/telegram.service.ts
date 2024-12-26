@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Bot } from "grammy";
 import axios from 'axios';
 import * as amqp from 'amqplib';
-import { RabbitService } from '../rabbit/rabbit.service';
+import { RabbitService } from '../../message/rabbit/rabbit.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
