@@ -26,7 +26,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   ): Promise<void> {
     const { name, emails, photos } = profile;
     const user = await this.authService.signInOrUp({
-      email: emails[0].value,
+      username: emails[0].value,
       name: name.givenName,
       password: emails[0].value,
       imageUrl: photos[0].value,
