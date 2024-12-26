@@ -58,7 +58,7 @@ export class AuthService {
   }
 
   async signInOrUp(signUpUserDto: SignUpUserDto) {
-    const { email, name, password } = signUpUserDto;
+    const { email, name, password, imageUrl } = signUpUserDto;
 
     const user = await this.prisma.user.findFirst({ where: { email } });
     if (user) {
@@ -94,6 +94,7 @@ export class AuthService {
         data: {
           name,
           email,
+          imageUrl,
           password: hashedPassword,
           accountUser: {
             create: {
@@ -133,7 +134,7 @@ export class AuthService {
           select: {
             id: true,
             name: true,
-            domain: true, // Ensure 'domain' is explicitly selected
+            domain: true,
           },
         },
       },

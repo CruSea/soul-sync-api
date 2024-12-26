@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { REQUEST } from '@nestjs/core';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
+import * as crypto from 'crypto';
 @Injectable()
 export class MentorService {
   constructor(
@@ -23,11 +24,10 @@ export class MentorService {
     if (!mentorRole) {
       throw new Error('Mentor role not found');
     }
-
-    const hashedPassword = await bcrypt.hash(
-      '12345678',
-      AuthService.saltRounds,
-    );
+    const generateRandomPassword = (): string =>
+      crypto.randomBytes(8).toString('hex');
+    const password = generateRandomPassword();
+    const hashedPassword = await bcrypt.hash(password, AuthService.saltRounds);
 
     const newUser = await this.prisma.user.create({
       data: {
@@ -129,7 +129,7 @@ export class MentorService {
   ) {
     await this.validateAccountAccess(accountId);
 
-    const { availability, ...otherData } = updateData;
+    const { availability, expertise, ...otherData } = updateData;
 
     const mentor = await this.prisma.mentor.update({
       where: {
@@ -145,12 +145,8 @@ export class MentorService {
       },
       data: {
         ...otherData,
-        availability: availability
-          ? {
-              startDate: availability.startDate,
-              endDate: availability.endDate,
-            }
-          : undefined,
+        expertise: expertise ? expertise.join(',') : undefined,
+        availability: availability ? JSON.stringify(availability) : undefined,
       },
     });
 

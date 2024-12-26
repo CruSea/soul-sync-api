@@ -26,7 +26,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     res.redirect(
-      `https://rl1s5vc7-3000.uks1.devtunnels.ms/log-in?token=${req.user}`,
+      `https://sbkh2slb-3000.uks1.devtunnels.ms/log-in?token=${req.user}`,
     );
   }
 

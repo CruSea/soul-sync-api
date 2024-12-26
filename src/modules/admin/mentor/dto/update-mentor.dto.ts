@@ -1,31 +1,92 @@
-import { IsOptional, IsString, IsInt, IsObject } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  ValidateNested,
+  IsArray,
+  ArrayMinSize,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class Time {
+  @IsString()
+  hour: string;
+
+  @IsString()
+  minute: string;
+
+  @IsString()
+  dayPeriod: string;
+}
+
+class DayAvailability {
+  @ValidateNested()
+  @Type(() => Time)
+  startTime: Time;
+
+  @ValidateNested()
+  @Type(() => Time)
+  endTime: Time;
+}
 
 class Availability {
-  @IsString()
-  startDate: string;
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  monday?: DayAvailability;
 
-  @IsString()
-  endDate: string;
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  tuesday?: DayAvailability;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  wednesday?: DayAvailability;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  thursday?: DayAvailability;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  friday?: DayAvailability;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  saturday?: DayAvailability;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => DayAvailability)
+  sunday?: DayAvailability;
 }
 
 export class UpdateMentorDto {
-  @IsOptional()
-  @IsString()
-  expertise: string;
-
-  @IsOptional()
-  @IsObject()
-  availability: Availability;
-
   @IsOptional()
   @IsInt()
   age: number;
 
   @IsOptional()
   @IsString()
-  gender: string;
+  location: string;
 
   @IsOptional()
   @IsString()
-  location: string;
+  gender: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  expertise: string[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Availability)
+  availability: Availability;
 }
