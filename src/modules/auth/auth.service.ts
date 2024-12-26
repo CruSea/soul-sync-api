@@ -18,7 +18,7 @@ export class AuthService {
 
   async signIn(signInUserDto: SignInUserDto): Promise<AuthDto> {
     const user = await this.prisma.user.findUnique({
-      where: { username: signInUserDto.email },
+      where: { username: signInUserDto.username },
     });
 
     if (!user) {
@@ -43,7 +43,7 @@ export class AuthService {
         ...user, roles: roles.map((role) => role.id),
         createdAt: new Date(),
         updatedAt: undefined,
-        email: ''
+        username: ''
       },
     };
   }
@@ -63,7 +63,7 @@ export class AuthService {
   }
 
   async signInOrUp(signUpUserDto: SignUpUserDto) {
-    const { email, name, password } = signUpUserDto;
+    const { username: email, name, password } = signUpUserDto;
 
     const user = await this.prisma.user.findFirst({ where: { username: email } });
     if (user) {

@@ -7,8 +7,8 @@ export class CreateUserDto {
   roleId: string;
   @IsString()
   name: string;
-  @IsEmail()
-  email: string;
+  @IsString()
+  username: string;
   @IsString()
   password: string;
 }
