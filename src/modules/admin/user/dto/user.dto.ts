@@ -8,7 +8,7 @@ export class UserDto {
   name: string;
 
   @Expose()
-  email: string;
+  username: string;
 
   @Expose()
   createdAt: Date;
@@ -21,7 +21,7 @@ export class UserDto {
   constructor(partial: Partial<UserDto>) {
     this.id = partial.id;
     this.name = partial.name;
-    this.email = partial.email;
+    this.username = partial.username;
     this.createdAt = partial.createdAt;
     this.updatedAt = partial.updatedAt;
   }
