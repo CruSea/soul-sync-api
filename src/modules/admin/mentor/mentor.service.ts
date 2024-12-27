@@ -6,11 +6,13 @@ import { REQUEST } from '@nestjs/core';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
 import * as crypto from 'crypto';
+import { MailerService } from '../mail/mail.service';
 @Injectable()
 export class MentorService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async createMentor(createMentorDto: CreateMentorDto) {
@@ -36,6 +38,12 @@ export class MentorService {
         name: name ?? 'Mentor',
       },
     });
+
+    await this.mailerService.sendEmail(
+      email,
+      'Welcome to the Platform',
+      `Hi ${name ?? 'Mentor'},\n\nHere is your temporary password: ${password}\n\nPlease change it after logging in.`,
+    );
 
     const mentor = await this.prisma.mentor.create({
       data: {

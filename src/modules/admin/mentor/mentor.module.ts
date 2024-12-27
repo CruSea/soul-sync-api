@@ -5,8 +5,9 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { MailerModule } from '../mail/mail.module';
 @Module({
-  imports: [PrismaModule, AuthModule, JwtModule],
+  imports: [PrismaModule, AuthModule, JwtModule, MailerModule],
   controllers: [MentorController],
   providers: [MentorService, PrismaService],
   exports: [MentorService],
