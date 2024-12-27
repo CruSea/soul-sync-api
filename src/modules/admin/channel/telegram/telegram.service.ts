@@ -1,7 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Bot } from "grammy";
 import axios from 'axios';
-import * as amqp from 'amqplib';
 import { RabbitService } from '../../message/rabbit/rabbit.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 
