@@ -50,24 +50,30 @@ export class AuthService {
   }
 
   async signUp(signUpUserDto: SignUpUserDto): Promise<AuthDto> {
-    const user = await this.signInOrUp(signUpUserDto);
-    if (!user) {
-      throw new Error('User not found');
+    try {
+      console.log(signUpUserDto);
+      const user = await this.signInOrUp(signUpUserDto);
+      if (!user) {
+        throw new Error('User not found');
+      }
+      const token = await this.jwtService.signAsync(user, {
+        secret: process.env.JWT_SECRET,
+      });
+      return {
+        token,
+        user: new UserDto(user),
+      };
+    } catch (error) {
+      console.error('Error in signUp:', error);
+      throw error;
     }
-    const token = await this.jwtService.signAsync(user, {
-      secret: process.env.JWT_SECRET,
-    });
-    return {
-      token,
-      user: new UserDto(user),
-    };
   }
 
   async signInOrUp(signUpUserDto: SignUpUserDto) {
     const { username, name, password, referenceAccountId } = signUpUserDto;
 
 
-    const user = await this.prisma.user.findFirst({ 
+    const user = await this.prisma.user.findUnique({ 
       where: { 
         username: username,
         isDeleted: false,
@@ -84,18 +90,16 @@ export class AuthService {
       if (!account) {
         throw new Error('Failed to create account');
       }
+     
       const checkUsername = await this.isValidEmail(username);
-       
       
-      const role = !password && !checkUsername ? await tx.role.findFirst({
+      const role = !checkUsername ? await tx.role.findFirst({
         where: {
           type: RoleType.MENTEE,
-          isDefault: true,
         },
       }) : await tx.role.findFirst({
         where: {
           type: RoleType.OWNER,
-          isDefault: true,
         },
       });
 

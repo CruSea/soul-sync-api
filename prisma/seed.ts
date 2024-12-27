@@ -6,24 +6,28 @@ async function main() {
   await prisma.role.createMany({
     data: [
       {
-        name: 'Owner',
+        name: 'OWNER',
         type: RoleType.OWNER,
         isDefault: true,
+        createdAt: new Date(),
       },
       {
-        name: 'Admin',
+        name: 'ADMIN',
         type: RoleType.ADMIN,
         isDefault: true,
+        createdAt: new Date(),
       },
       {
-        name: 'Mentor',
+        name: 'MENTOR',
         type: RoleType.MENTOR,
         isDefault: true,
+        createdAt: new Date(),
       },
       {
-        name: 'Mentee',
+        name: 'MENTEE',
         type: RoleType.MENTEE,
         isDefault: true,
+        createdAt: new Date(),
       },
     ],
     skipDuplicates: true, // Prevent duplicate seeding

@@ -3,12 +3,16 @@ import { Bot } from "grammy";
 import axios from 'axios';
 import * as amqp from 'amqplib';
 import { RabbitService } from '../../message/rabbit/rabbit.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
     private bot: Bot;
 
-    constructor(private readonly telegramRabbitService: RabbitService) {
+    constructor(
+        private readonly prisma: PrismaService, 
+        private readonly telegramRabbitService: RabbitService) 
+        {
         this.bot = new Bot(process.env.TELEGRAM_BOT_TOKEN); 
     }
 
@@ -22,7 +26,36 @@ export class TelegramService implements OnModuleInit {
 
 
 
-    async handleUpdate(update: any) {
+    async handleUpdate(update: any): Promise<void> {
+        const username = update.message.chat.username;
+    
+        const user = await this.prisma.user.findFirst({
+            where: { 
+                username: username,
+                isDeleted: false,
+            },
+        });
+    
+        if (!user) {
+            const channelMetadataResponse = await axios.get(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getMe`);
+            const channelUsername = channelMetadataResponse.data.result.username;
+    
+            const channel = await this.prisma.channel.findFirst({
+                where: { username: channelUsername },
+            });
+    
+            if (!channel) {
+                await this.sendMessage(update.message.chat.id, "Channel not found");
+                console.log('Channel not found');
+            }
+            
+            return;
+        }
+    
+        await this.handleIncomingMessage(update);
+    }
+
+    async handleIncomingMessage(update: any) {
         const chatId = update.message.chat.id;
         const text = "wow this is amazing!!!!";
 

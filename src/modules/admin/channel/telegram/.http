@@ -17,3 +17,12 @@ POST https://api.telegram.org/bot7723589454:AAHeCHL0ujCQb13RZyvquXBTA0SmYfzsY1A/
 ### deleete webhook
 POST https://api.telegram.org/bot7723589454:AAHeCHL0ujCQb13RZyvquXBTA0SmYfzsY1A/deleteWebhook
 
+###
+POST http://localhost:3000/auth/sign-up
+Content-Type: application/json
+
+{
+    "name": "Ds",
+    "username": "ds@gmail.com",
+    "password": "12345678"
+}
