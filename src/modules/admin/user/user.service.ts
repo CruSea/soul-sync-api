@@ -73,8 +73,21 @@ export class UserService {
     return new UserDto(userData);
   }
 
-  remove(id: string) {
-    this.request.user.isDeleted = true;
-    return 'User deleted successfully!'; 
+  async remove(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
+    });
+  
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    await this.prisma.user.update({
+      where: { id: id },
+      data: { isDeleted: true }, 
+    });
+  
+    return 'User deleted successfully!';
   }
+  
 }
