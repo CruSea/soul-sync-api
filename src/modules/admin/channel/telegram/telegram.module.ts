@@ -8,6 +8,6 @@ import { PrismaModule } from 'src/modules/prisma/prisma.module';
   imports: [RabbitModule, PrismaModule],
   controllers: [TelegramController],
   providers: [TelegramService],
-  exports: [TelegramService]
+  exports: [TelegramService, ]
 })
 export class TelegramModule {}
