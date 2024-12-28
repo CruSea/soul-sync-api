@@ -17,10 +17,10 @@ export class ConversationController {
     return this.conversationService.create(createConversationDto);
   }
 
-  @Get()
-  findAll() {
-    return this.conversationService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.conversationService.findAll();
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -32,8 +32,8 @@ export class ConversationController {
     return this.conversationService.update(+id, updateConversationDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.conversationService.remove(id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.conversationService.remove(id);
+  // }
 }

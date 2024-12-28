@@ -17,17 +17,10 @@ export class ChannelService {
     const channelData = await this.prisma.channel.create({
       data: {
         name: createChannelDto.name,
+        username: createChannelDto.username,
         accountId: accountId,
-        metadata:
-          typeof createChannelDto.metadata === 'string'
-            ? JSON.parse(createChannelDto.metadata)
-            : createChannelDto.metadata,
-        configuration:
-          typeof createChannelDto.configuration === 'string'
-            ? JSON.parse(createChannelDto.configuration)
-            : createChannelDto.configuration,
-        isDeleted: false,
-      },
+        configuration: createChannelDto.configuration,
+      }
     });
 
     return new ChannelDto(channelData);
@@ -70,10 +63,6 @@ export class ChannelService {
         where: { id },
         data: {
           name: updateChannelDto.name,
-          metadata:
-            typeof updateChannelDto.metadata === 'string'
-              ? JSON.parse(updateChannelDto.metadata)
-              : updateChannelDto.metadata,
           configuration:
             typeof updateChannelDto.configuration === 'string'
               ? JSON.parse(updateChannelDto.configuration)

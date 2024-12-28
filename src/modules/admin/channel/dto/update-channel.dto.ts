@@ -4,8 +4,8 @@ import { Prisma } from '@prisma/client';
 export class UpdateChannelDto {
   @IsString()
   name: string;
-  @IsJSON()
-  metadata: Prisma.JsonValue;
+  @IsString()
+  username: string;
   @IsJSON()
   configuration: Prisma.JsonValue;
 }

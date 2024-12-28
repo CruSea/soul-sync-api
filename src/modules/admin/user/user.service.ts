@@ -24,9 +24,9 @@ export class UserService {
     const userData = await this.prisma.user.create({
       data: {
         name: createUserDto.name,
-        email: createUserDto.email,
+        username: createUserDto.username,
         password: hashedPassword,
-        accountUser: {
+        accountUsers: {
           create: {
             accountId: accountId,
             roleId: createUserDto.roleId,
@@ -35,7 +35,7 @@ export class UserService {
         },
       },
       include: {
-        accountUser: true,
+        accountUsers: true,
       },
     });
 
@@ -48,7 +48,7 @@ export class UserService {
     const userData = await this.prisma.user.findFirst({
       where: {
         id,
-        accountUser: {
+        accountUsers: {
           some: {
             accountId,
             isDeleted: false,
@@ -56,7 +56,7 @@ export class UserService {
         },
       },
       include: {
-        accountUser: true,
+        accountUsers: true,
       },
     });
 
@@ -72,7 +72,7 @@ export class UserService {
 
     return this.prisma.user.findMany({
       where: {
-        accountUser: {
+        accountUsers: {
           some: {
             accountId: accountId,
             isDeleted: false,
@@ -101,14 +101,14 @@ export class UserService {
     const userToDelete = await this.prisma.user.findFirst({
       where: {
         id,
-        accountUser: {
+        accountUsers: {
           some: {
             accountId,
             isDeleted: false,
           },
         },
       },
-      include: { accountUser: true },
+      include: { accountUsers: true },
     });
 
     if (!userToDelete) {
@@ -118,14 +118,14 @@ export class UserService {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
-        accountUser: {
+        accountUsers: {
           updateMany: {
             where: { accountId },
             data: { isDeleted: true },
           },
         },
       },
-      include: { accountUser: true },
+      include: { accountUsers: true },
     });
 
     return new UserDto(updatedUser);
@@ -135,7 +135,7 @@ export class UserService {
     const account = await this.prisma.account.findFirst({
       where: {
         id: accountId,
-        AccountUser: { some: { userId: this.request.user.id } },
+        accountUsers: { some: { userId: this.request.user.id } },
       },
     });
 

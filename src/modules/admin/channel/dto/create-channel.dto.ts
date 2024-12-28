@@ -1,14 +1,16 @@
 import { Prisma } from '@prisma/client';
-import { IsJSON, IsString, IsOptional } from 'class-validator';
+import { IsJSON, IsString } from 'class-validator';
 
 export class CreateChannelDto {
   @IsString()
-  @IsOptional()
   accountId: string;
+
   @IsString()
   name: string;
-  @IsJSON()
-  metadata: Prisma.JsonValue;
+
+  @IsString()
+  username: string;
+
   @IsJSON()
   configuration: Prisma.JsonValue;
 }

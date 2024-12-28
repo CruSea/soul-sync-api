@@ -27,7 +27,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const { name, emails, photos } = profile;
     try {
       const user = await this.authService.signInOrUp({
-        email: emails[0].value,
+        username: emails[0].value,
         name: name.givenName,
         password: emails[0].value,
         imageUrl: photos[0].value,
@@ -39,7 +39,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       // Prepare JWT payload
       const payload = {
         sub: user.id,
-        email: user.email,
+        email: user.username,
         imageUrl: user.imageUrl,
         accounts: accounts.map((acc) => ({
           id: acc.account.id,

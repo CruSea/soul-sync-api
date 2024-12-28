@@ -18,7 +18,7 @@ export class AuthService {
 
   async signIn(signInUserDto: SignInUserDto): Promise<AuthDto> {
     const user = await this.prisma.user.findUnique({
-      where: { email: signInUserDto.email },
+      where: { username: signInUserDto.username },
     });
 
     if (!user) {
@@ -34,7 +34,7 @@ export class AuthService {
     });
 
     const roles = await this.prisma.role.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
+      where: { accountUsers: { some: { userId: user.id } } },
     });
 
     return {
@@ -58,9 +58,9 @@ export class AuthService {
   }
 
   async signInOrUp(signUpUserDto: SignUpUserDto) {
-    const { email, name, password } = signUpUserDto;
+    const { username, name, password } = signUpUserDto;
 
-    const user = await this.prisma.user.findFirst({ where: { email } });
+    const user = await this.prisma.user.findFirst({ where: { username } });
     if (user) {
       return user;
     }
@@ -93,9 +93,9 @@ export class AuthService {
       return tx.user.create({
         data: {
           name,
-          email,
+          username,
           password: hashedPassword,
-          accountUser: {
+          accountUsers: {
             create: {
               accountId: account.id,
               roleId: role.id,
@@ -109,19 +109,20 @@ export class AuthService {
 
   async getUserIfRefreshTokenMatches(email: string) {
     let user = await this.prisma.user.findUnique({
-      where: { email: email },
+      where: { username: email },
     });
 
     if (!user) {
       user = await this.prisma.user.create({
-        data: { email: email, name: email, password: '' },
+        data: { username: email, name: email, password: '' },
       });
     }
     return { userId: email };
   }
+
   async getUserRoles(userId: string) {
     return this.prisma.role.findMany({
-      where: { AccountUser: { some: { userId } } },
+      where: { accountUsers: { some: { userId } } },
     });
   }
 

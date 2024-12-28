@@ -36,7 +36,7 @@ export class CreateChannelPipe implements PipeTransform {
     const account = await this.prisma.account.findFirst({
       where: {
         id: accountId,
-        AccountUser: {
+        accountUsers: {
           some: { userId: userId },
         },
       },
@@ -63,9 +63,9 @@ export class CreateChannelPipe implements PipeTransform {
       throw new BadRequestException('Configuration is required and must be a non-empty JSON string');
     }
 
-    // Validate the metadata
-    if (!value.metadata || typeof value.metadata !== 'string' || value.metadata.trim() === '') {
-      throw new BadRequestException('Metadata is required and must be a non-empty JSON string');
+    // Validate the username
+    if (!value.username || value.username.trim() === '') {
+      throw new BadRequestException('Username is required');
     }
 
     // Parse the JSON strings to ensure they are valid JSON
@@ -76,9 +76,9 @@ export class CreateChannelPipe implements PipeTransform {
     }
 
     try {
-      value.metadata = JSON.parse(value.metadata);
+      value.username = String(value.username);
     } catch (error) {
-      throw new BadRequestException('Metadata must be a valid JSON string');
+      throw new BadRequestException('Username must be a string');
     }
 
     return value;

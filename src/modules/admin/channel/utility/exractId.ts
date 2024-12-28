@@ -29,7 +29,7 @@ export async function extractAccountIdFromToken(
   const account = await prisma.account.findFirst({
     where: {
       id: accountId,
-      AccountUser: {
+      accountUsers: {
         some: { userId: userId },
       },
     },

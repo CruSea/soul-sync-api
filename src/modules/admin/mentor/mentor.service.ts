@@ -13,7 +13,7 @@ export class MentorService {
   ) {}
 
   async createMentor(createMentorDto: CreateMentorDto) {
-    const { email, name, accountId } = createMentorDto;
+    const { username, name, accountId } = createMentorDto;
     await this.validateAccountAccess(accountId);
 
     const mentorRole = await this.prisma.role.findFirst({
@@ -31,7 +31,7 @@ export class MentorService {
 
     const newUser = await this.prisma.user.create({
       data: {
-        email,
+        username,
         password: hashedPassword,
         name: name ?? 'Mentor',
       },
@@ -46,6 +46,7 @@ export class MentorService {
         age: 0,
         gender: '',
         location: '',
+        phone: '',
       },
     });
 
@@ -79,7 +80,7 @@ export class MentorService {
     const mentors = await this.prisma.mentor.findMany({
       where: {
         user: {
-          accountUser: {
+          accountUsers: {
             some: {
               accountId,
               isDeleted: false,
@@ -102,7 +103,7 @@ export class MentorService {
       where: {
         id,
         user: {
-          accountUser: {
+          accountUsers: {
             some: {
               accountId,
               isDeleted: false,
@@ -135,7 +136,7 @@ export class MentorService {
       where: {
         id,
         user: {
-          accountUser: {
+          accountUsers: {
             some: {
               accountId,
               isDeleted: false,
@@ -166,7 +167,7 @@ export class MentorService {
       where: {
         id: mentorId,
         user: {
-          accountUser: {
+          accountUsers: {
             some: {
               accountId,
               isDeleted: false,
@@ -188,7 +189,7 @@ export class MentorService {
         isActive: false,
         user: {
           update: {
-            accountUser: {
+            accountUsers: {
               updateMany: {
                 where: { accountId },
                 data: { isDeleted: true },
@@ -203,7 +204,7 @@ export class MentorService {
     const account = await this.prisma.account.findFirst({
       where: {
         id: accountId,
-        AccountUser: { some: { userId: this.request.user.id } },
+        accountUsers: { some: { userId: this.request.user.id } },
       },
     });
 

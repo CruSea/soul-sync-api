@@ -4,7 +4,7 @@ export class CreateConversationDto {
     @IsString()
     mentorId: string;
     @IsString()
-    address: string;
+    meteeId: string;
     @IsString()
     channelId: string;
 /*      @IsBoolean()

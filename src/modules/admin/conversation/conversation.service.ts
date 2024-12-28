@@ -17,10 +17,9 @@ export class ConversationService {
     const conversationData = await this.prisma.conversation.create({
       data: {
         mentorId: createConversationDto.mentorId,
-        address: createConversationDto.address,
+        menteeId: createConversationDto.meteeId,
         channelId: createConversationDto.channelId,
         isActive: true,
-        isDeleted: false,
 
       },
     });
@@ -28,18 +27,18 @@ export class ConversationService {
     return new ConversationDto(conversationData);
   }
 
-  async findAll() {
-    const conversations = await this.prisma.conversation.findMany({
-      where: { isDeleted: false },
-    });
-    return conversations.map(conversation => new ConversationDto(conversation));
-  }
+  // async findAll() {
+  //   const conversations = await this.prisma.conversation.findMany({
+  //     where: { isDeleted: false },
+  //   });
+  //   return conversations.map(conversation => new ConversationDto(conversation));
+  // }
 
   async findOne(id: string) {
     const conversation = await this.prisma.conversation.findUnique({
       where: {
         id: id,
-        isDeleted: false
+        // isDeleted: false
       },
     });
 
@@ -54,11 +53,11 @@ export class ConversationService {
     return `This action updates a #${id} conversation`;
   }
 
-  async remove(id: string) {
-    const conversation = await this.prisma.conversation.update({
-      where: { id: id },
-      data: { isDeleted: true },
-    });
-    return { message: `Conversation with the #${id} deleted successfully!` };
-  }
+  // async remove(id: string) {
+  //   const conversation = await this.prisma.conversation.update({
+  //     where: { id: id },
+  //     data: { isDeleted: true },
+  //   });
+  //   return { message: `Conversation with the #${id} deleted successfully!` };
+  // }
 }

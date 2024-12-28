@@ -8,7 +8,7 @@ import {
 
 export class CreateMentorDto {
   @IsEmail()
-  email: string;
+  username: string;
 
   @IsNotEmpty()
   @IsString()

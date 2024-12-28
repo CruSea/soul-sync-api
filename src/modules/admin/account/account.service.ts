@@ -28,7 +28,7 @@ export class AccountService {
       return await this.prisma.account.create({
         data: {
           name: createAccountDto.name,
-          AccountUser: {
+          accountUsers: {
             create: {
               userId: user.id,
               roleId: role.id,
@@ -43,21 +43,21 @@ export class AccountService {
   async findAll() {
     const user = this.request.user;
     return await this.prisma.account.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
+      where: { accountUsers: { some: { userId: user.id } } },
     });
   }
 
   async findOne(id: string) {
     const user = this.request.user;
     return await this.prisma.account.findFirst({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+      where: { id, accountUsers: { some: { userId: user.id } } },
     });
   }
 
   async update(id: string, updateAccountDto: UpdateAccountDto) {
     const user = this.request.user;
     return await this.prisma.account.update({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+      where: { id, accountUsers: { some: { userId: user.id } } },
       data: updateAccountDto,
     });
   }
@@ -65,7 +65,7 @@ export class AccountService {
   async remove(id: string) {
     const user = this.request.user;
     return await this.prisma.account.delete({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+      where: { id, accountUsers: { some: { userId: user.id } } },
     });
   }
 }
