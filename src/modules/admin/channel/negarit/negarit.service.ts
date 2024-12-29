@@ -5,12 +5,12 @@ import * as https from 'https';
 export type MultipleSmsType = {
   id: string;
   message: string;
-  phone: string; 
+  phone: string;
 };
 
 @Injectable()
 export class NegaritService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private readonly singleSmsUrl = 'https://api.negarit.net/api/api_request/sent_message';
   private readonly bulkSms = "https://api.negarit.net/api/api_request/sent_multiple_messages";
@@ -56,8 +56,10 @@ export class NegaritService {
     });
   }
 
+  // Send single SMS and store message in the database
   async sendSms(apiKey: string, sentTo: string, message: string, campaignId: string): Promise<any> {
     try {
+      // Step 1: Send the SMS via Negarit API
       const url = `${this.singleSmsUrl}?API_KEY=${apiKey}`;
       const payload = {
         API_KEY: apiKey,
@@ -66,10 +68,38 @@ export class NegaritService {
         campaign_id: campaignId,
       };
 
-      return await this.makeRequest('POST', url, payload);
+      const response = await this.makeRequest('POST', url, payload);
+
+      // Step 2: Store the message in the database
+      const channel = await this.prisma.channel.findFirst({
+        where: { name: 'Negarit' },
+      });
+
+      if (!channel) {
+        throw new HttpException('Channel not found', HttpStatus.BAD_REQUEST);
+      }
+
+      const user = await this.prisma.user.findUnique({
+        where: { username: sentTo }, // sentTo is assumed to be the phone number
+      });
+
+      const senderId = user ? user.id : null;
+
+      const messageRecord = await this.prisma.message.create({
+        data: {
+          content: message,
+          senderId: senderId,  // Assuming user exists, otherwise sender will be null
+          channelId: channel.id,  // Use the dynamically fetched channel ID
+          type: 'SENT',
+        },
+      });
+
+      console.log('Message stored in DB:', messageRecord);
+
+      return { success: true, data: response, messageRecord };
     } catch (error) {
-      console.error('Error sending SMS:', error.message);
-      throw new HttpException('Failed to send SMS', HttpStatus.BAD_REQUEST);
+      console.error('Error sending SMS or storing message:', error.message);
+      throw new HttpException('Failed to send SMS or store message', HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -88,5 +118,4 @@ export class NegaritService {
       throw new HttpException('Failed to send SMS', HttpStatus.BAD_REQUEST);
     }
   }
-
 }

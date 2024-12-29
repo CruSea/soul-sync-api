@@ -186,7 +186,6 @@ model Channel {
   id             String          @id @default(uuid())
   accountId      String
   name           String
-  username       String          @unique
   configuration  Json
   isDeleted      Boolean         @default(false) 
   createdAt      DateTime        @default(now())
@@ -197,5 +196,4 @@ model Channel {
   messages       Message[]       @relation("ChannelToMessages")
 
   @@index([accountId, isDeleted])
-  @@index([username, isDeleted])
 }

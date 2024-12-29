@@ -63,22 +63,11 @@ export class CreateChannelPipe implements PipeTransform {
       throw new BadRequestException('Configuration is required and must be a non-empty JSON string');
     }
 
-    // Validate the username
-    if (!value.username || value.username.trim() === '') {
-      throw new BadRequestException('Username is required');
-    }
-
     // Parse the JSON strings to ensure they are valid JSON
     try {
       value.configuration = JSON.parse(value.configuration);
     } catch (error) {
       throw new BadRequestException('Configuration must be a valid JSON string');
-    }
-
-    try {
-      value.username = String(value.username);
-    } catch (error) {
-      throw new BadRequestException('Username must be a string');
     }
 
     return value;

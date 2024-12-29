@@ -17,7 +17,6 @@ export class ChannelService {
     const channelData = await this.prisma.channel.create({
       data: {
         name: createChannelDto.name,
-        username: createChannelDto.username,
         accountId: accountId,
         configuration: createChannelDto.configuration,
       }

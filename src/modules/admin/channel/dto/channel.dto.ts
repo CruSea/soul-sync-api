@@ -12,9 +12,6 @@ export class ChannelDto {
   name: string;
 
   @Expose()
-  metadata: Prisma.JsonValue;
-
-  @Expose()
   configuration: Prisma.JsonValue;
 
   @Expose()
@@ -27,7 +24,6 @@ export class ChannelDto {
     this.id = partial.id;
     this.accountId = partial.accountId;
     this.name = partial.name;
-    this.metadata = partial.metadata;
     this.configuration = partial.configuration;
     this.createdAt = partial.createdAt;
     this.updatedAt = partial.updatedAt;
