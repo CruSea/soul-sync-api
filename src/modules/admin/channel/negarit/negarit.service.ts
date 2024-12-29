@@ -12,6 +12,8 @@ export type MultipleSmsType = {
 
 @Injectable()
 export class NegaritService {
+  private userId: string;
+
   constructor(
     private prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -65,8 +67,8 @@ export class NegaritService {
   async sendSms(apiKey: string, sentTo: string, message: string, campaignId: string, token: string): Promise<any> {
     try {
       // Extract the user ID and account ID from the token using the utility function
-      const { userId } = await extractAccountIdFromToken(token, this.jwtService, this.prisma);
-
+      this.userId = (await extractAccountIdFromToken(token, this.jwtService, this.prisma)).userId;
+      console.log('User ID:', this.userId);
       // Step 1: Send the SMS via Negarit API
       const url = `${this.singleSmsUrl}?API_KEY=${apiKey}`;
       const payload = {
@@ -96,7 +98,7 @@ export class NegaritService {
       const messageRecord = await this.prisma.message.create({
         data: {
           content: message,
-          senderId: userId,  // Assuming user exists, otherwise sender will be null
+          senderId: this.userId,  // Assuming user exists, otherwise sender will be null
           channelId: channel.id,  // Use the dynamically fetched channel ID
           type: 'SENT',
         },
@@ -198,11 +200,21 @@ export class NegaritService {
         });
       } else {
         // 8. If no conversation exists, create one
+        // Retrieve the mentorId from the database
+        console.log('User ID:', this.userId);
+        const mentor = await this.prisma.mentor.findUnique({
+          where: { userId: this.userId }, // Use the userId from the decoded token
+        });
+
+        if (!mentor) {
+          throw new Error('Mentor not found');
+        }
+
         const newConversation = await this.prisma.conversation.create({
           data: {
             channelId: channel.id,
-            mentorId: '214ab770-3448-4d2b-868f-17d3243257c3',  // Add logic to find or create mentor
-            menteeId: mentee.id,     // Use the menteeId to associate with the conversation
+            mentorId: mentor.id,  // Use the retrieved mentorId
+            menteeId: mentee.id,  // Use the mentee created in the 4th step
             isActive: true,
           },
         });

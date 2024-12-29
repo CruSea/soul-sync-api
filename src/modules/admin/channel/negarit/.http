@@ -1,11 +1,11 @@
 ### Send SMS
 POST http://localhost:3000/negarit/send-sms
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwODE2YWY2MC0wOWUwLTQxMmItYTlkYy01MjAzMmE2YmRhZGYiLCJlbWFpbCI6ImJpa2lsYWtldGVtYTk0QGdtYWlsLmNvbSIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W3siaWQiOiJlYjdlZWZlZS1hYmFkLTQ0MTYtOTY3ZS0xMmViMzQ2YzRmN2MiLCJuYW1lIjoiQmlraWxhIn1dLCJyb2xlcyI6WyJPV05FUiJdLCJpYXQiOjE3MzU0OTc5ODcsImV4cCI6MTczNTUwMTU4N30.rVpWrFjIZopXFpxzGHLpe_KE-TIgauARGs8OFLZjmgM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwODE2YWY2MC0wOWUwLTQxMmItYTlkYy01MjAzMmE2YmRhZGYiLCJlbWFpbCI6ImJpa2lsYWtldGVtYTk0QGdtYWlsLmNvbSIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W3siaWQiOiJlYjdlZWZlZS1hYmFkLTQ0MTYtOTY3ZS0xMmViMzQ2YzRmN2MiLCJuYW1lIjoiQmlraWxhIEsifV0sInJvbGVzIjpbIk9XTkVSIl0sImlhdCI6MTczNTUwMTgxNSwiZXhwIjoxNzM1NTA1NDE1fQ.2Vc5Q1PAyMdJU4wwtk0UAVBeOTQkm0h4Orh3Us0uAjQ
 
 {
     "campaignId": "524",
-    "sentTo": "0913495212",
+    "sentTo": "0942932231",
     "message": "Sent from the system!",
     "apiKey": "01CIS3itU5S0UxZ25ifcyVovh5Ni73OF"
 }
