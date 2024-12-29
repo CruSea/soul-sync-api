@@ -18,7 +18,9 @@ export class ChannelService {
       data: {
         name: createChannelDto.name,
         accountId: accountId,
-        configuration: createChannelDto.configuration,
+        configuration: typeof createChannelDto.configuration === 'string'
+          ? JSON.parse(createChannelDto.configuration)
+          : createChannelDto.configuration,
       }
     });
 

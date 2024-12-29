@@ -9,5 +9,5 @@ export class CreateChannelDto {
   name: string;
 
   @IsJSON()
-  configuration: JSON;
+  configuration: Prisma.JsonValue;
 }

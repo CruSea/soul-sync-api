@@ -1,6 +1,8 @@
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import * as https from 'https';
+import { extractAccountIdFromToken } from '../utility/exractId';
+import { JwtService } from '@nestjs/jwt';
 
 export type MultipleSmsType = {
   id: string;
@@ -10,7 +12,10 @@ export type MultipleSmsType = {
 
 @Injectable()
 export class NegaritService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) { }
 
   private readonly singleSmsUrl = 'https://api.negarit.net/api/api_request/sent_message';
   private readonly bulkSms = "https://api.negarit.net/api/api_request/sent_multiple_messages";
@@ -57,8 +62,11 @@ export class NegaritService {
   }
 
   // Send single SMS and store message in the database
-  async sendSms(apiKey: string, sentTo: string, message: string, campaignId: string): Promise<any> {
+  async sendSms(apiKey: string, sentTo: string, message: string, campaignId: string, token: string): Promise<any> {
     try {
+      // Extract the user ID and account ID from the token using the utility function
+      const { userId } = await extractAccountIdFromToken(token, this.jwtService, this.prisma);
+
       // Step 1: Send the SMS via Negarit API
       const url = `${this.singleSmsUrl}?API_KEY=${apiKey}`;
       const payload = {
@@ -88,7 +96,7 @@ export class NegaritService {
       const messageRecord = await this.prisma.message.create({
         data: {
           content: message,
-          senderId: senderId,  // Assuming user exists, otherwise sender will be null
+          senderId: userId,  // Assuming user exists, otherwise sender will be null
           channelId: channel.id,  // Use the dynamically fetched channel ID
           type: 'SENT',
         },
@@ -116,6 +124,102 @@ export class NegaritService {
     } catch (error) {
       console.error('Error sending SMS:', error.message);
       throw new HttpException('Failed to send SMS', HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // Process incoming SMS and store the conversation and thread
+  async processIncomingSms(receivedMessage: any): Promise<any> {
+    try {
+      const { sent_from, message } = receivedMessage;
+
+      // 1. Find or create the channel (e.g., SMS)
+      const channel = await this.prisma.channel.findFirst({
+        where: { name: "Negarit" },
+      });
+
+      if (!channel) {
+        throw new Error('Channel not found');
+      }
+
+      // 2. Check if the user (sender) already exists
+      let user = await this.prisma.user.findUnique({
+        where: { username: sent_from },
+      });
+
+      // 3. If the user doesn't exist, create the user
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: {
+            name: 'Default Name', // You can set a default name or handle this based on your logic
+            username: `${sent_from}`, // You can customize the username
+          },
+        });
+      }
+
+      // 4. Create a mentee for the user
+      let mentee = await this.prisma.mentee.findUnique({
+        where: { userId: user.id },
+      });
+
+      if (!mentee) {
+        mentee = await this.prisma.mentee.create({
+          data: {
+            userId: user.id,
+            metadata: {}, // Add any default metadata if needed
+          },
+        });
+      }
+
+      // 5. Create a new message entry
+      const newMessage = await this.prisma.message.create({
+        data: {
+          content: message,
+          senderId: user.id,
+          channelId: channel.id,
+          type: 'RECEIVED',
+        },
+      });
+
+      // 6. Create a conversation (or associate it if already exists)
+      const conversation = await this.prisma.conversation.findFirst({
+        where: {
+          channelId: channel.id,
+          isActive: true,
+        },
+      });
+
+      if (conversation) {
+        // 7. If conversation exists, add message to the thread
+        await this.prisma.thread.create({
+          data: {
+            conversationId: conversation.id,
+            messageId: newMessage.id,
+          },
+        });
+      } else {
+        // 8. If no conversation exists, create one
+        const newConversation = await this.prisma.conversation.create({
+          data: {
+            channelId: channel.id,
+            mentorId: '214ab770-3448-4d2b-868f-17d3243257c3',  // Add logic to find or create mentor
+            menteeId: mentee.id,     // Use the menteeId to associate with the conversation
+            isActive: true,
+          },
+        });
+
+        // 9. Create thread for the new conversation
+        await this.prisma.thread.create({
+          data: {
+            conversationId: newConversation.id,
+            messageId: newMessage.id,
+          },
+        });
+      }
+
+      return { success: true, message: 'Message received and processed' };
+    } catch (error) {
+      console.error('Error processing incoming SMS:', error);
+      throw new HttpException('Error processing SMS', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
