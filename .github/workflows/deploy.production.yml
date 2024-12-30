@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Preparing Server
+    name: Preparing Prod Server
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -28,5 +28,6 @@ jobs:
             git pull
             npm install
             npm run build
+            npx prisma migrate reset --force
             pm2 delete soul-sync-api
             pm2 start dist/src/main.js --name soul-sync-api
