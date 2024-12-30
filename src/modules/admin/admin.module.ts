@@ -6,6 +6,12 @@ import { MentorModule } from './mentor/mentor.module';
 import { ChannelModule } from './channel/channel.module';
 
 @Module({
-  imports: [MessageModule, UserModule, AccountModule, MentorModule, ChannelModule],
+  imports: [
+    MessageModule,
+    UserModule,
+    AccountModule,
+    MentorModule,
+    ChannelModule,
+  ],
 })
 export class AdminModule {}
