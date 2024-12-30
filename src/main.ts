@@ -13,12 +13,16 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://rl1s5vc7-3000.uks1.devtunnels.ms',
+      'https://sbkh2slb-3000.uks1.devtunnels.ms',
+    ],
     credentials: true,
     allowedHeaders: 'Authorization, Content-Type',
   });
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
-  await app.listen(3000);
+  await app.listen(8000);
 }
 bootstrap();
