@@ -1,5 +1,5 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { TelegramService } from '../channel/telegram/telegram.service';
+import { TelegramService } from '../channel/messagingChannels/telegram/telegram.service';
 
 @Controller('message')
 export class MessageController {

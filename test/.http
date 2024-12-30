@@ -1,0 +1,59 @@
+### Send a message via Telegram bot
+POST http://localhost:3000/message/tg-send
+Content-Type: application/json
+
+{
+    "chatId": "5209941226",
+    "message": "This is magic"
+}
+
+
+###
+POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/getUpdates
+
+### setting up a webhook
+POST https://api.telegram.org/bot7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo/setWebhook?url=https://1clr2kph-3000.uks1.devtunnels.ms/telegram/webhook
+
+### deleete webhook
+POST https://api.telegram.org/bot7723589454:AAHeCHL0ujCQb13RZyvquXBTA0SmYfzsY1A/deleteWebhook
+
+### creating / authenticating a user
+POST http://localhost:3000/auth/sign-up
+Content-Type: application/json
+
+{
+    "name": "Ds",
+    "username": "ds@gmail.com",
+    "password": "12345678"
+}
+
+###  7723589454:AAHeCHL0ujCQb13RZyvquXBTA0SmYfzsY1A
+POST http://localhost:3000/channel/telegram
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQyNzAyZmQyLWJjM2MtNDQxNy05ZDA0LTM4OWMwOTY1Y2Y3NiIsIm5hbWUiOiJEcyIsInVzZXJuYW1lIjoiZHNAZ21haWwuY29tIiwicGFzc3dvcmQiOiIkMmEkMTAkbHVtanRIZ2g4aWpqNWxkMDkwRy9FdUdHRjhvWUIxWXJmRi5FaFRnNEtIZU1mWkVYNC9NZm0iLCJpbWFnZVVybCI6bnVsbCwiaXNEZWxldGVkIjpmYWxzZSwiY3JlYXRlZEF0IjoiMjAyNC0xMi0zMFQxNDowNjo0Ni4zODJaIiwidXBkYXRlZEF0IjoiMjAyNC0xMi0zMFQxNDowNjo0Ni4zODJaIiwiaWF0IjoxNzM1NTY3NjA2fQ.y3iG7OlaLBO11tH0DzHaqvUrS1MCsa4jkIoMxo3-w3Q
+
+{
+    "telegramToken": "7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo"
+}
+
+###
+GET http://localhost:3000/channel/test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVjNzM2ZmE1LWIxMjItNDZlMS1iZDc3LTBkMDJjNTFlNDk0NCIsIm5hbWUiOiJEcyIsInVzZXJuYW1lIjoiZHNAZ21haWwuY29tIiwicGFzc3dvcmQiOiIkMmEkMTAkRUVTcGZZN1ZvUVd6TVF4YWRoOU5KT2JnWkhFaVVELjZ3QzBSOS40WWFURWxqcXdlLmZmVmUiLCJpbWFnZVVybCI6bnVsbCwiaXNEZWxldGVkIjpmYWxzZSwiY3JlYXRlZEF0IjoiMjAyNC0xMi0zMFQwOToxNjo1Mi4xMjdaIiwidXBkYXRlZEF0IjoiMjAyNC0xMi0zMFQwOToxNjo1Mi4xMjdaIiwiaWF0IjoxNzM1NTU5ODkyfQ.0DdsJxmNt5a1eRV1lyNllPPk-Wf4ejno1LY2DIDudjw
+
+###
+POST  http://localhost:3000/channel/create
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRjYzBlYzk5LWFlNmQtNDE1NC05ZGMwLTQ1ZmI3Y2FkOTk1NyIsIm5hbWUiOiJEcyIsInVzZXJuYW1lIjoiZHNAZ21haWwuY29tIiwicGFzc3dvcmQiOiIkMmEkMTAkSk9IL2xoSDNObWRMTVFYeEdxSmhZZWdyNksuMlNIaVM1U1VqQktVYnNVNlhKT045ZlZiVG0iLCJpbWFnZVVybCI6bnVsbCwiaXNEZWxldGVkIjpmYWxzZSwiY3JlYXRlZEF0IjoiMjAyNC0xMi0zMFQxNToxMToxNC4zOTdaIiwidXBkYXRlZEF0IjoiMjAyNC0xMi0zMFQxNToxMToxNC4zOTdaIiwiaWF0IjoxNzM1NTcxNDc0fQ.BMcOA0DLLFivA8oZTtHq3sl3T9sAatnqDhV541AT2EM
+Content-Type: application/json
+
+ {
+   "id": "56380b19-151e-4dbd-ae66-3b262ec3d519",
+   "name": "Eyosi",
+   "metaData": { 
+    "channelType": "Telegram Bot",
+    "channelToken": "7237693210:AAE5-wnuwTTHdn2BM-d-PyttdIZdy9iXzUo",
+     "apiKey": "",
+    "campaignId": ""
+    },
+   
+   "date": "Dec 30, 2024"
+ }

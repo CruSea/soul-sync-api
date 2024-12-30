@@ -28,6 +28,6 @@ import { AuthGuard } from './guard/auth/auth.guard';
     JwtService,
     AuthGuard,
   ],
-  exports: [PassportModule],
+  exports: [PassportModule, JwtStrategy],
 })
 export class AuthModule {}
