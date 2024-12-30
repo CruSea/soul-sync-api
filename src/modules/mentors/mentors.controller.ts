@@ -23,6 +23,7 @@ export class MentorsController {
   async findMentorById(@Param('id') id: string) {
     return this.mentorsService.findMentorById(id);
   }
+
   @Patch(':id')
   async updateMentor(
     @Param('id') id: string,

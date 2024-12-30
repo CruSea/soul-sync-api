@@ -13,120 +13,122 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 enum RoleType {
   OWNER
   ADMIN
   USER
   MENTOR
 }
-model User {
-  id           String       @id @default(uuid())
-  name         String
-  email        String       @unique
-  password     String
-  imageUrl     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 
-  mentors      Mentor[]     @relation("UserToMentors")
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mentors     Mentor[]      @relation("UserToMentors")
   accountUser AccountUser[]
 }
 
 model Mentor {
-  id             String          @id @default(uuid())
-  userId         String          @unique
-  expertise      String
-  availability   Json
-  age            Int
-  gender         String
-  location       String
-  isActive       Boolean
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  expertise    String
+  availability Json
+  age          Int
+  gender       String
+  location     String
+  isActive     Boolean
 
-  user           User            @relation("UserToMentors", fields: [userId], references: [id])
-  conversations  Conversation[]
+  user          User           @relation("UserToMentors", fields: [userId], references: [id])
+  conversations Conversation[]
 }
 
 model Conversation {
-  id             String         @id @default(uuid())
-  mentorId       String
-  address        String
-  channelId      String
-  isActive       Boolean
+  id        String  @id @default(uuid())
+  mentorId  String
+  address   String
+  channelId String
+  isActive  Boolean
 
-  mentor         Mentor         @relation(fields: [mentorId], references: [id])
-  channel        Channel        @relation(fields: [channelId], references: [id])
-  threads        Thread[]
+  mentor  Mentor   @relation(fields: [mentorId], references: [id])
+  channel Channel  @relation(fields: [channelId], references: [id])
+  threads Thread[]
 }
 
 model Role {
-  id           String        @id @default(uuid())
-  name         String
-  isDefault    Boolean      @default(false)
-  type         RoleType
-  accountId    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  account      Account?      @relation(fields: [accountId], references: [id])
+  id          String        @id @default(uuid())
+  name        String
+  isDefault   Boolean       @default(false)
+  type        RoleType
+  accountId   String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  account     Account?      @relation(fields: [accountId], references: [id])
   AccountUser AccountUser[]
 }
 
 model AccountUser {
-  id           String     @id @default(uuid())
-  userId       String
-  isDeleted    Boolean
-  roleId       String
-  accountId    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  account      Account    @relation(fields: [accountId], references: [id])
-  user         User       @relation(fields: [userId], references: [id])
-  role         Role       @relation(fields: [roleId], references: [id])
+  id        String   @id @default(uuid())
+  userId    String
+  isDeleted Boolean  @default(false)
+  roleId    String
+  accountId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account  @relation(fields: [accountId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
 }
 
 model Thread {
-  id             String        @id @default(uuid())
+  id             String @id @default(uuid())
   conversationId String
   messageId      String
 
-  conversation   Conversation  @relation(fields: [conversationId], references: [id])
-  message        Message       @relation(fields: [messageId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  message      Message      @relation(fields: [messageId], references: [id])
 }
 
 model Account {
-  id            String        @id @default(uuid())
-  name          String
-  domain        String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  Role         Role[]
-  AccountUser  AccountUser[]
-  Channel      Channel[]
+  id          String        @id @default(uuid())
+  name        String
+  domain      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Role        Role[]
+  AccountUser AccountUser[]
+  Channel     Channel[]
 }
 
 model Channel {
-  id             String         @id @default(uuid())
-  accountId      String
-  name           String
-  metadata       Json
-  configuration  Json
-  isDeleted      Boolean
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  account        Account        @relation(fields: [accountId], references: [id])
-  conversations  Conversation[]
-  messages       Message[]
+  id            String   @id @default(uuid())
+  accountId     String
+  name          String
+  metadata      Json
+  configuration Json
+  isDeleted     Boolean
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  account       Account        @relation(fields: [accountId], references: [id])
+  conversations Conversation[]
+  messages      Message[]
 }
 
 model Message {
-  id             String        @id @default(uuid())
-  channelId      String
-  address        String
-  type           String
-  body           String
-  isDeleted      Boolean
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  channel        Channel       @relation(fields: [channelId], references: [id])
-  threads        Thread[]
+  id        String   @id @default(uuid())
+  channelId String
+  address   String
+  type      String
+  body      String
+  isDeleted Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  channel   Channel  @relation(fields: [channelId], references: [id])
+  threads   Thread[]
 }
