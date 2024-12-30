@@ -33,13 +33,10 @@ export class AuthService {
       secret: process.env.JWT_SECRET,
     });
 
-    const roles = await this.prisma.role.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
-    });
-
     return {
       token,
-      user: { ...user, roles: roles.map((role) => role.id) },
+      user: new UserDto(user),
+      accounts: await this.getUserAccounts(user.id),
     };
   }
 
@@ -51,14 +48,17 @@ export class AuthService {
     const token = await this.jwtService.signAsync(user, {
       secret: process.env.JWT_SECRET,
     });
+
+    const accounts = await this.getUserAccounts(user.id);
     return {
       token,
       user: new UserDto(user),
+      accounts,
     };
   }
 
   async signInOrUp(signUpUserDto: SignUpUserDto) {
-    const { email, name, password } = signUpUserDto;
+    const { email, name, password, imageUrl } = signUpUserDto;
 
     const user = await this.prisma.user.findFirst({ where: { email } });
     if (user) {
@@ -94,8 +94,9 @@ export class AuthService {
         data: {
           name,
           email,
+          imageUrl,
           password: hashedPassword,
-          accountUser: {
+          AccountUser: {
             create: {
               accountId: account.id,
               roleId: role.id,
@@ -117,5 +118,33 @@ export class AuthService {
       });
     }
     return { userId: email };
+  }
+
+  async getUserRoles(userId: string) {
+    return this.prisma.role.findMany({
+      where: { AccountUser: { some: { userId } } },
+      include: { Account: true },
+    });
+  }
+
+  async getUserAccounts(userId: string) {
+    const accounts = this.prisma.account.findMany({
+      where: { AccountUser: { some: { userId } } },
+      select: {
+        id: true,
+        name: true,
+        AccountUser: { select: { Role: { select: { id: true, name: true } } } },
+      },
+    });
+
+    return (await accounts).map((account) => ({
+      id: account.id,
+      name: account.name,
+      role:
+        account.AccountUser.map((accountUser) => ({
+          id: accountUser.Role.id,
+          name: accountUser.Role.name,
+        }))[0] ?? null,
+    }));
   }
 }

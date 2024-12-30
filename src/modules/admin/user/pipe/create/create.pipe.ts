@@ -17,7 +17,13 @@ export class CreatePipe implements PipeTransform {
 
     const account = await this.prisma.account.findFirst({
       where: {
-        AccountUser: { some: { userId: user.id, accountId: value.accountId } },
+        id: value.accountId,
+        AccountUser: {
+          some: {
+            userId: user.id,
+            accountId: value.accountId,
+          },
+        },
       },
     });
 
