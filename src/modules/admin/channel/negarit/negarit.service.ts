@@ -3,7 +3,9 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import * as https from 'https';
 import { extractAccountIdFromToken } from '../utility/exractId';
 import { JwtService } from '@nestjs/jwt';
-
+import {AuthService } from 'src/modules/auth/auth.service';
+import {SignUpUserDto} from 'src/modules/auth/dto/sign-up-auth.dto';
+import {User} from '@prisma/client';
 export type MultipleSmsType = {
   id: string;
   message: string;
@@ -17,6 +19,7 @@ export class NegaritService {
   constructor(
     private prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly authService: AuthService,
   ) { }
 
   private readonly singleSmsUrl = 'https://api.negarit.net/api/api_request/sent_message';
@@ -133,11 +136,14 @@ export class NegaritService {
   async processIncomingSms(receivedMessage: any): Promise<any> {
     try {
       const { sent_from, message } = receivedMessage;
+      console.log('Received message from:', sent_from);
+      console.log('Message content:', message);
 
       // 1. Find or create the channel (e.g., SMS)
       const channel = await this.prisma.channel.findFirst({
         where: { name: "Negarit" },
       });
+      console.log('Channel found:', channel);
 
       if (!channel) {
         throw new Error('Channel not found');
@@ -147,15 +153,24 @@ export class NegaritService {
       let user = await this.prisma.user.findUnique({
         where: { username: sent_from },
       });
+      console.log('User found:', user);
 
       // 3. If the user doesn't exist, create the user
       if (!user) {
-        user = await this.prisma.user.create({
-          data: {
-            name: 'Default Name', // You can set a default name or handle this based on your logic
-            username: `${sent_from}`, // You can customize the username
-          },
+        const signUpUserDto: SignUpUserDto = {
+          name: 'Default Name',
+          username: sent_from,
+          password: 'defaultPassword', // You can set a default password or handle this based on your logic
+        };
+        const signUpResult = await this.authService.signUp(signUpUserDto);
+        console.log('Sign up result:', signUpResult);
+        const username = signUpResult.user.username;
+
+        // Retrieve the user associated with the account
+        user = await this.prisma.user.findFirst({
+          where: { username: username },
         });
+        console.log('New user created:', user);
       }
 
       // 4. Create a mentee for the user
@@ -201,19 +216,19 @@ export class NegaritService {
       } else {
         // 8. If no conversation exists, create one
         // Retrieve the mentorId from the database
-        console.log('User ID:', this.userId);
-        const mentor = await this.prisma.mentor.findUnique({
+        //console.log('User ID:', this.userId);
+/*         const mentor = await this.prisma.mentor.findUnique({
           where: { userId: this.userId }, // Use the userId from the decoded token
         });
 
         if (!mentor) {
           throw new Error('Mentor not found');
-        }
+        } */
 
         const newConversation = await this.prisma.conversation.create({
           data: {
             channelId: channel.id,
-            mentorId: mentor.id,  // Use the retrieved mentorId
+            mentorId: "05e75a8c-dbd5-429a-ab57-cb21daad072b",  // Use the retrieved mentorId
             menteeId: mentee.id,  // Use the mentee created in the 4th step
             isActive: true,
           },
