@@ -28,5 +28,6 @@ jobs:
             git pull
             npm install
             npm run build
+            npx prisma migrate reset --force
             pm2 delete dev-soul-sync-api
             pm2 start dist/src/main.js --name dev-soul-sync-api

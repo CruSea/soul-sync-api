@@ -30,7 +30,7 @@ async function seedBatchTwo() {
   });
   const password = await bcrypt.hash('Password123#', 10);
   await Promise.all(
-    Array.from({ length: 10 }).map(async () => {
+    Array.from({ length: 5 }).map(async () => {
       return await prisma.user.create({
         data: {
           name: faker.person.fullName(),
@@ -64,7 +64,7 @@ async function seedBatchTwo() {
                     })),
                   },
                   Mentor: {
-                    create: Array.from({ length: 10 }).map(() => {
+                    create: Array.from({ length: 2 }).map(() => {
                       const mentor = {
                         name: faker.person.fullName(),
                         email: faker.internet.email(),
