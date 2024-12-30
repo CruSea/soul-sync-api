@@ -1,32 +1,144 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
+import { REQUEST } from '@nestjs/core';
+import * as bcrypt from 'bcrypt';
+import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
-  create(createUserDto: CreateUserDto) {
-    console.log('createUserDto', createUserDto);
-    return 'This action adds a new user';
+  constructor(
+    @Inject(REQUEST) private readonly request: any,
+    private prisma: PrismaService,
+  ) {}
+  async create(accountId: string, createUserDto: CreateUserDto) {
+    await this.validateAccountAccess(accountId);
+
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      AuthService.saltRounds,
+    );
+
+    const userData = await this.prisma.user.create({
+      data: {
+        name: createUserDto.name,
+        email: createUserDto.email,
+        password: hashedPassword,
+        AccountUser: {
+          create: {
+            accountId: accountId,
+            roleId: createUserDto.roleId,
+          },
+        },
+      },
+      include: {
+        AccountUser: true,
+      },
+    });
+
+    return new UserDto(userData);
   }
 
-  async findAll(): Promise<UserDto[]> {
-    const users = await this.prisma.user.findMany({ where: {} });
-    return users.map((user) => new UserDto(user));
+  async findOne(accountId: string, id: string): Promise<UserDto> {
+    await this.validateAccountAccess(accountId);
+
+    const userData = await this.prisma.user.findFirst({
+      where: {
+        id,
+        AccountUser: {
+          some: {
+            accountId,
+          },
+        },
+      },
+      include: {
+        AccountUser: true,
+      },
+    });
+
+    if (!userData) {
+      throw new Error('User not found or access is restricted');
+    }
+
+    return new UserDto(userData);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findAllUsers(accountId: string) {
+    await this.validateAccountAccess(accountId);
+
+    return this.prisma.user.findMany({
+      where: {
+        AccountUser: {
+          some: {
+            accountId: accountId,
+          },
+        },
+      },
+    });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    console.log(updateUserDto);
-    return `This action updates a #${id} user`;
+  async updateUser(
+    accountId: string,
+    userId: string,
+    updateUserDto: UpdateUserDto,
+  ) {
+    await this.validateAccountAccess(accountId);
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { ...updateUserDto },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(accountId: string, id: string): Promise<UserDto> {
+    await this.validateAccountAccess(accountId);
+
+    const userToDelete = await this.prisma.user.findFirst({
+      where: {
+        id,
+        AccountUser: {
+          some: {
+            accountId,
+          },
+        },
+      },
+      include: { AccountUser: true },
+    });
+
+    if (!userToDelete) {
+      throw new Error('User not found or you do not have access.');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        AccountUser: {
+          updateMany: {
+            where: { accountId },
+            data: { deletedAt: Date() },
+          },
+        },
+      },
+      include: { AccountUser: true },
+    });
+
+    return new UserDto(updatedUser);
+  }
+
+  private async validateAccountAccess(accountId: string) {
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: accountId,
+        AccountUser: { some: { userId: this.request.user.id } },
+      },
+    });
+
+    if (!account) {
+      throw new ForbiddenException('You do not have access to this account.');
+    }
+
+    return account;
   }
 }

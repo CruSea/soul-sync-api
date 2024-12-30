@@ -3,16 +3,24 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
+import { MentorModule } from 'src/modules/admin/mentor/mentor.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
     AuthModule,
     AdminModule,
+    MentorModule,
   ],
   providers: [PrismaService],
+  controllers: [],
 })
 export class AppModule {}

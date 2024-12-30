@@ -11,6 +11,9 @@ export class AuthDto {
   @Expose()
   token: string;
 
+  @Expose()
+  accounts: any;
+
   constructor(partial: Partial<AuthDto>) {
     Object.assign(this, partial);
   }

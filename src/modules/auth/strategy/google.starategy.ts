@@ -23,16 +23,35 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     refreshToken: string,
     profile: Profile,
     done: VerifyCallback,
-  ): Promise<void> {
+  ): Promise<any> {
     const { name, emails, photos } = profile;
-    const user = await this.authService.signInOrUp({
-      email: emails[0].value,
-      name: name.givenName,
-      password: photos[0].value,
-    });
-    const token = this.jwtService.signAsync(user, {
-      secret: process.env.JWT_SECRET,
-    });
-    done(null, token);
+    try {
+      const user = await this.authService.signInOrUp({
+        email: emails[0].value,
+        name: name.givenName,
+        password: emails[0].value,
+        imageUrl: photos[0].value,
+      });
+      // Fetch roles and accounts using AuthService methods
+      const accounts = await this.authService.getUserAccounts(user.id);
+
+      // Prepare JWT payload
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        imageUrl: user.imageUrl,
+        accounts: accounts,
+      };
+
+      // Generate JWT token
+      const token = await this.jwtService.signAsync(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: process.env.JWT_EXPIRATION,
+      });
+
+      done(null, token);
+    } catch (error) {
+      done(error, false);
+    }
   }
 }

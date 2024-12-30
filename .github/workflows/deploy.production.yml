@@ -1,0 +1,32 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Preparing Server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Connecting Server
+        uses: JimCronqvist/action-ssh@master
+        with:
+          hosts: 'root@134.122.71.215'
+          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
+          debug: true
+          command: |
+            cd ~/soul-sync/production/soul-sync-api
+            git stash
+            git clean -f -d
+            git pull
+            npm install
+            npm run build
+            pm2 delete soul-sync-api
+            pm2 start dist/main.js --name soul-sync-api

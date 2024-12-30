@@ -1,5 +1,5 @@
 # Use Node.js image
-FROM node:20-alpine
+FROM node:20
 
 # Set working directory
 WORKDIR /app
@@ -12,6 +12,12 @@ RUN npm install
 
 # Copy application code
 COPY . .
+
+# Run Prisma generate
+RUN npx prisma generate
+
+# Run Prisma migrate
+RUN npx prisma migrate
 
 # Build the NestJS application
 RUN npm run build
