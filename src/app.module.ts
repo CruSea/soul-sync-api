@@ -3,7 +3,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
-import { MentorModule } from 'src/modules/admin/mentor/mentor.module';
 import { JwtModule } from '@nestjs/jwt';
 import { MentorModule } from './modules/mentor/mentor.module';
 
