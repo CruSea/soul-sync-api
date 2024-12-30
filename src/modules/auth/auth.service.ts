@@ -69,6 +69,52 @@ export class AuthService {
     }
   }
 
+  async menteeSignUp(signUpUserDto: SignUpUserDto, accountId: string){
+    console.log('we are in the mentee signup');
+    console.log("signUpUserDto: ",signUpUserDto);
+    return this.prisma.$transaction(async (tx) => {
+
+      if (!accountId) {
+        throw new Error('no accountId has been provided');
+      }
+      
+      const role = await tx.role.findFirst({
+        where: {
+          type: RoleType.MENTEE,
+        },
+      });
+
+      if (!role) {
+        throw new Error('Default MENTEE role not found');
+      }
+
+      return tx.user.create({
+        data: {
+          name: signUpUserDto.name,
+          username: signUpUserDto.username,
+          accountUsers: {
+            create: {
+              accountId: accountId,
+              roleId: role.id,
+              isDeleted: false,
+            },
+          },
+          mentees: {
+            create: {
+              metadata:{
+                create: {
+                  name: signUpUserDto.name,
+                  username: signUpUserDto.username,
+                }
+              },
+              isDeleted: false,
+            },
+          }
+        },
+      });
+    });
+  }
+
   async signInOrUp(signUpUserDto: SignUpUserDto) {
     const { username, name, password, referenceAccountId } = signUpUserDto;
 
@@ -90,14 +136,8 @@ export class AuthService {
       if (!account) {
         throw new Error('Failed to create account');
       }
-     
-      const checkUsername = await this.isValidEmail(username);
       
-      const role = !checkUsername ? await tx.role.findFirst({
-        where: {
-          type: RoleType.MENTEE,
-        },
-      }) : await tx.role.findFirst({
+      const role = await tx.role.findFirst({
         where: {
           type: RoleType.OWNER,
         },
@@ -111,23 +151,6 @@ export class AuthService {
         password,
         AuthService.saltRounds,
       );
-
-      if (!hashedPassword) {
-        return tx.user.create({
-          data: {
-            name,
-            username,
-            password: '',
-            accountUsers: {
-              create: {
-                accountId: referenceAccountId,
-                roleId: role.id,
-                isDeleted: false,
-              },
-            },
-          },
-        });
-      }
 
       return tx.user.create({
         data: {

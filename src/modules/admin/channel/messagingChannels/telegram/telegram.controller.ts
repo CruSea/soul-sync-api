@@ -7,6 +7,6 @@ export class TelegramController {
 
     @Post('webhook')
     async handleWebhook(@Body() update: any) {
-        return this.telegramService.checkChannelAvailability(update);
+        return this.telegramService.handleUpdate(update);
     }
 }

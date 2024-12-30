@@ -9,6 +9,7 @@ import { RefreshStrategy } from './strategy/refresh.strategy';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthGuard } from './guard/auth/auth.guard';
+import { SignUpUserDto } from './dto/sign-up-auth.dto';
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),

@@ -17,7 +17,10 @@ RUN npm install
 COPY . .
 
 # Generate Prisma client
-RUN npx prisma generate
+RUN npx prisma migrate dev --name init
+
+#Seed the database
+RUN npx prisma db seed
 
 # Build the NestJS application
 RUN npm run build

@@ -10,7 +10,7 @@ export class SignUpUserDto {
 
   @IsOptional()
   @IsString()
-  password: string;
+  password?: string;
 
   @IsOptional()
   @IsString()

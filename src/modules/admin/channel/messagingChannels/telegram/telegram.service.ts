@@ -3,47 +3,72 @@ import { Bot } from "grammy";
 import axios from 'axios';
 import { RabbitService } from '../../../message/rabbit/rabbit.service';
 import { PrismaService } from '../../../../prisma/prisma.service';
-
+import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
-    
     private bot: Bot;
-    private telegramToken: string;
 
     constructor(
         private readonly prisma: PrismaService, 
-        private readonly telegramRabbitService: RabbitService) 
-        {}
-    
+        private readonly telegramRabbitService: RabbitService,
+        private readonly authService: AuthService
+        
+    )  
+        {
+        this.bot = new Bot(process.env.TELEGRAM_BOT_TOKEN); 
+    }
 
     async onModuleInit() {
         await this.telegramRabbitService.connectToRabbitMQ('telegram');
+        this.bot.on('message', async (ctx) => {
+            await this.handleUpdate(ctx.update);
+        });
+        this.bot.start();
     }
 
 
 
-    async checkChannelAvailability(update: any): Promise<void> {
+    async handleUpdate(update: any): Promise<void> {
         const username = update.message.chat.username;
     
-        const channel = await this.prisma.channel.findFirst({
+        const user = await this.prisma.user.findFirst({
             where: { 
                 username: username,
                 isDeleted: false,
             },
         });
     
-        if (!channel) {
-            await this.sendMessage(update.message.chat.id, "Channel not found");
-        } else {
-            const metaData = channel.metaData as { channelToken: string };
-            this.telegramToken = metaData.channelToken;
-            console.log('Telegram token:', this.telegramToken);
+        if (!user) {
+            const channelMetadataResponse = await axios.get(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/getMe`);
+            const channelUsername = channelMetadataResponse.data.result.username;
+            console.log('Channel Username:', channelUsername);
+    
+            const channel = await this.prisma.channel.findFirst({
+                where: { username: channelUsername },
+            });
+            console.log('Channel:', channel);
+    
+            if (channel) {
+                
+                const mentee =  {
+                    name: update.message.chat.first_name,
+                    username: update.message.chat.username,
+                  };
+                console.log('we are about to get in to the mentee signup');
+                this.authService.menteeSignUp(mentee, channel.accountId);
+
+            }else {
+                
+                await this.sendMessage(update.message.chat.id, "Channel not found");
+                console.log('Channel not found');
+            }
+            
+            
         }
     
         await this.handleIncomingMessage(update);
     }
-    
 
     async handleIncomingMessage(update: any) {
         const chatId = update.message.chat.id;
