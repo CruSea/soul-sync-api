@@ -130,8 +130,8 @@ model Channel {
   id            String @id @default(uuid())
   accountId     String
   name          String
-  metadata      Json
-  configuration Json
+  metadata      Json?
+  configuration Json?
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
