@@ -33,7 +33,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         imageUrl: photos[0].value,
       });
       // Fetch roles and accounts using AuthService methods
-      const roles = await this.authService.getUserRoles(user.id);
       const accounts = await this.authService.getUserAccounts(user.id);
 
       // Prepare JWT payload
@@ -41,12 +40,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         sub: user.id,
         email: user.email,
         imageUrl: user.imageUrl,
-        accounts: accounts.map((acc) => ({
-          id: acc.account.id,
-          name: acc.account.name,
-          domain: acc.account.domain,
-        })),
-        roles: roles.map((role) => role.type),
+        accounts: accounts,
       };
 
       // Generate JWT token

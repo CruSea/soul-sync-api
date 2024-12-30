@@ -21,31 +21,73 @@ enum RoleType {
   MENTOR
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  imageUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Account {
+  id     String  @id @default(uuid())
+  name   String
+  domain String?
 
-  mentors     Mentor[]      @relation("UserToMentors")
-  accountUser AccountUser[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Role        Role[]
+  AccountUser AccountUser[]
+  Channel     Channel[]
+  Mentor      Mentor[]
+}
+
+enum GenderType {
+  MALE
+  FEMALE
+}
+
+model User {
+  id       String  @id @default(uuid())
+  name     String
+  email    String  @unique
+  password String
+  imageUrl String?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  AccountUser AccountUser[]
+}
+
+model AccountUser {
+  id        String @id @default(uuid())
+  userId    String
+  roleId    String
+  accountId String
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Account Account @relation(fields: [accountId], references: [id])
+  User    User    @relation(fields: [userId], references: [id])
+  Role    Role    @relation(fields: [roleId], references: [id])
 }
 
 model Mentor {
-  id           String  @id @default(uuid())
-  userId       String  @unique
-  expertise    String
-  availability Json
-  age          Int
-  gender       String
-  location     String
-  isActive     Boolean
+  id           String     @id @default(uuid())
+  accountId    String
+  name         String
+  email        String
+  expertise    String?
+  availability Json?
+  age          Int?
+  gender       GenderType @default(MALE)
+  location     String?
+  isActive     Boolean    @default(true)
 
-  user          User           @relation("UserToMentors", fields: [userId], references: [id])
-  conversations Conversation[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Conversation Conversation[]
+  Account      Account        @relation(fields: [accountId], references: [id])
 }
 
 model Conversation {
@@ -55,34 +97,24 @@ model Conversation {
   channelId String
   isActive  Boolean
 
-  mentor  Mentor   @relation(fields: [mentorId], references: [id])
-  channel Channel  @relation(fields: [channelId], references: [id])
-  threads Thread[]
+  Mentor  Mentor   @relation(fields: [mentorId], references: [id])
+  Channel Channel  @relation(fields: [channelId], references: [id])
+  Threads Thread[]
 }
 
 model Role {
-  id          String        @id @default(uuid())
-  name        String
-  isDefault   Boolean       @default(false)
-  type        RoleType
-  accountId   String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  account     Account?      @relation(fields: [accountId], references: [id])
-  AccountUser AccountUser[]
-}
-
-model AccountUser {
   id        String   @id @default(uuid())
-  userId    String
-  isDeleted Boolean  @default(false)
-  roleId    String
-  accountId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  account   Account  @relation(fields: [accountId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
-  role      Role     @relation(fields: [roleId], references: [id])
+  name      String
+  isDefault Boolean  @default(false)
+  type      RoleType
+  accountId String?
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Account     Account?      @relation(fields: [accountId], references: [id])
+  AccountUser AccountUser[]
 }
 
 model Thread {
@@ -90,45 +122,42 @@ model Thread {
   conversationId String
   messageId      String
 
-  conversation Conversation @relation(fields: [conversationId], references: [id])
-  message      Message      @relation(fields: [messageId], references: [id])
-}
-
-model Account {
-  id          String        @id @default(uuid())
-  name        String
-  domain      String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  Role        Role[]
-  AccountUser AccountUser[]
-  Channel     Channel[]
+  Conversation Conversation @relation(fields: [conversationId], references: [id])
+  Message      Message      @relation(fields: [messageId], references: [id])
 }
 
 model Channel {
-  id            String   @id @default(uuid())
+  id            String @id @default(uuid())
   accountId     String
   name          String
   metadata      Json
   configuration Json
-  isDeleted     Boolean
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
-  account       Account        @relation(fields: [accountId], references: [id])
-  conversations Conversation[]
-  messages      Message[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Account       Account        @relation(fields: [accountId], references: [id])
+  Conversations Conversation[]
+  Messages      Message[]
+}
+
+enum MessageType {
+  SENT
+  RECEIVED
 }
 
 model Message {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   channelId String
   address   String
-  type      String
+  type      MessageType
   body      String
-  isDeleted Boolean
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  channel   Channel  @relation(fields: [channelId], references: [id])
-  threads   Thread[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Channel Channel  @relation(fields: [channelId], references: [id])
+  Threads Thread[]
 }

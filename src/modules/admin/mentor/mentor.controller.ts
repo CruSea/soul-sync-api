@@ -1,58 +1,49 @@
 import {
   Controller,
-  Post,
-  Body,
   Get,
-  Patch,
-  Delete,
   Param,
   UseGuards,
-  UsePipes,
+  Query,
+  Post,
+  Body,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { MentorService } from './mentor.service';
-import { CreateMentorDto } from './dto/create-mentor.dto';
 import { Roles } from 'src/modules/auth/auth.decorator';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
-import { CreatePipe } from './pipe/create/create.pipe';
+import { GetMentorDto } from './dto/get-mentor.dto';
+import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
 
-@Controller('admin/mentors')
+@Controller('admin/mentor')
 @UseGuards(AuthGuard)
 @Roles('OWNER')
 export class MentorController {
   constructor(private readonly mentorService: MentorService) {}
 
+  @Get()
+  async findAll(@Query() getMentor: GetMentorDto) {
+    return this.mentorService.findAll(getMentor);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id, @Query() getMentor: GetMentorDto) {
+    return this.mentorService.findOne(id, getMentor);
+  }
+
   @Post()
-  @UsePipes(CreatePipe)
-  async createMentor(@Body() createMentorDto: CreateMentorDto) {
-    return this.mentorService.createMentor(createMentorDto);
-  }
-  @Get(':accountId/all')
-  async findMentors(@Param('accountId') accountId: string) {
-    return this.mentorService.findAllMentors(accountId);
+  async create(@Body() createMentor: CreateMentorDto) {
+    return this.mentorService.create(createMentor);
   }
 
-  @Get(':accountId/mentor/:id')
-  async findMentorById(
-    @Param('accountId') accountId: string,
-    @Param('id') id: string,
-  ) {
-    return this.mentorService.findMentorById(accountId, id);
+  @Patch()
+  async update(@Param('id') id, @Body() updateMentor: UpdateMentorDto) {
+    return this.mentorService.update(id, updateMentor);
   }
 
-  @Patch(':accountId/mentor/:id')
-  async updateMentor(
-    @Param('accountId') accountId: string,
-    @Param('id') id: string,
-    @Body() updateMentorDto: UpdateMentorDto,
-  ) {
-    return this.mentorService.updateMentor(accountId, id, updateMentorDto);
-  }
-  @Delete(':accountId/mentor/:id')
-  async removeMentor(
-    @Param('accountId') accountId: string,
-    @Param('id') id: string,
-  ) {
-    return this.mentorService.deleteMentor(accountId, id);
+  @Delete(':id')
+  async delete(@Param('id') id) {
+    return this.mentorService.delete(id);
   }
 }

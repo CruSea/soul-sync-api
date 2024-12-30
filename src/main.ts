@@ -23,6 +23,6 @@ async function bootstrap() {
   });
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
-  await app.listen(3000);
+  await app.listen(8000);
 }
 bootstrap();

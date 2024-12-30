@@ -33,13 +33,10 @@ export class AuthService {
       secret: process.env.JWT_SECRET,
     });
 
-    const roles = await this.prisma.role.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
-    });
-
     return {
       token,
-      user: { ...user, roles: roles.map((role) => role.id) },
+      user: new UserDto(user),
+      accounts: await this.getUserAccounts(user.id),
     };
   }
 
@@ -51,9 +48,12 @@ export class AuthService {
     const token = await this.jwtService.signAsync(user, {
       secret: process.env.JWT_SECRET,
     });
+
+    const accounts = await this.getUserAccounts(user.id);
     return {
       token,
       user: new UserDto(user),
+      accounts,
     };
   }
 
@@ -96,7 +96,7 @@ export class AuthService {
           email,
           imageUrl,
           password: hashedPassword,
-          accountUser: {
+          AccountUser: {
             create: {
               accountId: account.id,
               roleId: role.id,
@@ -123,21 +123,28 @@ export class AuthService {
   async getUserRoles(userId: string) {
     return this.prisma.role.findMany({
       where: { AccountUser: { some: { userId } } },
-      include: { account: true },
+      include: { Account: true },
     });
   }
 
   async getUserAccounts(userId: string) {
-    return this.prisma.accountUser.findMany({
-      where: { userId: userId },
-      include: {
-        account: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+    const accounts = this.prisma.account.findMany({
+      where: { AccountUser: { some: { userId } } },
+      select: {
+        id: true,
+        name: true,
+        AccountUser: { select: { Role: { select: { id: true, name: true } } } },
       },
     });
+
+    return (await accounts).map((account) => ({
+      id: account.id,
+      name: account.name,
+      role:
+        account.AccountUser.map((accountUser) => ({
+          id: accountUser.Role.id,
+          name: accountUser.Role.name,
+        }))[0] ?? null,
+    }));
   }
 }

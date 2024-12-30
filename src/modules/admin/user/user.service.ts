@@ -26,16 +26,15 @@ export class UserService {
         name: createUserDto.name,
         email: createUserDto.email,
         password: hashedPassword,
-        accountUser: {
+        AccountUser: {
           create: {
             accountId: accountId,
             roleId: createUserDto.roleId,
-            isDeleted: false,
           },
         },
       },
       include: {
-        accountUser: true,
+        AccountUser: true,
       },
     });
 
@@ -48,15 +47,14 @@ export class UserService {
     const userData = await this.prisma.user.findFirst({
       where: {
         id,
-        accountUser: {
+        AccountUser: {
           some: {
             accountId,
-            isDeleted: false,
           },
         },
       },
       include: {
-        accountUser: true,
+        AccountUser: true,
       },
     });
 
@@ -72,10 +70,9 @@ export class UserService {
 
     return this.prisma.user.findMany({
       where: {
-        accountUser: {
+        AccountUser: {
           some: {
             accountId: accountId,
-            isDeleted: false,
           },
         },
       },
@@ -101,14 +98,13 @@ export class UserService {
     const userToDelete = await this.prisma.user.findFirst({
       where: {
         id,
-        accountUser: {
+        AccountUser: {
           some: {
             accountId,
-            isDeleted: false,
           },
         },
       },
-      include: { accountUser: true },
+      include: { AccountUser: true },
     });
 
     if (!userToDelete) {
@@ -118,14 +114,14 @@ export class UserService {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
-        accountUser: {
+        AccountUser: {
           updateMany: {
             where: { accountId },
-            data: { isDeleted: true },
+            data: { deletedAt: Date() },
           },
         },
       },
-      include: { accountUser: true },
+      include: { AccountUser: true },
     });
 
     return new UserDto(updatedUser);

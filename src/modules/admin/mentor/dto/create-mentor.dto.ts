@@ -1,10 +1,4 @@
-import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  IsOptional,
-  IsBoolean,
-} from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateMentorDto {
   @IsEmail()
@@ -17,8 +11,4 @@ export class CreateMentorDto {
   @IsString()
   @IsOptional()
   name: string;
-
-  @IsBoolean()
-  @IsOptional()
-  isActive: boolean;
 }

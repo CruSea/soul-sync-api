@@ -32,7 +32,6 @@ export class AccountService {
             create: {
               userId: user.id,
               roleId: role.id,
-              isDeleted: false,
             },
           },
         },

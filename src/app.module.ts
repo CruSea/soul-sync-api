@@ -4,9 +4,6 @@ import { PrismaService } from './modules/prisma/prisma.service';
 import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
 import { MentorModule } from 'src/modules/admin/mentor/mentor.module';
-import { MentorsController } from './modules/mentors/mentors.controller';
-import { MentorsService } from './modules/mentors/mentors.service';
-import { MentorsModule } from './modules/mentors/mentors.module';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
@@ -22,9 +19,8 @@ import { JwtModule } from '@nestjs/jwt';
     AuthModule,
     AdminModule,
     MentorModule,
-    MentorsModule,
   ],
-  providers: [PrismaService, MentorsService],
-  controllers: [MentorsController],
+  providers: [PrismaService],
+  controllers: [],
 })
 export class AppModule {}
