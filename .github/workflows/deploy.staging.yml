@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Preparing Server
+    name: Preparing Dev Server
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
