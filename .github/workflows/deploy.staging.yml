@@ -29,4 +29,4 @@ jobs:
             npm install
             npm run build
             pm2 delete dev-soul-sync-api
-            pm2 start dist/main.js --name dev-soul-sync-api
+            pm2 start dist/src/main.js --name dev-soul-sync-api
