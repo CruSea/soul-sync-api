@@ -1,5 +1,8 @@
 # Use Node.js image
-FROM node:20
+FROM node:20-alpine
+
+# Install OpenSSL dependencies
+RUN apk add --no-cache openssl
 
 # Set working directory
 WORKDIR /app
