@@ -1,4 +1,8 @@
-// This is your Prisma schema file. Learn more: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider      = "prisma-client-js"
@@ -10,17 +14,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum RoleType {
-  OWNER
-  ADMIN
-  MENTOR
-  MENTEE
+enum GenderType {
+  MALE
+  FEMALE
 }
 
-//This message type is defined with respect to the system (not the mentee)
-enum MessageType {
-  SENT
-  RECEIVED
+model Account {
+  id            String           @id @default(uuid())
+  name          String           @unique
+  domain        String?
+  
+  isDeleted     Boolean          @default(false) 
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  roles         Role[]           @relation("AccountToRoles")
+  accountUsers  AccountUser[]    @relation("AccountToAccountUsers")
+  channels      Channel[]        @relation("AccountToChannels")
+  Mentor        Mentor[]         @relation("AccountToMentors")
+ 
+  @@index([isDeleted, name])
 }
 
 model User {
@@ -29,6 +42,7 @@ model User {
   username     String       @unique
   password     String?
   imageUrl     String?
+  
   isDeleted    Boolean       @default(false) 
   createdAt    DateTime      @default(now())
   updatedAt    DateTime?     @updatedAt
@@ -42,24 +56,137 @@ model User {
   @@index([username, isDeleted])
 }
 
+model AccountUser {
+  id           String           @id @default(uuid())
+  userId       String
+  accountId    String
+  roleId       String
+  
+  isDeleted    Boolean          @default(false) 
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  account      Account          @relation("AccountToAccountUsers", fields: [accountId], references: [id])
+  user         User             @relation("UserToAccountUsers", fields: [userId], references: [id])
+  role         Role             @relation("AccountToAccountUsers", fields: [roleId], references: [id])
+
+  @@index([userId, isDeleted]) 
+  @@index([accountId, isDeleted])
+}
+
 model Mentor {
   id             String          @id @default(uuid())
-  userId         String          @unique
+  accountId      String          
+  name           String
+  email          String          
   expertise      String
-  availability   Json
-  age            Int
-  gender         String
+  availability   Json?
+  age            Int?
+  gender         GenderType      @default(MALE)
   location       String
-  isActive       Boolean         @default(false)
-  phone          String
+  isActive       Boolean         @default(false) //this is to know if the mentor has already used the link sent to him and joined 
+  
   isDeleted      Boolean         @default(false) 
   createdAt      DateTime        @default(now())
   updatedAt      DateTime?       @updatedAt
   
-  user           User            @relation("UserToMentors", fields: [userId], references: [id])
+  user           User            @relation("UserToMentors", fields: [email], references: [username])
   conversations  Conversation[]  @relation("MentorToConversations")
+  Account        Account         @relation("AccountToMentors", fields: [accountId], references: [id])
   
-  @@index([userId, isDeleted])
+  @@index([email, isDeleted])
+}
+
+model Conversation {
+  id             String          @id @default(uuid())
+  mentorId       String
+  menteeId       String
+  channelId      String
+  
+  isActive       Boolean
+  createdAt      DateTime        @default(now())
+  endedAt        DateTime?
+
+  mentor         Mentor          @relation("MentorToConversations", fields: [mentorId], references: [id])
+  mentee         Mentee          @relation("MenteeToConversations", fields: [menteeId], references: [id])
+  channel        Channel         @relation("ChannelToConversations", fields: [channelId], references: [id])
+  threads        Thread[]        @relation("ConversationToThreads")
+  
+  @@index([mentorId, menteeId])
+}
+
+enum RoleType {
+  OWNER
+  ADMIN
+  MENTOR
+  MENTEE
+}
+
+model Role {
+  id           String           @id @default(uuid())
+  name         String
+  type         RoleType
+  accountId    String?
+  
+  isDefault    Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  account      Account?         @relation("AccountToRoles", fields: [accountId], references: [id])
+  accountUsers AccountUser[]    @relation("AccountToAccountUsers")
+}
+
+model Thread {
+  id             String          @id @default(uuid())
+  conversationId String
+  messageId      String
+
+  conversation   Conversation    @relation("ConversationToThreads", fields: [conversationId], references: [id])
+  message        Message         @relation("MessageToThreads", fields: [messageId], references: [id])
+  
+  @@index([conversationId])
+}
+
+model Channel {
+  id             String          @id @default(uuid())
+  accountId      String
+  name           String
+  username       String          @unique
+  configuration  Json?
+  metaData       Json?
+  
+  isDeleted      Boolean         @default(false) 
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  account        Account         @relation("AccountToChannels", fields: [accountId], references: [id])
+  conversations  Conversation[]  @relation("ChannelToConversations")
+  messages       Message[]       @relation("ChannelToMessages")
+
+  @@index([accountId, isDeleted])
+  @@index([username, isDeleted])
+}
+
+//This message type is defined with respect to the system (not the mentee)
+enum MessageType {
+  SENT
+  RECEIVED
+}
+
+model Message {
+  id             String          @id @default(uuid())
+  channelId      String
+  senderId       String
+  type           MessageType
+  content        String
+  isDeleted      Boolean         @default(false) 
+  createdAt      DateTime        @default(now())
+
+  channel        Channel         @relation("ChannelToMessages", fields: [channelId], references: [id])
+  sender         User            @relation("UserToMessages", fields: [senderId], references: [id])
+  Thread         Thread[]        @relation("MessageToThreads")
+  
+  @@index([channelId, isDeleted])
+  @@index([isDeleted, senderId]) 
 }
 
 model Mentee {
@@ -91,112 +218,4 @@ model Admin {
   user           User            @relation("UserToAdmins", fields: [userId], references: [id])
  
   @@index([userId, isDeleted])
-}
-
-model Conversation {
-  id             String          @id @default(uuid())
-  mentorId       String
-  menteeId       String
-  channelId      String
-  isActive       Boolean
-  createdAt      DateTime        @default(now())
-  endedAt        DateTime?
-
-  mentor         Mentor          @relation("MentorToConversations", fields: [mentorId], references: [id])
-  mentee         Mentee          @relation("MenteeToConversations", fields: [menteeId], references: [id])
-  channel        Channel         @relation("ChannelToConversations", fields: [channelId], references: [id])
-  threads        Thread[]        @relation("ConversationToThreads")
-  
-  @@index([mentorId, menteeId])
-}
-
-model Thread {
-  id             String          @id @default(uuid())
-  conversationId String
-  messageId      String
-
-  conversation   Conversation    @relation("ConversationToThreads", fields: [conversationId], references: [id])
-  message        Message         @relation("MessageToThreads", fields: [messageId], references: [id])
-  
-  @@index([conversationId])
-}
-
-model Message {
-  id             String          @id @default(uuid())
-  channelId      String
-  senderId       String
-  type           MessageType
-  content        String
-  isDeleted      Boolean         @default(false) 
-  createdAt      DateTime        @default(now())
-
-  channel        Channel         @relation("ChannelToMessages", fields: [channelId], references: [id])
-  sender         User            @relation("UserToMessages", fields: [senderId], references: [id])
-  Thread         Thread[]        @relation("MessageToThreads")
-  
-  @@index([channelId, isDeleted])
-  @@index([isDeleted, senderId]) 
-}
-
-model Account {
-  id            String           @id @default(uuid())
-  name          String           @unique
-  domain        String?
-  isDeleted     Boolean          @default(false) 
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  
-  roles         Role[]           @relation("AccountToRoles")
-  accountUsers  AccountUser[]    @relation("AccountToAccountUsers")
-  channels      Channel[]        @relation("AccountToChannels")
- 
-  @@index([isDeleted, name])
-}
-
-model AccountUser {
-  id           String           @id @default(uuid())
-  userId       String
-  accountId    String
-  roleId       String
-  isDeleted    Boolean          @default(false) 
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-
-  account      Account          @relation("AccountToAccountUsers", fields: [accountId], references: [id])
-  user         User             @relation("UserToAccountUsers", fields: [userId], references: [id])
-  role         Role             @relation("AccountToAccountUsers", fields: [roleId], references: [id])
-
-  @@index([userId, isDeleted]) 
-  @@index([accountId, isDeleted])
-}
-
-model Role {
-  id           String           @id @default(uuid())
-  name         String
-  type         RoleType
-  isDefault    Boolean          @default(false)
-  accountId    String?
-  createdAt    DateTime         @default(now())
-
-  account      Account?         @relation("AccountToRoles", fields: [accountId], references: [id])
-  accountUsers AccountUser[]    @relation("AccountToAccountUsers")
-}
-
-model Channel {
-  id             String          @id @default(uuid())
-  accountId      String
-  name           String
-  username       String          @unique
-  configuration  Json
-  metaData       Json
-  isDeleted      Boolean         @default(false) 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  account        Account         @relation("AccountToChannels", fields: [accountId], references: [id])
-  conversations  Conversation[]  @relation("ChannelToConversations")
-  messages       Message[]       @relation("ChannelToMessages")
-
-  @@index([accountId, isDeleted])
-  @@index([username, isDeleted])
 }

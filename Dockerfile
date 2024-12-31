@@ -16,8 +16,11 @@ RUN npm install
 # Copy application code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma migrate dev --name init
+# Run Prisma generate
+RUN npx prisma generate
+
+# Run Prisma migrate
+RUN npx prisma migrate
 
 #Seed the database
 RUN npx prisma db seed
