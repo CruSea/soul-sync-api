@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { REQUEST } from '@nestjs/core';
@@ -17,6 +17,36 @@ export class ChannelService {
     const channel = await this.prisma.channel.create({
       data: createChannelDto,
     });
+
+    return Channel.create(channel);
+  }
+
+  async connect(id: string): Promise<Channel> {
+    const channel = await this.prisma.channel.findFirst({
+      where: { id, type: 'TELEGRAM' },
+    });
+
+    if (channel) {
+      const token = (channel.configuration as any)?.token;
+      const resp = await fetch(
+        'https://api.telegram.org/bot' + token + '/setWebhook',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
+          }),
+        },
+      );
+
+      if (!resp.ok) {
+        throw new HttpException(resp.body, resp.status);
+      }
+
+      return resp.json();
+    }
 
     return Channel.create(channel);
   }

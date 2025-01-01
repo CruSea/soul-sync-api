@@ -63,6 +63,18 @@ export class MentorService {
           accountId: createMentor.accountId,
         },
       });
+
+      let user = await this.prisma.user.findFirst({
+        where: { email: mentor.email },
+      });
+
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: { name: mentor.name, email: mentor.email, password: '' },
+        });
+      }
+
+      return new MentorDto({ ...mentor, user: { ...user } });
     }
 
     const user = await this.prisma.user.findFirst({

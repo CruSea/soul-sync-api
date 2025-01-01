@@ -126,11 +126,18 @@ model Thread {
   Message      Message      @relation(fields: [messageId], references: [id])
 }
 
+enum ChannelType {
+  NEGARIT
+  TELEGRAM
+  WHATSAPP
+  TWILIO
+}
+
 model Channel {
-  id            String @id @default(uuid())
+  id            String      @id @default(uuid())
   accountId     String
   name          String
-  metadata      Json?
+  type          ChannelType @default(NEGARIT)
   configuration Json?
 
   deletedAt DateTime?

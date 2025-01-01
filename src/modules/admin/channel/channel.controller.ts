@@ -27,6 +27,11 @@ export class ChannelController {
     return this.channelService.create(createChannelDto);
   }
 
+  @Post(':id/connect')
+  connect(@Param('id') id: string) {
+    return this.channelService.connect(id);
+  }
+
   @Get()
   findAll(@Query() getChannel: GetChannelDto) {
     return this.channelService.findAll(getChannel);

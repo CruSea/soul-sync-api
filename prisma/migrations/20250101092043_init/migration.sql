@@ -5,6 +5,9 @@ CREATE TYPE "RoleType" AS ENUM ('OWNER', 'ADMIN', 'USER', 'MENTOR');
 CREATE TYPE "GenderType" AS ENUM ('MALE', 'FEMALE');
 
 -- CreateEnum
+CREATE TYPE "ChannelType" AS ENUM ('NEGARIT', 'TELEGRAM', 'WHATSAPP', 'TWILIO');
+
+-- CreateEnum
 CREATE TYPE "MessageType" AS ENUM ('SENT', 'RECEIVED');
 
 -- CreateTable
@@ -104,7 +107,7 @@ CREATE TABLE "Channel" (
     "id" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "metadata" JSONB,
+    "type" "ChannelType" NOT NULL DEFAULT 'NEGARIT',
     "configuration" JSONB,
     "deletedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

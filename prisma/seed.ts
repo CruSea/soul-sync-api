@@ -47,8 +47,8 @@ async function seedBatchTwo() {
                       length: faker.number.int({ min: 1, max: 5 }),
                     }).map(() => ({
                       name: faker.company.name(),
-                      metadata: { data: faker.lorem.paragraph() },
-                      configuration: { data: faker.lorem.paragraph() },
+                      type: 'TELEGRAM',
+                      configuration: { id: 'SAMPLEID', token: 'SAMPLE-TOKEN' },
                       Messages: {
                         create: Array.from({
                           length: faker.number.int({ min: 5, max: 50 }),
@@ -82,6 +82,15 @@ async function seedBatchTwo() {
       });
     }),
   );
+
+  prisma.channel.create({
+    data: {
+      name: '',
+      type: 'NEGARIT',
+      configuration: { id: 'ssd' },
+      accountId: '',
+    },
+  });
 }
 
 async function seedBatchThree() {
