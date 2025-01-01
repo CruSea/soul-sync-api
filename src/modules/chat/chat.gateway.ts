@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -9,9 +9,10 @@ import {
 import { Server } from 'socket.io';
 import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
 import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
+import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
+import { Chat } from 'src/types/chat';
 
-@UseGuards(WsGuardGuard)
-@WebSocketGateway(3002, {
+@WebSocketGateway(Number(process.env.CHAT_PORT), {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -21,7 +22,10 @@ import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exch
 export class ChatGateway {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly chatExchangeService: ChatExchangeService) {}
+  constructor(
+    private readonly chatExchangeService: ChatExchangeService,
+    private readonly rabbitmqService: RabbitmqService,
+  ) {}
 
   afterInit(server: any) {
     console.log('ChatGateway Initialized', server);
@@ -36,12 +40,21 @@ export class ChatGateway {
   }
 
   @SubscribeMessage('message')
+  @UseGuards(WsGuardGuard)
   handleMessage(
     @MessageBody() data: string,
     @ConnectedSocket() client: any,
   ): string {
-    console.log('Message client:', client.user);
-    this.chatExchangeService.send('message', data);
-    return 'AKC';
+    try {
+      const chatData: Chat = JSON.parse(data);
+      if (chatData.type === 'CHAT') {
+        const data = this.rabbitmqService.getChatEchangeData(chatData, client);
+        this.chatExchangeService.send('chat', data);
+        return 'AKC';
+      }
+    } catch (e) {
+      console.log(e);
+      throw new NotFoundException('Invalid Chat Data');
+    }
   }
 }

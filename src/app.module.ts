@@ -8,6 +8,7 @@ import { MentorModule } from './modules/mentor/mentor.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { RabbitmqModule } from './common/rabbitmq/rabbitmq.module';
 import { RedisModule } from './common/redis/redis.module';
+import { MessageModule } from './modules/message/message.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RedisModule } from './common/redis/redis.module';
     ChatModule,
     RabbitmqModule,
     RedisModule,
+    MessageModule,
   ],
   providers: [PrismaService],
   controllers: [],
