@@ -5,6 +5,9 @@ import { AdminModule } from './modules/admin/admin.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MentorModule } from './modules/mentor/mentor.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { RabbitmqModule } from './common/rabbitmq/rabbitmq.module';
+import { RedisModule } from './common/redis/redis.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { MentorModule } from './modules/mentor/mentor.module';
     AuthModule,
     AdminModule,
     MentorModule,
+    ChatModule,
+    RabbitmqModule,
+    RedisModule,
   ],
   providers: [PrismaService],
   controllers: [],
