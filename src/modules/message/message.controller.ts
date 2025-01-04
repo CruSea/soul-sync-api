@@ -7,8 +7,9 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @Post('negarit')
-  negarit(@Body() negaritMessageDto: NegaritMessageDto) {
-    return this.messageService.negarit(negaritMessageDto);
+  @HttpCode(200)
+  negarit(@Query() param, @Body() negaritMessageDto: any) {
+    return this.messageService.negarit(param.id, negaritMessageDto);
   }
 
   @Post('telegram')

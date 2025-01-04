@@ -3,6 +3,7 @@ import { NegaritMessageDto } from './dto/negarit-message.dto';
 import { MessageExchangeService } from 'src/common/rabbitmq/message-exchange/message-exchange.service';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { TelegramChat } from 'src/types/telegram';
+import { NegaritChat } from 'src/types/negarit';
 
 @Injectable()
 export class MessageService {
@@ -17,9 +18,10 @@ export class MessageService {
     return 'ok';
   }
 
-  negarit(negaritMessageDto: NegaritMessageDto) {
-    const data = this.rabbitmqService.getMessageEchangeData('negarit', negaritMessageDto);
-    console.log('negaritMessageDto', negaritMessageDto);
-    return `This action returns all message`;
+  negarit(id: string, negaritChat: NegaritChat) {
+    const data = this.rabbitmqService.getMessageEchangeDataNegarit('negarit', negaritChat);
+    this.messageExchangeService.send('negarit', data);
+    //console.log('negaritMessageDto', negaritMessageDto);
+    return 'ok';
   }
 }

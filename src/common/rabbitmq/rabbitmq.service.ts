@@ -29,4 +29,16 @@ export class RabbitmqService {
       payload: payload,
     };
   }
+
+  getMessageEchangeDataNegarit(channelId: string, payload: any): any {
+    return {
+      id: uuidv4(),
+      type: 'MESSAGE',
+      metadata: {
+        type: 'NEGARIT',
+        channelId: channelId,
+      },
+      payload: payload,
+    };
+  }
 }
