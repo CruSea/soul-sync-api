@@ -18,7 +18,7 @@ export class RabbitmqService {
     };
   }
 
-  getMessageEchangeData(channelId: string, payload: TelegramChat): any {
+  getMessageEchangeData(channelId: string, payload: any): any {
     return {
       id: uuidv4(),
       type: 'MESSAGE',

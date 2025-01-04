@@ -18,6 +18,7 @@ export class MessageService {
   }
 
   negarit(negaritMessageDto: NegaritMessageDto) {
+    const data = this.rabbitmqService.getMessageEchangeData('negarit', negaritMessageDto);
     console.log('negaritMessageDto', negaritMessageDto);
     return `This action returns all message`;
   }
