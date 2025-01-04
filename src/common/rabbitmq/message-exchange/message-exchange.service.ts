@@ -9,6 +9,7 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly EXCHANGE_NAME = 'message';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
+  private readonly QUEUE_NAME = 'message_queue';
 
   async onModuleInit() {
     await this.connect();
@@ -37,6 +38,9 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
     this.channel.publish(this.EXCHANGE_NAME, routingKey, messageBuffer, {
       persistent: true,
     });
+    await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
+    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
+
     console.log(
       `Message sent to exchange "${this.EXCHANGE_NAME}" with routing key "${routingKey}":`,
       message,

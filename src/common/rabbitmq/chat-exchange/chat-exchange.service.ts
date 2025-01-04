@@ -9,7 +9,7 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly EXCHANGE_NAME = 'chat';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
-
+  private readonly QUEUE_NAME = 'chat_queue';
   async onModuleInit() {
     await this.connect();
   }
@@ -23,6 +23,8 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
     await this.channel.assertExchange(this.EXCHANGE_NAME, this.EXCHANGE_TYPE, {
       durable: true,
     });
+    await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
+    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
     console.log('ChatExchangeService Connected!');
   }
 
