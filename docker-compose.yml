@@ -18,7 +18,7 @@ services:
       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
 
   postgres:
     image: postgres

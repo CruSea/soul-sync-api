@@ -40,7 +40,7 @@ export class ChannelService {
           }),
         },
       );
-
+ 
       if (!resp.ok) {
         throw new HttpException(resp.body, resp.status);
       }
