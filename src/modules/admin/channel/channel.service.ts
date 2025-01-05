@@ -11,7 +11,7 @@ export class ChannelService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   async create(createChannelDto: CreateChannelDto): Promise<Channel> {
     const channel = await this.prisma.channel.create({
@@ -49,6 +49,19 @@ export class ChannelService {
     }
 
     return Channel.create(channel);
+  }
+
+  async connectNegarit(id: string): Promise<{ success: string }> {
+    const channel = await this.prisma.channel.findFirst({
+      where: { id, type: 'NEGARIT' },
+    });
+
+    if (channel) {
+      const success = `Please add this URL to your Negarit admin dashboard webhook URL field: ${process.env.HOST_URL + '/message/negarit?id=' + channel.id}`;
+      return { success };
+    }
+
+    throw new HttpException('Channel not found', 404);
   }
 
   async findAll(getChannel: GetChannelDto): Promise<Channel[]> {

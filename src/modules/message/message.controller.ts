@@ -12,12 +12,12 @@ export class MessageController {
     return this.messageService.negarit(param.id, negaritMessageDto);
   }
 
-  @Post('negarit-webhook')
+  @Post(`${process.env.HOST_URL + '/message/negarit?id=' + 'c73f9200-afaa-4e40-9923-f5a3be097639'}`)
   @HttpCode(200)
-  receiveSms(@Body() body: any) {
+  receiveSms(@Query() param, @Body() body: any) {
     try {
       const { received_message } = body;
-      return this.messageService.processNegaritWebhook(received_message);
+      return this.messageService.processNegaritWebhook(param.id, received_message);
     } catch (error) {
       console.error('Error processing incoming SMS:', error);
       throw new HttpException('Error processing SMS', HttpStatus.INTERNAL_SERVER_ERROR);

@@ -32,6 +32,11 @@ export class ChannelController {
     return this.channelService.connect(id);
   }
 
+  @Post(':id/connect-negarit')
+  connectNegarit(@Param('id') id: string) {
+    return this.channelService.connectNegarit(id);
+  }
+
   @Get()
   findAll(@Query() getChannel: GetChannelDto) {
     return this.channelService.findAll(getChannel);
