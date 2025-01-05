@@ -10,7 +10,7 @@ export class MessageService {
   constructor(
     private readonly messageExchangeService: MessageExchangeService,
     private readonly rabbitmqService: RabbitmqService,
-  ) {}
+  ) { }
 
   telegram(id: string, telegramChat: TelegramChat) {
     const data = this.rabbitmqService.getMessageEchangeData(id, telegramChat);
@@ -24,4 +24,14 @@ export class MessageService {
     //console.log('negaritMessageDto', negaritMessageDto);
     return 'ok';
   }
+
+  processNegaritWebhook(received_message: any) {
+    const data = this.rabbitmqService.getMessageEchangeDataNegarit('negarit', received_message);
+    this.messageExchangeService.sendNegarit('negarit', data);
+    // Log the response data to inspect its structure
+    console.log('Negarit response data:', data);
+    return 'ok';
+  }
+
+
 }

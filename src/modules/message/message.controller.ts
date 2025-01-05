@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, Query } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { NegaritMessageDto } from './dto/negarit-message.dto';
 
@@ -10,6 +10,18 @@ export class MessageController {
   @HttpCode(200)
   negarit(@Query() param, @Body() negaritMessageDto: any) {
     return this.messageService.negarit(param.id, negaritMessageDto);
+  }
+
+  @Post('negarit-webhook')
+  @HttpCode(200)
+  receiveSms(@Body() body: any) {
+    try {
+      const { received_message } = body;
+      return this.messageService.processNegaritWebhook(received_message);
+    } catch (error) {
+      console.error('Error processing incoming SMS:', error);
+      throw new HttpException('Error processing SMS', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Post('telegram')

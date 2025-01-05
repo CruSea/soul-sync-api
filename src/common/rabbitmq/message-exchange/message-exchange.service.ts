@@ -46,4 +46,18 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
       message,
     );
   }
+
+  async sendNegarit(routingKey: string, message: any) {
+    const messageBuffer = Buffer.from(JSON.stringify(message));
+    this.channel.publish(this.EXCHANGE_NAME, routingKey, messageBuffer, {
+      persistent: true,
+    });
+    await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
+    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'negarit'); // Bind to the specific routing key
+
+    console.log(
+      `Message sent to exchange "${this.EXCHANGE_NAME}" with routing key "${routingKey}":`,
+      message,
+    );
+  }
 }
