@@ -71,23 +71,44 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
             // Fetch the created message from the database
             const fetchedMessage = await this.prisma.message.findUnique({
-              where: { id: createdMessage.id, type: 'RECEIVED' }
+              where: { id: createdMessage.id }
             });
             console.log('Fetched message:', fetchedMessage);
 
             if (fetchedMessage) {
-               const createConversationDto: CreateConversationDto = {
-                mentorId: "014a2bfb-d414-49a8-9806-6241f2da119e",
-                address: fetchedMessage.address,
-                channelId: fetchedMessage.channelId.toString(),
-                isActive: true
-              };
-
-               await this.prisma.conversation.create({
-                data: createConversationDto
+              // Check for existing conversation
+              const existingConversation = await this.prisma.conversation.findFirst({
+                where: { address: fetchedMessage.address, isActive: true }
               });
 
-              console.log('Conversation created:', createConversationDto);
+              let conversationId: string;
+
+              if (existingConversation) {
+                console.log('Existing conversation found:', existingConversation);
+                conversationId = existingConversation.id;
+              } else {
+                const createConversationDto: CreateConversationDto = {
+                  mentorId: "014a2bfb-d414-49a8-9806-6241f2da119e",
+                  address: fetchedMessage.address,
+                  channelId: fetchedMessage.channelId,
+                  isActive: true
+                };
+
+                const createdConversation = await this.prisma.conversation.create({
+                  data: createConversationDto
+                });
+                console.log('Conversation created:', createdConversation);
+                conversationId = createdConversation.id;
+              }
+
+              // Create the thread using the conversationId and messageId
+              const createdThread = await this.prisma.thread.create({
+                data: {
+                  conversationId: conversationId,
+                  messageId: createdMessage.id,
+                }
+              });
+              console.log('Thread created:', createdThread);
             }
           }
 
