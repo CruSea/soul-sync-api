@@ -9,6 +9,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { RabbitmqModule } from './common/rabbitmq/rabbitmq.module';
 import { RedisModule } from './common/redis/redis.module';
 import { MessageModule } from './modules/message/message.module';
+import {DatabaseConsumerModule} from './common/rabbitmq/consumers/database/databaseConsumer.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { MessageModule } from './modules/message/message.module';
     RabbitmqModule,
     RedisModule,
     MessageModule,
+    DatabaseConsumerModule,
   ],
   providers: [PrismaService],
   controllers: [],
