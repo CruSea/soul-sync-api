@@ -1,4 +1,4 @@
-import { IsString } from "class-validator";
+import { IsBoolean, IsString } from "class-validator";
 
 export class CreateConversationDto {
     @IsString()
@@ -7,6 +7,8 @@ export class CreateConversationDto {
     @IsString()
     address: string;
 
-    @IsString()
     channelId: string;
+
+    @IsBoolean()
+    isActive: boolean;
 }

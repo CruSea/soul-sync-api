@@ -2,6 +2,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { CreateConversationDto } from './dto/create-conversation.dto';
 
 @Injectable()
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -42,34 +43,61 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         const message = JSON.parse(messageContent);
         console.log('Consumed message:', message);
 
-        // Perform database operations here
-        if (message.metadata.type === 'TELEGRAM') {
-          const createMessageDto: CreateMessageDto = {
-            channelId: message.metadata.channelId,
-            address: message.payload.message.chat.id.toString(),
-            type: 'RECEIVED',
-            body: message.payload.message.text,
-          };
+        try {
+          let createMessageDto: CreateMessageDto;
 
-          await this.prisma.message.create({
-            data: createMessageDto
-          });
-        } else if (message.metadata.type === 'NEGARIT') {
-          const createMessageDto: CreateMessageDto = {
-            channelId: message.metadata.channelId,
-            address: message.payload.received_message.sent_from,
-            type: 'RECEIVED',
-            body: message.payload.received_message.message,
-          };
+          if (message.metadata.type === 'TELEGRAM') {
+            createMessageDto = {
+              channelId: message.metadata.channelId,
+              address: message.payload.message.chat.id.toString(),
+              type: 'RECEIVED',
+              body: message.payload.message.text,
+            };
+          } else if (message.metadata.type === 'NEGARIT') {
+            createMessageDto = {
+              channelId: message.metadata.channelId,
+              address: message.payload.received_message.sent_from,
+              type: 'RECEIVED',
+              body: message.payload.received_message.message,
+            };
+          }
 
-          await this.prisma.message.create({
-            data: createMessageDto
-          });
+          if (createMessageDto) {
+            console.log('Creating message with DTO:', createMessageDto);
+            const createdMessage = await this.prisma.message.create({
+              data: createMessageDto
+            });
+            console.log('Created message:', createdMessage);
+
+            // Fetch the created message from the database
+            const fetchedMessage = await this.prisma.message.findUnique({
+              where: { id: createdMessage.id, type: 'RECEIVED' }
+            });
+            console.log('Fetched message:', fetchedMessage);
+
+            if (fetchedMessage) {
+               const createConversationDto: CreateConversationDto = {
+                mentorId: "014a2bfb-d414-49a8-9806-6241f2da119e",
+                address: fetchedMessage.address,
+                channelId: fetchedMessage.channelId.toString(),
+                isActive: true
+              };
+
+               await this.prisma.conversation.create({
+                data: createConversationDto
+              });
+
+              console.log('Conversation created:', createConversationDto);
+            }
+          }
+
+          this.channel.ack(msg);
+        } catch (error) {
+          console.error('Error processing message:', error);
+          // Optionally, we can nack the message to requeue it
+          // this.channel.nack(msg);
         }
-
-        this.channel.ack(msg);
       }
     });
   }
- 
 }
