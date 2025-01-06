@@ -10,6 +10,7 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly EXCHANGE_NAME = 'chat';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
   private readonly QUEUE_NAME = 'chat_queue';
+  
   async onModuleInit() {
     await this.connect();
   }

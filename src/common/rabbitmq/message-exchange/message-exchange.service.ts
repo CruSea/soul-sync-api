@@ -9,11 +9,13 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly EXCHANGE_NAME = 'message';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
-  private readonly QUEUE_NAME = 'message_queue';
+  private readonly MESSAGE_QUEUE_NAME = 'message_queue';
+  private readonly DATABASE_QUEUE_NAME = 'database_queue';
 
   async onModuleInit() {
     await this.connect();
   }
+
   async onModuleDestroy() {
     await this.disconnect();
   }
@@ -24,6 +26,12 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
     await this.channel.assertExchange(this.EXCHANGE_NAME, this.EXCHANGE_TYPE, {
       durable: true,
     });
+    await this.channel.assertQueue(this.MESSAGE_QUEUE_NAME, { durable: true });
+    await this.channel.assertQueue(this.DATABASE_QUEUE_NAME, { durable: true });
+    await this.channel.bindQueue(this.MESSAGE_QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
+    await this.channel.bindQueue(this.DATABASE_QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
+    await this.channel.bindQueue(this.MESSAGE_QUEUE_NAME, this.EXCHANGE_NAME, 'negarit'); // Bind to the specific routing key
+    await this.channel.bindQueue(this.DATABASE_QUEUE_NAME, this.EXCHANGE_NAME, 'negarit'); // Bind to the specific routing key
     console.log('MessageExchangeService Connected!');
   }
 
@@ -38,23 +46,6 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
     this.channel.publish(this.EXCHANGE_NAME, routingKey, messageBuffer, {
       persistent: true,
     });
-    await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
-    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
-
-    console.log(
-      `Message sent to exchange "${this.EXCHANGE_NAME}" with routing key "${routingKey}":`,
-      message,
-    );
-  }
-
-  async sendNegarit(routingKey: string, message: any) {
-    const messageBuffer = Buffer.from(JSON.stringify(message));
-    this.channel.publish(this.EXCHANGE_NAME, routingKey, messageBuffer, {
-      persistent: true,
-    });
-    await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
-    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'negarit'); // Bind to the specific routing key
-
     console.log(
       `Message sent to exchange "${this.EXCHANGE_NAME}" with routing key "${routingKey}":`,
       message,
