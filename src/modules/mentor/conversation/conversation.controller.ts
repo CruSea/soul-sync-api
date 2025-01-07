@@ -11,6 +11,11 @@ export class ConversationController {
     return this.conversationService.findAll();
   }
 
+  @Get('threads/:id')
+  findThread(@Param('id') id: string) {
+    return this.conversationService.findThread(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.conversationService.findOne(id);
