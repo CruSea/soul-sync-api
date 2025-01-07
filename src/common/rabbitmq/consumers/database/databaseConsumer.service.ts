@@ -12,7 +12,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly QUEUE_NAME = 'database_queue';
 
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
     await this.connect();
@@ -38,12 +38,12 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
   private async consume() {
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
-      if (msg !== null) {
-        const messageContent = msg.content.toString();
-        const message = JSON.parse(messageContent);
-        console.log('Consumed message:', message);
-
+      if (msg && msg.content) {
         try {
+          const messageContent = msg.content.toString();
+          const message = JSON.parse(messageContent);
+          console.log('Consumed message:', message);
+
           let createMessageDto: CreateMessageDto;
 
           if (message.metadata.type === 'TELEGRAM') {
@@ -60,63 +60,47 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
               type: 'RECEIVED',
               body: message.payload.received_message.message,
             };
+          } else {
+            console.error('Unsupported message type:', message.metadata.type);
+            this.channel.ack(msg);
+            return;
           }
 
-          if (createMessageDto) {
-            console.log('Creating message with DTO:', createMessageDto);
-            const createdMessage = await this.prisma.message.create({
-              data: createMessageDto
+          // Transaction to handle message, conversation, and thread
+          await this.prisma.$transaction(async (prisma) => {
+            const createdMessage = await prisma.message.create({
+              data: createMessageDto,
             });
-            console.log('Created message:', createdMessage);
 
-            // Fetch the created message from the database
-            const fetchedMessage = await this.prisma.message.findUnique({
-              where: { id: createdMessage.id }
+            const existingConversation = await prisma.conversation.findFirst({
+              where: { address: createdMessage.address, isActive: true },
             });
-            console.log('Fetched message:', fetchedMessage);
 
-            if (fetchedMessage) {
-              // Check for existing conversation
-              const existingConversation = await this.prisma.conversation.findFirst({
-                where: { address: fetchedMessage.address, isActive: true }
-              });
+            const conversationId = existingConversation
+              ? existingConversation.id
+              : (
+                  await prisma.conversation.create({
+                    data: {
+                      mentorId: process.env.DEFAULT_MENTOR_ID || 'fallback-id',
+                      address: createdMessage.address,
+                      channelId: createdMessage.channelId,
+                      isActive: true,
+                    },
+                  })
+                ).id;
 
-              let conversationId: string;
+            await prisma.thread.create({
+              data: {
+                conversationId,
+                messageId: createdMessage.id,
+              },
+            });
+          });
 
-              if (existingConversation) {
-                console.log('Existing conversation found:', existingConversation);
-                conversationId = existingConversation.id;
-              } else {
-                const createConversationDto: CreateConversationDto = {
-                  mentorId: "014a2bfb-d414-49a8-9806-6241f2da119e",
-                  address: fetchedMessage.address,
-                  channelId: fetchedMessage.channelId,
-                  isActive: true
-                };
-
-                const createdConversation = await this.prisma.conversation.create({
-                  data: createConversationDto
-                });
-                console.log('Conversation created:', createdConversation);
-                conversationId = createdConversation.id;
-              }
-
-              // Create the thread using the conversationId and messageId
-              const createdThread = await this.prisma.thread.create({
-                data: {
-                  conversationId: conversationId,
-                  messageId: createdMessage.id,
-                }
-              });
-              console.log('Thread created:', createdThread);
-            }
-          }
-
-          this.channel.ack(msg);
+          this.channel.ack(msg); // Acknowledge message only after success
         } catch (error) {
           console.error('Error processing message:', error);
-          // Optionally, we can nack the message to requeue it
-          // this.channel.nack(msg);
+          this.channel.nack(msg); // Requeue message for retry
         }
       }
     });
