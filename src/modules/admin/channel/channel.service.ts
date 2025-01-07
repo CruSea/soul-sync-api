@@ -11,11 +11,16 @@ export class ChannelService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
-  ) { }
+  ) {}
 
   async create(createChannelDto: CreateChannelDto): Promise<Channel> {
     const channel = await this.prisma.channel.create({
-      data: createChannelDto,
+      data: {
+        name: createChannelDto.name,
+        type: createChannelDto.type as unknown as import('@prisma/client').$Enums.ChannelType,
+        configuration: createChannelDto.configuration,
+        accountId: createChannelDto.accountId,
+      },
     });
 
     return Channel.create(channel);
@@ -83,7 +88,10 @@ export class ChannelService {
   async update(id: string, updateChannelDto: UpdateChannelDto) {
     const channel = await this.prisma.channel.update({
       where: { id },
-      data: updateChannelDto,
+      data: {
+        name: updateChannelDto.name,
+        configuration: updateChannelDto.configuration,
+      },
     });
 
     return Channel.create(channel);

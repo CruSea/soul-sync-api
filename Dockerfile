@@ -1,5 +1,8 @@
 # Use Node.js image
-FROM node:20
+FROM node:20-alpine
+
+# Install OpenSSL dependencies
+RUN apk add --no-cache openssl
 
 # Set working directory
 WORKDIR /app
@@ -24,6 +27,7 @@ RUN npm run build
 
 # Expose application port
 EXPOSE 3000
+EXPOSE 5432
 
 # Start the application
-CMD ["npm", "run", "start:dev"]
+CMD ["npm", "run", "start:prod"]
