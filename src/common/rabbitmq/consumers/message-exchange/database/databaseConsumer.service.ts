@@ -81,7 +81,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
               : (
                   await prisma.conversation.create({
                     data: {
-                      mentorId: process.env.DEFAULT_MENTOR_ID || 'fallback-id',
+                      mentorId: process.env.DEFAULT_MENTOR_ID,
                       address: createdMessage.address,
                       channelId: createdMessage.channelId,
                       isActive: true,
