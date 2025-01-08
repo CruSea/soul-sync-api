@@ -19,14 +19,17 @@ export class MessageService {
   }
 
   negarit(id: string, negaritChat: NegaritChat) {
-    const data = this.rabbitmqService.getMessageEchangeDataNegarit(id, negaritChat);
+    const data = this.rabbitmqService.getMessageEchangeData(id, negaritChat);
     this.messageExchangeService.send('negarit', data);
     //console.log('negaritMessageDto', negaritMessageDto);
     return 'ok';
   }
 
   processNegaritWebhook(id: string, received_message: any) {
-    const data = this.rabbitmqService.getMessageEchangeDataNegarit(id, received_message);
+    const data = this.rabbitmqService.getMessageEchangeData(
+      id,
+      received_message,
+    );
     this.messageExchangeService.send('negarit', data);
     console.log('Negarit response data:', data);
     return 'ok';

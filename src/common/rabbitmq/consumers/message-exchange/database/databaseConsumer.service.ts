@@ -3,7 +3,6 @@ import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateConversationDto } from './dto/create-conversation.dto';
-import { setChatQueue } from '../router';
 
 @Injectable()
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -99,7 +98,6 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           });
 
           this.channel.ack(msg); // Acknowledge message only after success
-          setChatQueue(conversationId, message);
         } catch (error) {
           console.error('Error processing message:', error);
           this.channel.nack(msg); // Requeue message for retry
