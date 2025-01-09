@@ -28,15 +28,15 @@ export class RedisService {
   }
 
   async get(key: string): Promise<string | null> {
-    return await this.redisClient.get(key); // Retrieve value by key
+    return await this.redisClient.get(key); 
   }
 
   async delete(key: string): Promise<number> {
-    return await this.redisClient.del(key); // Delete a key
+    return await this.redisClient.del(key); 
   }
 
   async disconnect(): Promise<void> {
-    await this.redisClient.quit(); // Gracefully close the Redis connection
+    await this.redisClient.quit(); 
     console.log('Redis connection closed');
   }
 }

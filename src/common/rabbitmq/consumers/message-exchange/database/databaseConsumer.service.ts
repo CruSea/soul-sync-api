@@ -3,6 +3,9 @@ import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateConversationDto } from './dto/create-conversation.dto';
+import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
+import { Chat } from 'src/types/chat';
+import { RedisService } from 'src/common/redis/redis.service';
 
 @Injectable()
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -12,7 +15,11 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly QUEUE_NAME = 'database_queue';
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly rabbitmqService: RabbitmqService,
+    private readonly redisService: RedisService,
+  ) {}
 
   async onModuleInit() {
     await this.connect();
@@ -37,6 +44,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async consume() {
+    let chat: Chat;
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
       if (msg && msg.content) {
         try {
@@ -116,6 +124,15 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
                 messageId: createdMessage.id,
               },
             });
+            chat = {
+              type: 'CHAT',
+              metadata: {
+                conversationId: conversationId,
+              },
+              payload: {
+                message: createdMessage,
+              },
+            };
           });
 
           // Acknowledge only after success
@@ -124,7 +141,23 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           console.error('Error processing message:', error);
           this.channel.nack(msg); // Requeue on error
         }
+        try {
+          const conversation = await this.prisma.conversation.findUnique({
+            where: { id: chat.metadata.conversationId },
+          });
+          await this.redisService.get(conversation.mentorId.toString());
+          const chatEchangeData = this.rabbitmqService.getChatEchangeData(
+            chat,
+            null,
+          );
+          await this.channel.sendToQueue(
+            'chat_exchange',
+            Buffer.from(JSON.stringify(chatEchangeData)),
+          );
+        } catch (error) {
+          console.error('Error sending chat exchange data:', error);
+        }
       }
     });
-  }f
+  }
 }
