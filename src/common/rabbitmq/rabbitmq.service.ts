@@ -8,12 +8,12 @@ import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class RabbitmqService {
   constructor(private readonly prisma: PrismaService) {}
-  getChatEchangeData(chat: Chat, socket: any): any {
+  getChatEchangeData(chat: Chat, socket: string): any {
     return {
       id: uuidv4(),
       type: 'CHAT',
       metadata: {
-        userId: socket.user.id,
+        userId: chat.metadata.mentorId,
         conversationId: chat.metadata.conversationId,
       },
       payload: chat.payload,

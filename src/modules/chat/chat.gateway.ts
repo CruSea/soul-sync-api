@@ -48,7 +48,7 @@ export class ChatGateway {
     try {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
-        const data = this.rabbitmqService.getChatEchangeData(chatData, client);
+        const data = this.rabbitmqService.getChatEchangeData(chatData, client.id);
         this.chatExchangeService.send('chat', data);
         return 'AKC';
       }

@@ -29,6 +29,7 @@ RUN npm run build
 EXPOSE 3000
 EXPOSE 5432
 EXPOSE 3002
+EXPOSE 6379
 
 # Start the application
 CMD ["npm", "run", "start:prod"]

@@ -128,6 +128,9 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
               type: 'CHAT',
               metadata: {
                 conversationId: conversationId,
+                mentorId: (await this.prisma.conversation.findUnique({
+                  where: { id: conversationId },
+                })).mentorId,
               },
               payload: {
                 message: createdMessage,
@@ -145,13 +148,17 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           const conversation = await this.prisma.conversation.findUnique({
             where: { id: chat.metadata.conversationId },
           });
-          await this.redisService.get(conversation.mentorId.toString());
+          let socketId = await this.redisService.get(conversation.mentorId.toString());
+          if (!socketId) {
+            this.redisService.set(conversation.mentorId.toString(), 'mentor is offline');
+            socketId = 'mentor is offline';
+          }
           const chatEchangeData = this.rabbitmqService.getChatEchangeData(
             chat,
-            null,
+            socketId,
           );
           await this.channel.sendToQueue(
-            'chat_exchange',
+            'chat_queue',
             Buffer.from(JSON.stringify(chatEchangeData)),
           );
         } catch (error) {
