@@ -1,4 +1,4 @@
-import { NotFoundException, UseGuards } from '@nestjs/common';
+import { forwardRef, Inject, NotFoundException, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -24,6 +24,7 @@ export class ChatGateway {
 
   constructor(
     private readonly chatExchangeService: ChatExchangeService,
+    @Inject(forwardRef(() => RabbitmqService))
     private readonly rabbitmqService: RabbitmqService,
   ) {}
 
@@ -48,7 +49,10 @@ export class ChatGateway {
     try {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
-        const data = this.rabbitmqService.getChatEchangeData(chatData, client.id);
+        const data = this.rabbitmqService.getChatEchangeData(
+          chatData,
+          client.id,
+        );
         this.chatExchangeService.send('chat', data);
         return 'AKC';
       }

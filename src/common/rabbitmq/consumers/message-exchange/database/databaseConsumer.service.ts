@@ -22,12 +22,20 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit() {
-    await this.connect();
-    await this.consume();
+    try {
+      await this.connect();
+      await this.consume();
+    } catch (error) {
+      console.error('Error initializing DatabaseConsumerService:', error);
+    }
   }
 
   async onModuleDestroy() {
-    await this.disconnect();
+    try {
+      await this.disconnect();
+    } catch (error) {
+      console.error('Error destroying DatabaseConsumerService:', error);
+    }
   }
 
   private async connect() {
@@ -44,127 +52,153 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async consume() {
-    let chat: Chat;
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
-      if (msg && msg.content) {
-        try {
-          const messageContent = msg.content.toString();
-          const message = JSON.parse(messageContent);
-          console.log('Consumed message:', message);
+      if (!msg || !msg.content) {
+        console.error('Invalid message:', msg);
+        this.channel.nack(msg);
+        return;
+      }
 
-          let createMessageDto: CreateMessageDto;
+      try {
+        const messageContent = msg.content.toString();
+        const message = JSON.parse(messageContent);
+        console.log('Consumed message:', message);
 
-          // Validate message structure
-          if (!message.metadata || !message.payload) {
-            console.error('Invalid message format:', message);
-            this.channel.nack(msg); // Requeue invalid messages
-            return;
-          }
-
-          if (message.metadata.type === 'TELEGRAM') {
-            if (
-              !message.payload.message ||
-              !message.payload.message.chat ||
-              !message.payload.message.text
-            ) {
-              console.error('Invalid TELEGRAM message structure:', message);
-              this.channel.nack(msg); // Requeue invalid messages
-              return;
-            }
-            createMessageDto = {
-              channelId: message.metadata.channelId,
-              address: message.payload.message.chat.id.toString(),
-              type: 'RECEIVED',
-              body: message.payload.message.text,
-            };
-          } else if (message.metadata.type === 'NEGARIT') {
-            if (!message.payload.received_message) {
-              console.error('Invalid NEGARIT message structure:', message);
-              this.channel.nack(msg); // Requeue invalid messages
-              return;
-            }
-            createMessageDto = {
-              channelId: message.metadata.channelId,
-              address: message.payload.received_message.sent_from,
-              type: 'RECEIVED',
-              body: message.payload.received_message.message,
-            };
-          } else {
-            console.error('Unsupported message type:', message.metadata.type);
-            this.channel.nack(msg); // Requeue unsupported messages
-            return;
-          }
-
-          // Transaction to handle message, conversation, and thread
-          await this.prisma.$transaction(async (prisma) => {
-            const createdMessage = await prisma.message.create({
-              data: createMessageDto,
-            });
-
-            const existingConversation = await prisma.conversation.findFirst({
-              where: { address: createdMessage.address, isActive: true },
-            });
-
-            const conversationId = existingConversation
-              ? existingConversation.id
-              : (
-                  await prisma.conversation.create({
-                    data: {
-                      mentorId: process.env.DEFAULT_MENTOR_ID,
-                      address: createdMessage.address,
-                      channelId: createdMessage.channelId,
-                      isActive: true,
-                    },
-                  })
-                ).id;
-
-            await prisma.thread.create({
-              data: {
-                conversationId,
-                messageId: createdMessage.id,
-              },
-            });
-            chat = {
-              type: 'CHAT',
-              metadata: {
-                conversationId: conversationId,
-                mentorId: (await this.prisma.conversation.findUnique({
-                  where: { id: conversationId },
-                })).mentorId,
-              },
-              payload: {
-                message: createdMessage,
-              },
-            };
-          });
-
-          // Acknowledge only after success
-          this.channel.ack(msg);
-        } catch (error) {
-          console.error('Error processing message:', error);
-          this.channel.nack(msg); // Requeue on error
+        const createMessageDto = this.validateMessage(message);
+        if (!createMessageDto) {
+          console.error('Invalid message structure:', message);
+          this.channel.nack(msg);
+          return;
         }
-        try {
-          const conversation = await this.prisma.conversation.findUnique({
-            where: { id: chat.metadata.conversationId },
-          });
-          let socketId = await this.redisService.get(conversation.mentorId.toString());
-          if (!socketId) {
-            this.redisService.set(conversation.mentorId.toString(), 'mentor is offline');
-            socketId = 'mentor is offline';
-          }
-          const chatEchangeData = this.rabbitmqService.getChatEchangeData(
-            chat,
-            socketId,
-          );
-          await this.channel.sendToQueue(
-            'chat_queue',
-            Buffer.from(JSON.stringify(chatEchangeData)),
-          );
-        } catch (error) {
-          console.error('Error sending chat exchange data:', error);
+
+        const chat = await this.processMessage(createMessageDto);
+        if (!chat) {
+          console.error('Error processing message:', message);
+          this.channel.nack(msg);
+          return;
         }
+
+        await this.sendChatExchangeData(chat);
+        this.channel.ack(msg);
+      } catch (error) {
+        console.error('Error processing message:', error);
+        this.channel.nack(msg);
       }
     });
+  }
+
+  private validateMessage(message: any): CreateMessageDto | null {
+    if (!message.metadata || !message.payload) {
+      return null;
+    }
+
+    if (message.metadata.type === 'TELEGRAM') {
+      if (
+        !message.payload.message ||
+        !message.payload.message.chat ||
+        !message.payload.message.text
+      ) {
+        return null;
+      }
+      return {
+        channelId: message.metadata.channelId,
+        address: message.payload.message.chat.id.toString(),
+        type: 'RECEIVED',
+        body: message.payload.message.text,
+      };
+    } else if (message.metadata.type === 'NEGARIT') {
+      if (!message.payload.received_message) {
+        return null;
+      }
+      return {
+        channelId: message.metadata.channelId,
+        address: message.payload.received_message.sent_from,
+        type: 'RECEIVED',
+        body: message.payload.received_message.message,
+      };
+    } else {
+      console.error('Unsupported message type:', message.metadata.type);
+      return null;
+    }
+  }
+
+  private async processMessage(
+    createMessageDto: CreateMessageDto,
+  ): Promise<Chat | null> {
+    try {
+      const createdMessage = await this.prisma.message.create({
+        data: createMessageDto,
+      });
+
+      const existingConversation = await this.prisma.conversation.findFirst({
+        where: { address: createdMessage.address, isActive: true },
+      });
+
+      const conversationId = existingConversation
+        ? existingConversation.id
+        : (
+            await this.prisma.conversation.create({
+              data: {
+                mentorId: process.env.DEFAULT_MENTOR_ID,
+                address: createdMessage.address,
+                channelId: createdMessage.channelId,
+                isActive: true,
+              },
+            })
+          ).id;
+
+      await this.prisma.thread.create({
+        data: {
+          conversationId,
+          messageId: createdMessage.id,
+        },
+      });
+
+      return {
+        type: 'CHAT',
+        metadata: {
+          conversationId,
+          mentorId: (
+            await this.prisma.conversation.findUnique({
+              where: { id: conversationId },
+            })
+          ).mentorId,
+        },
+        payload: {
+          message: createdMessage,
+        },
+      };
+    } catch (error) {
+      console.error('Error processing message:', error);
+      return null;
+    }
+  }
+
+  private async sendChatExchangeData(chat: Chat) {
+    try {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: chat.metadata.conversationId },
+      });
+      let socketId = await this.redisService.get(
+        conversation.mentorId.toString(),
+      );
+      if (!socketId) {
+        this.redisService.set(
+          conversation.mentorId.toString(),
+          'mentor is offline',
+        );
+        socketId = 'mentor is offline';
+      }
+      const chatEchangeData = this.rabbitmqService.getChatEchangeData(
+        chat,
+        socketId,
+      );
+      await this.channel.sendToQueue(
+        'chat_queue',
+        Buffer.from(JSON.stringify(chatEchangeData)),
+      );
+    } catch (error) {
+      console.error('Error sending chat exchange data:', error);
+    }
   }
 }
