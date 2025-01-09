@@ -1,4 +1,9 @@
-import { forwardRef, Inject, NotFoundException, UseGuards } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,6 +16,9 @@ import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
 import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
+import { MentorChatService } from 'src/common/rabbitmq/consumers/chat-exchange/mentor-chat.service';
+import { JwtService } from '@nestjs/jwt';
+import { ChatService } from './chat.service';
 
 @WebSocketGateway(Number(process.env.CHAT_PORT), {
   cors: {
@@ -26,39 +34,60 @@ export class ChatGateway {
     private readonly chatExchangeService: ChatExchangeService,
     @Inject(forwardRef(() => RabbitmqService))
     private readonly rabbitmqService: RabbitmqService,
+    private readonly mentorChatService: MentorChatService,
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService,
+    private readonly jwtService: JwtService,
   ) {}
 
   afterInit(server: any) {
     console.log('ChatGateway Initialized', server);
   }
 
-  handleConnection(client: any) {
-    console.log('Client connected:', client);
+  @UseGuards(WsGuardGuard)
+  async handleConnection(client: any) {
+    try {
+      console.log('Client connected:', client.id);
+      const token = client.handshake.headers.authorization.split(' ')[1];
+      const userId = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET,
+        ignoreExpiration: false,
+      });
+      console.log('User ID:', userId);
+      await this.chatService.setClient(client.id, userId);
+      this.mentorChatService.consume(client.id);
+    } catch (error) {
+      console.error('Error handling client connection:', error);
+    }
   }
 
+  @UseGuards(WsGuardGuard)
   handleDisconnect(client: any) {
-    console.log('Client disconnected:', client);
+    console.log('Client disconnected:', client.id);
+    this.chatService.removeClient(client.id);
   }
 
   @SubscribeMessage('message')
   @UseGuards(WsGuardGuard)
-  handleMessage(
+  async handleMessage(
     @MessageBody() data: string,
     @ConnectedSocket() client: any,
-  ): string {
+  ): Promise<string> {
     try {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
-        const data = this.rabbitmqService.getChatEchangeData(
+        const chatExchangeData = this.rabbitmqService.getChatEchangeData(
           chatData,
           client.id,
         );
-        this.chatExchangeService.send('chat', data);
-        return 'AKC';
+        this.chatExchangeService.send('chat', chatExchangeData);
+        return 'ACK';
+      } else {
+        throw new NotFoundException('Invalid chat data');
       }
-    } catch (e) {
-      console.log(e);
-      throw new NotFoundException('Invalid Chat Data');
+    } catch (error) {
+      console.error('Error handling message:', error);
+      throw error;
     }
   }
 }

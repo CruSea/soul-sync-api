@@ -15,6 +15,6 @@ import { ChatModule } from 'src/modules/chat/chat.module';
     RedisService,
     MentorChatService,
   ],
-  exports: [DatabaseConsumerService],
+  exports: [DatabaseConsumerService, MentorChatService],
 })
 export class ConsumerModule {}

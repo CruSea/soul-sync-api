@@ -53,6 +53,8 @@ model User {
   updatedAt DateTime  @updatedAt
 
   AccountUser AccountUser[]
+
+  Mentor Mentor[]
 }
 
 model AccountUser {
@@ -88,6 +90,7 @@ model Mentor {
 
   Conversation Conversation[]
   Account      Account        @relation(fields: [accountId], references: [id])
+  User         User           @relation(fields: [email], references: [email])
 }
 
 model Conversation {

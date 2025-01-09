@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RedisService } from '../../common/redis/redis.service';
 import { Server } from 'socket.io';
 import { ChatGateway } from './chat.gateway'; // Import the gateway for access to the server
@@ -8,18 +8,19 @@ export class ChatService {
   private server: Server;
 
   constructor(
-    private redis: RedisService,
-    private chatGateway: ChatGateway, 
+    private redisService: RedisService,
+    @Inject(forwardRef(() => ChatGateway))
+    private chatGateway: ChatGateway,
   ) {
-    this.server = this.chatGateway.server; 
+    this.server = this.chatGateway.server;
   }
 
   async setClient(clientId: string, userId: string) {
-    await this.redis.set(clientId, userId);
+    await this.redisService.set(clientId, userId);
   }
 
   async removeClient(clientId: string) {
-    await this.redis.delete(clientId);
+    await this.redisService.delete(clientId);
   }
 
   async send(socketId: string, message: string) {
