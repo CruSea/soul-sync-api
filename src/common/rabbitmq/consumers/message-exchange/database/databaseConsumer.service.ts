@@ -46,7 +46,23 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
           let createMessageDto: CreateMessageDto;
 
+          // Validate message structure
+          if (!message.metadata || !message.payload) {
+            console.error('Invalid message format:', message);
+            this.channel.nack(msg); // Requeue invalid messages
+            return;
+          }
+
           if (message.metadata.type === 'TELEGRAM') {
+            if (
+              !message.payload.message ||
+              !message.payload.message.chat ||
+              !message.payload.message.text
+            ) {
+              console.error('Invalid TELEGRAM message structure:', message);
+              this.channel.nack(msg); // Requeue invalid messages
+              return;
+            }
             createMessageDto = {
               channelId: message.metadata.channelId,
               address: message.payload.message.chat.id.toString(),
@@ -54,6 +70,11 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
               body: message.payload.message.text,
             };
           } else if (message.metadata.type === 'NEGARIT') {
+            if (!message.payload.received_message) {
+              console.error('Invalid NEGARIT message structure:', message);
+              this.channel.nack(msg); // Requeue invalid messages
+              return;
+            }
             createMessageDto = {
               channelId: message.metadata.channelId,
               address: message.payload.received_message.sent_from,
@@ -62,7 +83,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
             };
           } else {
             console.error('Unsupported message type:', message.metadata.type);
-            this.channel.ack(msg);
+            this.channel.nack(msg); // Requeue unsupported messages
             return;
           }
 
@@ -97,12 +118,13 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
             });
           });
 
-          this.channel.ack(msg); // Acknowledge message only after success
+          // Acknowledge only after success
+          this.channel.ack(msg);
         } catch (error) {
           console.error('Error processing message:', error);
-          this.channel.nack(msg); // Requeue message for retry
+          this.channel.nack(msg); // Requeue on error
         }
       }
     });
-  }
+  }f
 }

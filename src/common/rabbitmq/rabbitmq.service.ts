@@ -7,9 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class RabbitmqService {
-  constructor(
-    private readonly prisma: PrismaService
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
   getChatEchangeData(chat: Chat, socket: any): any {
     return {
       id: uuidv4(),
@@ -23,17 +21,29 @@ export class RabbitmqService {
     };
   }
 
-  getMessageEchangeData(channelId: string, payload: any): any {
-    const channelType = this.prisma.channel
-      .findUnique({
+  async getMessageEchangeData(channelId: string, payload: any) {
+    let channelType;
+
+    try {
+      const channel = await this.prisma.channel.findUnique({
         where: { id: channelId },
-      })
-      .then((channel) => channel.type);
+      });
+
+      if (!channel) {
+        throw new Error(`Channel with ID ${channelId} not found`);
+      }
+
+      channelType = channel.type;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to retrieve channel type'); 
+    }
+
     return {
       id: uuidv4(),
       type: 'MESSAGE',
       metadata: {
-        type: channelType,
+        type: channelType, 
         channelId: channelId,
       },
       payload: payload,
