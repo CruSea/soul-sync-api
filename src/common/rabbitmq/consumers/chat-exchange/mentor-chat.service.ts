@@ -6,6 +6,7 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import * as amqp from 'amqplib';
+import { Message } from 'amqplib';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
@@ -64,45 +65,53 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async consume(socketId: string) {
+  async consume(email: string) {
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
-      if (!msg || !msg.content) {
+      if (!msg || !msg.content || msg.content.length === 0) {
         console.error('Invalid message:', msg);
-        this.channel.nack(msg);
+        this.channel.nack(msg, false, false); 
         return;
       }
 
       try {
-        const chatContent = msg.content.toString();
-        const chat = JSON.parse(chatContent);
-        const email = await this.redisService.get(socketId);
-        const user = await this.prismaService.user.findUnique({
-          where: {
-            id : chat.metadata.userId,
-          },
-        })
-        console.log('Consumed CHAT:', chat);
-
-        if (user.email === email) {
-          const socketId = await this.redisService.get(chat.metadata.userId);
-          if (socketId === 'mentor is offline' || !socketId) {
-            throw new Error('Mentor is offline');
-          } else {
-            try {
-              await this.chatService.send(socketId, chat);
-              console.log('successfully sent the message!');
-            } catch (error) {
-              console.log("Error sending message:", error);
-            }
-            this.channel.ack(msg);
-          }
-        } else {
-          throw new Error('Unauthorized access');
+        if (await this.handleMessage(msg, email)) {
+          this.channel.ack(msg);
+        }else {
+          throw new Error('handleMessage returned false');
         }
       } catch (error) {
-        console.error('Error processing CHAT:', error);
-        this.channel.nack(msg);
+        console.error('Error processing message:', error);
+        this.channel.nack(msg, false, true); 
       }
     });
+  }
+
+  private async handleMessage(msg: Message, email: string): Promise<boolean> {
+    const chatContent = msg.content.toString();
+    const chat = JSON.parse(chatContent);
+    console.log("this is the chat: ", chat);
+    try {
+      const user = await this.prismaService.user.findUniqueOrThrow({
+        where: { email: chat.metadata.email },
+      });
+      console.log('this is the user: ', user, ' email: ', email);
+      if (!user || user.email !== email) {
+        console.log('user.email: ', user.email, ' email: ', email);
+        throw new Error('Unauthorized access');
+      }
+
+      const socketId = await this.redisService.get(chat.metadata.email);
+      if (!socketId || socketId === 'mentor is offline') {
+        throw new Error('Mentor is offline');
+      }
+      await this.chatService.send(socketId, chat);
+      console.log('Successfully sent the message!');
+      return true;
+    } catch (error) {
+      console.log("Error handling the message: ", error);
+      return false;
+    }
+
+    
   }
 }

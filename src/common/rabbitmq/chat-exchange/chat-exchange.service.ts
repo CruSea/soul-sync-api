@@ -25,7 +25,7 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
       durable: true,
     });
     await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
-    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
+    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); 
     console.log('ChatExchangeService Connected!');
   }
 

@@ -10,6 +10,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  OnGatewayInit,
 } from '@nestjs/websockets';
 import { Server, Socket as BaseSocket } from 'socket.io';
 
@@ -17,10 +18,10 @@ interface Socket extends BaseSocket {
   user?: any;
 }
 import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
-import { ChatExchangeService } from'src/common/rabbitmq/chat-exchange/chat-exchange.service';
-import { RabbitmqService } from'src/common/rabbitmq/rabbitmq.service';
-import { Chat } from'src/types/chat';
-import { MentorChatService } from'src/common/rabbitmq/consumers/chat-exchange/mentor-chat.service';
+import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
+import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
+import { Chat } from 'src/types/chat';
+import { MentorChatService } from 'src/common/rabbitmq/consumers/chat-exchange/mentor-chat.service';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 
@@ -31,7 +32,7 @@ import { ChatService } from './chat.service';
     credentials: false,
   },
 })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayInit {
   @WebSocketServer() server: Server;
 
   constructor(
@@ -44,24 +45,44 @@ export class ChatGateway {
     private readonly jwtService: JwtService,
   ) {}
 
+  afterInit(server: Server) {
+    this.server = server;
+    if (this.chatService) {
+      this.chatService.setServer(server);
+    }
+  }
+
   async handleConnection(client: Socket) {
     try {
       const token = this.getTokenFromClient(client);
       const user = await this.verifyToken(token);
       await this.chatService.setSocket(user.email, client.id);
-      console.log('User connected: ', user.email, " id: ", client.id);
+      console.log('User connected: ', user.email, 'id: ', client.id);
+      this.mentorChatService.consume(user.email);
     } catch (error) {
       console.error('Error handling client connection:', error);
+      if (error.name === 'TokenExpiredError') {
+        client.emit('error', 'Token has expired');
+      } else if (error.name === 'JsonWebTokenError') {
+        client.emit('error', 'Invalid token');
+      } else {
+        client.emit('error', 'Unknown error');
+      }
       client.disconnect();
     }
   }
 
   async handleDisconnect(client: Socket) {
-    const user = this.getUserFromClient(client);
-    if (user) {
-      await this.chatService.removeSocket(user.email);
+    await this.chatService.removeSocket(client.id);
+    try {
+      const user = this.getUserFromClient(client);
+      if (user) {
+        console.log('User disconnected: ', user.email, 'id: ', client.id);
+      }
+    } catch (error) {
+      console.log("Error in handleDisconnect: ", error);
     }
-    console.log('User disconnected: ', user.email, ' id: ', client.id);
+    
   }
 
   @SubscribeMessage('message')
@@ -98,10 +119,14 @@ export class ChatGateway {
 
   private async verifyToken(token: string): Promise<any> {
     const parsedToken = token.startsWith('Bearer ') ? token.slice(7) : token;
-    return this.jwtService.verifyAsync(parsedToken, {
-      secret: process.env.JWT_SECRET,
-      ignoreExpiration: false,
-    });
+    try {
+      return await this.jwtService.verifyAsync(parsedToken, {
+        secret: process.env.JWT_SECRET,
+        ignoreExpiration: false,
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   private getUserFromClient(client: Socket): any {

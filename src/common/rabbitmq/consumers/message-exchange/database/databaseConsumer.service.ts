@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, forwardRef, Inject } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -6,6 +6,7 @@ import { CreateConversationDto } from './dto/create-conversation.dto';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { RedisService } from 'src/common/redis/redis.service';
+import { ChatService } from 'src/modules/chat/chat.service';
 
 @Injectable()
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -19,6 +20,8 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     private prisma: PrismaService,
     private readonly rabbitmqService: RabbitmqService,
     private readonly redisService: RedisService,
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService
   ) {}
 
   async onModuleInit() {
@@ -158,11 +161,11 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         type: 'CHAT',
         metadata: {
           conversationId,
-          mentorId: (
-            await this.prisma.conversation.findUnique({
+          email: (await this.prisma.mentor.findUnique({
+            where: { id: (await this.prisma.conversation.findUnique({
               where: { id: conversationId },
-            })
-          ).mentorId,
+            })).mentorId },
+          }))?.email,
         },
         payload: {
           message: createdMessage,
@@ -187,7 +190,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       );
       if (!socketId) {
         if (mentor) {
-          this.redisService.set(
+          this.chatService.setSocket(
             mentor.email.toString(),
             'mentor is offline',
           );
