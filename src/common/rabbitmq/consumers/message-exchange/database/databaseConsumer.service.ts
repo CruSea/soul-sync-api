@@ -55,6 +55,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async consume() {
+    let createMessageDto;
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
       if (!msg || !msg.content) {
         console.error('Invalid message:', msg);
@@ -67,9 +68,13 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         const message = JSON.parse(messageContent);
         console.log('Consumed message:', message);
 
-        const createMessageDto = this.validateMessage(message);
+        if (message.type === 'CHAT') {
+          createMessageDto = this.validateChat(message);
+        } else if (message.type === 'MESSAGE') {
+          createMessageDto = this.validateMessage(message);
+        }
         if (!createMessageDto) {
-          console.error('Invalid message structure:', message);
+          console.error('Invalid message/chat structure:', message);
           this.channel.nack(msg);
           return;
         }
@@ -79,10 +84,13 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           console.error('Error processing message:', message);
           this.channel.nack(msg);
           return;
+        } else if (chat.type === 'CHAT') {
+          await this.sendChatExchangeData(chat);
+          this.channel.ack(msg);
+        }else if (chat.type === 'MESSAGE') {
+          this.channel.ack(msg);
+          console.log('successfully added the chat to database!')
         }
-
-        await this.sendChatExchangeData(chat);
-        this.channel.ack(msg);
       } catch (error) {
         console.error('Error processing message:', error);
         this.channel.nack(msg);
@@ -125,9 +133,21 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private validateChat(chat: any) { 
+    if (!chat.metadata || !chat.payload) {
+      return null;
+    }
+    return {
+      channelId: chat.payload.channelId,
+      address: chat.payload.address,
+      type: chat.payload.type,
+      body: chat.payload.body,
+    };
+  }
+
   private async processMessage(
     createMessageDto: CreateMessageDto,
-  ): Promise<Chat | null> {
+  ): Promise<any> {
     try {
       const createdMessage = await this.prisma.message.create({
         data: createMessageDto,
@@ -157,20 +177,33 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         },
       });
 
-      return {
-        type: 'CHAT',
-        metadata: {
-          conversationId,
-          email: (await this.prisma.mentor.findUnique({
-            where: { id: (await this.prisma.conversation.findUnique({
-              where: { id: conversationId },
-            })).mentorId },
-          }))?.email,
-        },
-        payload: {
-          message: createdMessage,
-        },
-      };
+      if (createdMessage.type === 'RECEIVED') {
+        return {
+          type: 'CHAT',
+          metadata: {
+            conversationId,
+            email: (
+              await this.prisma.mentor.findUnique({
+                where: {
+                  id: (
+                    await this.prisma.conversation.findUnique({
+                      where: { id: conversationId },
+                    })
+                  ).mentorId,
+                },
+              })
+            )?.email,
+          },
+          payload: {
+            message: createdMessage,
+          },
+        };
+      } else {
+        return {
+          type: 'MESSAGE'
+        }
+      }
+        
     } catch (error) {
       console.error('Error processing message:', error);
       return null;

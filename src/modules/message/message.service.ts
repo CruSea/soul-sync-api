@@ -14,14 +14,13 @@ export class MessageService {
 
   async telegram(id: string, telegramChat: TelegramChat) {
     const data = await this.rabbitmqService.getMessageEchangeData(id, telegramChat);
-    this.messageExchangeService.send('telegram', data);
+    this.messageExchangeService.send('message', data);
     return 'ok';
   }
 
   negarit(id: string, negaritChat: NegaritChat) {
     const data = this.rabbitmqService.getMessageEchangeData(id, negaritChat);
-    this.messageExchangeService.send('negarit', data);
-    //console.log('negaritMessageDto', negaritMessageDto);
+    this.messageExchangeService.send('message', data);
     return 'ok';
   }
 
@@ -30,7 +29,7 @@ export class MessageService {
       id,
       received_message,
     );
-    this.messageExchangeService.send('negarit', data);
+    this.messageExchangeService.send('message', data);
     console.log('Negarit response data:', data);
     return 'ok';
   }

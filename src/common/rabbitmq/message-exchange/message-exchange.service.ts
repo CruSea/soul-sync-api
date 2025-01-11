@@ -9,7 +9,6 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly EXCHANGE_NAME = 'message';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
-  private readonly MESSAGE_QUEUE_NAME = 'message_queue';
   private readonly DATABASE_QUEUE_NAME = 'database_queue';
 
   async onModuleInit() {
@@ -26,12 +25,12 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
     await this.channel.assertExchange(this.EXCHANGE_NAME, this.EXCHANGE_TYPE, {
       durable: true,
     });
-    await this.channel.assertQueue(this.MESSAGE_QUEUE_NAME, { durable: true });
     await this.channel.assertQueue(this.DATABASE_QUEUE_NAME, { durable: true });
-    await this.channel.bindQueue(this.MESSAGE_QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
-    await this.channel.bindQueue(this.DATABASE_QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); // Bind to the specific routing key
-    await this.channel.bindQueue(this.MESSAGE_QUEUE_NAME, this.EXCHANGE_NAME, 'negarit'); // Bind to the specific routing key
-    await this.channel.bindQueue(this.DATABASE_QUEUE_NAME, this.EXCHANGE_NAME, 'negarit'); // Bind to the specific routing key
+    await this.channel.bindQueue(
+      this.DATABASE_QUEUE_NAME,
+      this.EXCHANGE_NAME,
+      'message',
+    );
     console.log('MessageExchangeService Connected!');
   }
 

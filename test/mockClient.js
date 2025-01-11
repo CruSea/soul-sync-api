@@ -26,6 +26,7 @@ socket.emit(
     metadata: {
       mentorId: '51eacba7-24b6-429f-9cd5-00d7bacacbb6',
       conversationId: '51eacba7-24b6-429f-9cd5-00d7bacacbb6',
+      channelId: '51eacba7-24b6-429f-9cd5-00d7bacacbb6',
     },
     payload: {
       text: 'Hello, server!',

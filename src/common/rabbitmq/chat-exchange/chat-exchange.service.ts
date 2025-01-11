@@ -9,8 +9,9 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly EXCHANGE_NAME = 'chat';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
-  private readonly QUEUE_NAME = 'chat_queue';
-  
+  private readonly QUEUE_NAME_CHAT = 'chat_queue';
+  private readonly QUEUE_NAME_DB = 'database_queue';
+
   async onModuleInit() {
     await this.connect();
   }
@@ -24,8 +25,18 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
     await this.channel.assertExchange(this.EXCHANGE_NAME, this.EXCHANGE_TYPE, {
       durable: true,
     });
-    await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
-    await this.channel.bindQueue(this.QUEUE_NAME, this.EXCHANGE_NAME, 'telegram'); 
+    await this.channel.assertQueue(this.QUEUE_NAME_CHAT, { durable: true });
+    await this.channel.bindQueue(
+      this.QUEUE_NAME_CHAT,
+      this.EXCHANGE_NAME,
+      'chat',
+    );
+    await this.channel.assertQueue(this.QUEUE_NAME_DB, { durable: true });
+    await this.channel.bindQueue(
+      this.QUEUE_NAME_DB,
+      this.EXCHANGE_NAME,
+      'chat',
+    );
     console.log('ChatExchangeService Connected!');
   }
 
