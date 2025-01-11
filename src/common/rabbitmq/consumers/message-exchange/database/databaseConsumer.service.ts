@@ -179,14 +179,19 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: chat.metadata.conversationId },
       });
+      const mentor = await this.prisma.mentor.findUnique({
+        where: { id: conversation.mentorId },
+      });
       let socketId = await this.redisService.get(
-        conversation.mentorId.toString(),
+        mentor.email.toString(),
       );
       if (!socketId) {
-        this.redisService.set(
-          conversation.mentorId.toString(),
-          'mentor is offline',
-        );
+        if (mentor) {
+          this.redisService.set(
+            mentor.email.toString(),
+            'mentor is offline',
+          );
+        }
         socketId = 'mentor is offline';
       }
       const chatEchangeData = this.rabbitmqService.getChatEchangeData(

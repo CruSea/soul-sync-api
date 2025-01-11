@@ -11,12 +11,12 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
-import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
-import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
-import { Chat } from 'src/types/chat';
-import { MentorChatService } from 'src/common/rabbitmq/consumers/chat-exchange/mentor-chat.service';
+import { ChatExchangeService } from'src/common/rabbitmq/chat-exchange/chat-exchange.service';
+import { RabbitmqService } from'src/common/rabbitmq/rabbitmq.service';
+import { Chat } from'src/types/chat';
+import { MentorChatService } from'src/common/rabbitmq/consumers/chat-exchange/mentor-chat.service';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 
@@ -28,6 +28,7 @@ import { ChatService } from './chat.service';
   },
 })
 export class ChatGateway {
+  private user: any;
   @WebSocketServer() server: Server;
 
   constructor(
@@ -40,54 +41,68 @@ export class ChatGateway {
     private readonly jwtService: JwtService,
   ) {}
 
-  afterInit(server: any) {
-    console.log('ChatGateway Initialized', server);
-  }
-
-  @UseGuards(WsGuardGuard)
-  async handleConnection(client: any) {
+  async handleConnection(client: Socket) {
     try {
-      console.log('Client connected:', client.id);
-      const token = client.handshake.headers.authorization.split(' ')[1];
-      const userId = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
-        ignoreExpiration: false,
-      });
-      console.log('User ID:', userId);
-      await this.chatService.setClient(client.id, userId);
-      this.mentorChatService.consume(client.id);
+      const token = this.getTokenFromClient(client);
+      const user = await this.verifyToken(token);
+      await this.chatService.setSocket(user.email, client.id);
     } catch (error) {
       console.error('Error handling client connection:', error);
+      client.disconnect();
     }
   }
 
-  @UseGuards(WsGuardGuard)
-  handleDisconnect(client: any) {
-    console.log('Client disconnected:', client.id);
-    this.chatService.removeClient(client.id);
+  async handleDisconnect(client: Socket) {
+    const user = this.getUserFromClient(client);
+    if (user) {
+      await this.chatService.removeSocket(user.email);
+    }
   }
 
   @SubscribeMessage('message')
   @UseGuards(WsGuardGuard)
   async handleMessage(
     @MessageBody() data: string,
-    @ConnectedSocket() client: any,
+    @ConnectedSocket() client: Socket,
   ): Promise<string> {
+    console.log('incoming message from the socket: ', data);
     try {
-      const chatData: Chat = JSON.parse(data);
+      const chatData = JSON.parse(data) as Chat;
+      console.log('Parsed data: ', chatData);
       if (chatData.type === 'CHAT') {
         const chatExchangeData = this.rabbitmqService.getChatEchangeData(
           chatData,
           client.id,
         );
-        this.chatExchangeService.send('chat', chatExchangeData);
+        console.log('chatExchangeData: ', chatExchangeData);
+        await this.chatExchangeService.send('chat', chatExchangeData);
         return 'ACK';
       } else {
         throw new NotFoundException('Invalid chat data');
       }
     } catch (error) {
       console.error('Error handling message:', error);
-      throw error;
+      return 'ERROR';
     }
+  }
+
+  private getTokenFromClient(client: Socket): string {
+    return (
+      client.handshake?.auth?.token ||
+      client.handshake?.headers?.authorization ||
+      client.handshake?.query?.token
+    );
+  }
+
+  private async verifyToken(token: string): Promise<any> {
+    const parsedToken = token.startsWith('Bearer ') ? token.slice(7) : token;
+    return this.jwtService.verifyAsync(parsedToken, {
+      secret: process.env.JWT_SECRET,
+      ignoreExpiration: false,
+    });
+  }
+
+  private getUserFromClient(client: Socket): any {
+    return this.user;
   }
 }

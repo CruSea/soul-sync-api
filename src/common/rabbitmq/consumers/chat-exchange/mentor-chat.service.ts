@@ -8,6 +8,7 @@ import {
 import * as amqp from 'amqplib';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
+import { PrismaService } from '../../../../modules/prisma/prisma.service';
 
 @Injectable()
 export class MentorChatService implements OnModuleInit, OnModuleDestroy {
@@ -18,9 +19,10 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
   private readonly QUEUE_NAME = 'chat_queue';
 
   constructor(
-    private readonly redis: RedisService,
+    private readonly redisService: RedisService,
     @Inject(forwardRef(() => ChatService))
-    private readonly chat: ChatService,
+    private readonly chatService: ChatService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async onModuleInit() {
@@ -73,16 +75,25 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
       try {
         const chatContent = msg.content.toString();
         const chat = JSON.parse(chatContent);
-        const userId = await this.redis.get(socketId);
+        const email = await this.redisService.get(socketId);
+        const user = await this.prismaService.user.findUnique({
+          where: {
+            id : chat.metadata.userId,
+          },
+        })
         console.log('Consumed CHAT:', chat);
 
-        if (chat.metadata.userId === userId) {
-          const socketId = await this.redis.get(chat.metadata.userId);
-          if (socketId === 'mentor is offline') {
+        if (user.email === email) {
+          const socketId = await this.redisService.get(chat.metadata.userId);
+          if (socketId === 'mentor is offline' || !socketId) {
             throw new Error('Mentor is offline');
           } else {
-            await this.chat.send(socketId, chat);
-            console.log('successfully sent the message!');
+            try {
+              await this.chatService.send(socketId, chat);
+              console.log('successfully sent the message!');
+            } catch (error) {
+              console.log("Error sending message:", error);
+            }
             this.channel.ack(msg);
           }
         } else {

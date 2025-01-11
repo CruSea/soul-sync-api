@@ -6,9 +6,15 @@ import { ChatService } from './chat.service';
 import { RedisService } from 'src/common/redis/redis.service';
 import { RedisModule } from 'src/common/redis/redis.module';
 import { MentorChatService } from 'src/common/rabbitmq/consumers/chat-exchange/mentor-chat.service';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [forwardRef(() => RabbitmqModule), JwtModule, RedisModule],
+  imports: [
+    forwardRef(() => RabbitmqModule),
+    JwtModule,
+    RedisModule,
+    PrismaModule,
+  ],
   providers: [ChatGateway, ChatService, RedisService, MentorChatService],
   exports: [ChatService, ChatGateway],
 })

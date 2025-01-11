@@ -15,11 +15,12 @@ export class ChatService {
     this.server = this.chatGateway.server;
   }
 
-  async setClient(clientId: string, userId: string) {
-    await this.redisService.set(clientId, userId);
+  async setSocket(email: string, clientId: string) {
+    await this.redisService.delete(email);
+    await this.redisService.set(email, clientId);
   }
 
-  async removeClient(clientId: string) {
+  async removeSocket(clientId: string) {
     await this.redisService.delete(clientId);
   }
 

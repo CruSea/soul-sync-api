@@ -29,8 +29,9 @@ export class WsGuardGuard implements CanActivate {
 
   private getTokenFromHandshake(client: any): string {
     const token =
-      client.handshake?.query?.token ||
-      client.handshake?.headers?.authorization;
+      client.handshake?.auth?.token ||
+      client.handshake?.headers?.authorization ||
+      client.handshake?.query?.token;
     if (!token) {
       throw new UnauthorizedException('Token not provided');
     }
