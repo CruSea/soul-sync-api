@@ -1,7 +1,7 @@
 import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { RedisService } from '../../common/redis/redis.service';
 import { Server } from 'socket.io';
-import { ChatGateway } from './chat.gateway'; // Import the gateway for access to the server
+import { ChatGateway } from './chat.gateway'; 
 
 @Injectable()
 export class ChatService {
@@ -16,7 +16,7 @@ export class ChatService {
   }
 
   async setSocket(email: string, clientId: string) {
-    await this.redisService.delete(email);
+    await this.redisService.delete(email); // deletes if there is any that is previously set but left without being removed so that it sets a new one
     await this.redisService.set(email, clientId);
   }
 

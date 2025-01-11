@@ -11,7 +11,11 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Server, Socket as BaseSocket } from 'socket.io';
+
+interface Socket extends BaseSocket {
+  user?: any;
+}
 import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
 import { ChatExchangeService } from'src/common/rabbitmq/chat-exchange/chat-exchange.service';
 import { RabbitmqService } from'src/common/rabbitmq/rabbitmq.service';
@@ -28,7 +32,6 @@ import { ChatService } from './chat.service';
   },
 })
 export class ChatGateway {
-  private user: any;
   @WebSocketServer() server: Server;
 
   constructor(
@@ -46,6 +49,7 @@ export class ChatGateway {
       const token = this.getTokenFromClient(client);
       const user = await this.verifyToken(token);
       await this.chatService.setSocket(user.email, client.id);
+      console.log('User connected: ', user.email, " id: ", client.id);
     } catch (error) {
       console.error('Error handling client connection:', error);
       client.disconnect();
@@ -57,6 +61,7 @@ export class ChatGateway {
     if (user) {
       await this.chatService.removeSocket(user.email);
     }
+    console.log('User disconnected: ', user.email, ' id: ', client.id);
   }
 
   @SubscribeMessage('message')
@@ -65,16 +70,13 @@ export class ChatGateway {
     @MessageBody() data: string,
     @ConnectedSocket() client: Socket,
   ): Promise<string> {
-    console.log('incoming message from the socket: ', data);
     try {
       const chatData = JSON.parse(data) as Chat;
-      console.log('Parsed data: ', chatData);
       if (chatData.type === 'CHAT') {
         const chatExchangeData = this.rabbitmqService.getChatEchangeData(
           chatData,
           client.id,
         );
-        console.log('chatExchangeData: ', chatExchangeData);
         await this.chatExchangeService.send('chat', chatExchangeData);
         return 'ACK';
       } else {
@@ -103,6 +105,6 @@ export class ChatGateway {
   }
 
   private getUserFromClient(client: Socket): any {
-    return this.user;
+    return client.user;
   }
 }
