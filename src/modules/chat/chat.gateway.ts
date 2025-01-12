@@ -93,11 +93,13 @@ export class ChatGateway implements OnGatewayInit {
   ): Promise<string> {
     try {
       const chatData = JSON.parse(data) as Chat;
+      console.log('chatgateway chatData: ', chatData);
       if (chatData.type === 'CHAT') {
         const chatExchangeData = this.rabbitmqService.getChatEchangeData(
           chatData,
           client.id,
         );
+        console.log('chatgateway chatExchangeData: ', chatExchangeData);
         await this.chatExchangeService.send('chat', chatExchangeData);
         return 'ACK';
       } else {

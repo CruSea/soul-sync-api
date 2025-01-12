@@ -26,11 +26,6 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
       durable: true,
     });
     await this.channel.assertQueue(this.QUEUE_NAME_CHAT, { durable: true });
-    await this.channel.bindQueue(
-      this.QUEUE_NAME_CHAT,
-      this.EXCHANGE_NAME,
-      'chat',
-    );
     await this.channel.assertQueue(this.QUEUE_NAME_DB, { durable: true });
     await this.channel.bindQueue(
       this.QUEUE_NAME_DB,
@@ -48,6 +43,7 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
 
   async send(routingKey: string, message: any) {
     const messageBuffer = Buffer.from(JSON.stringify(message));
+    console.log('chatexchange message: ', message, "messageBuffer: ", messageBuffer);
     if (this.channel) {
       this.channel.publish(this.EXCHANGE_NAME, routingKey, messageBuffer, {
         persistent: true,

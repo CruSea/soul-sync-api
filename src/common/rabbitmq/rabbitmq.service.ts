@@ -13,7 +13,8 @@ export class RabbitmqService {
       id: uuidv4(),
       type: 'CHAT',
       metadata: {
-        email: chat.metadata.email,
+        email: chat.metadata?.email,
+        userId: chat.metadata?.userId,
         conversationId: chat.metadata.conversationId,
       },
       payload: chat.payload,

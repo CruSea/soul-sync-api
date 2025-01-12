@@ -1,4 +1,10 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, forwardRef, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -21,7 +27,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     private readonly rabbitmqService: RabbitmqService,
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => ChatService))
-    private readonly chatService: ChatService
+    private readonly chatService: ChatService,
   ) {}
 
   async onModuleInit() {
@@ -55,7 +61,6 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async consume() {
-    let createMessageDto;
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
       if (!msg || !msg.content) {
         console.error('Invalid message:', msg);
@@ -68,13 +73,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         const message = JSON.parse(messageContent);
         console.log('Consumed message:', message);
 
-        if (message.type === 'CHAT') {
-          createMessageDto = this.validateChat(message);
-        } else if (message.type === 'MESSAGE') {
-          createMessageDto = this.validateMessage(message);
-        }
+        const createMessageDto = this.validateMessage(message);
+        console.log('Validated message: ', createMessageDto);
         if (!createMessageDto) {
-          console.error('Invalid message/chat structure:', message);
+          console.error('Invalid message structure:', message);
           this.channel.nack(msg);
           return;
         }
@@ -84,13 +86,15 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           console.error('Error processing message:', message);
           this.channel.nack(msg);
           return;
-        } else if (chat.type === 'CHAT') {
-          await this.sendChatExchangeData(chat);
-          this.channel.ack(msg);
-        }else if (chat.type === 'MESSAGE') {
-          this.channel.ack(msg);
-          console.log('successfully added the chat to database!')
         }
+
+        if (chat.type === 'CHAT') {
+          await this.sendChatExchangeData(chat);
+        } else if (chat.type === 'MESSAGE') {
+          await this.sendMessageExchangeData(message);
+        }
+
+        this.channel.ack(msg);
       } catch (error) {
         console.error('Error processing message:', error);
         this.channel.nack(msg);
@@ -103,7 +107,17 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       return null;
     }
 
-    if (message.metadata.type === 'TELEGRAM') {
+    if (message.type === 'CHAT') {
+      if (!message.payload.body) {
+        return null;
+      }
+      return {
+        channelId: message.payload.channelId,
+        address: message.payload.address,
+        type: 'SENT',
+        body: message.payload.body,
+      };
+    } else if (message.metadata.type === 'TELEGRAM') {
       if (
         !message.payload.message ||
         !message.payload.message.chat ||
@@ -128,21 +142,9 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         body: message.payload.received_message.message,
       };
     } else {
-      console.error('Unsupported message type:', message.metadata.type);
+      console.error('Unsupported message type:', message.metadata);
       return null;
     }
-  }
-
-  private validateChat(chat: any) { 
-    if (!chat.metadata || !chat.payload) {
-      return null;
-    }
-    return {
-      channelId: chat.payload.channelId,
-      address: chat.payload.address,
-      type: chat.payload.type,
-      body: chat.payload.body,
-    };
   }
 
   private async processMessage(
@@ -200,10 +202,9 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         };
       } else {
         return {
-          type: 'MESSAGE'
-        }
+          type: 'MESSAGE',
+        };
       }
-        
     } catch (error) {
       console.error('Error processing message:', error);
       return null;
@@ -218,9 +219,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       const mentor = await this.prisma.mentor.findUnique({
         where: { id: conversation.mentorId },
       });
-      let socketId = await this.redisService.get(
-        mentor.email.toString(),
-      );
+      let socketId = await this.redisService.get(mentor.email.toString());
       if (!socketId) {
         if (mentor) {
           this.chatService.setSocket(
@@ -240,6 +239,47 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       );
     } catch (error) {
       console.error('Error sending chat exchange data:', error);
+    }
+  }
+
+  private async sendMessageExchangeData(message: any) {
+    try {
+      if (
+        !message.payload ||
+        !message.payload.address ||
+        !message.payload.body
+      ) {
+        console.error('Invalid message payload:', message);
+        return;
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: message.payload.address,
+          text: message.payload.body,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error('Error sending message to Telegram:', errorResponse);
+        return;
+      }
+
+      const telegramResponse = await response.json();
+      if (!telegramResponse.ok) {
+        console.error('Error sending message to Telegram:', telegramResponse);
+        return;
+      }
+
+      console.log('Message sent to Telegram successfully:', telegramResponse);
+    } catch (error) {
+      console.error('Error sending message to Telegram:', error);
     }
   }
 }
