@@ -139,7 +139,8 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
           return;
         }
 
-        const telegramApiUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const config = channel.configuration as { token: string };
+        const telegramApiUrl = `https://api.telegram.org/bot${config.token}/sendMessage`;
         const response = await fetch(telegramApiUrl, {
           method: 'POST',
           headers: {
