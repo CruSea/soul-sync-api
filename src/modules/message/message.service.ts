@@ -14,25 +14,14 @@ export class MessageService {
 
   async telegram(id: string, telegramChat: TelegramChat) {
     const data = await this.rabbitmqService.getMessageEchangeData(id, telegramChat);
-    this.messageExchangeService.send('message', data);
+    console.log('data:', data);
+    // this.messageExchangeService.send('message', data);
     return 'ok';
   }
 
-  negarit(id: string, negaritChat: NegaritChat) {
-    const data = this.rabbitmqService.getMessageEchangeData(id, negaritChat);
-    this.messageExchangeService.send('message', data);
+  async negarit(id: string, negaritChat: NegaritChat) {
+    const data = await this.rabbitmqService.getMessageEchangeData(id, negaritChat);
+    await this.messageExchangeService.send('message', data);
     return 'ok';
   }
-
-  processNegaritWebhook(id: string, received_message: any) {
-    const data = this.rabbitmqService.getMessageEchangeData(
-      id,
-      received_message,
-    );
-    this.messageExchangeService.send('message', data);
-    console.log('Negarit response data:', data);
-    return 'ok';
-  }
-
-
 }
