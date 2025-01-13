@@ -124,43 +124,50 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async sendMessageExchangeData(message: any) {
-    try {
-      if (
-        !message.payload ||
-        !message.payload.address ||
-        !message.payload.body
-      ) {
-        console.error('Invalid message payload:', message);
-        return;
+    const channel = await this.prismaService.channel.findFirst({
+      where: { id: message.payload.channelId },
+    });
+    const channelType = channel?.type;
+    if (channelType === 'TELEGRAM') {
+      try {
+        if (
+          !message.payload ||
+          !message.payload.address ||
+          !message.payload.body
+        ) {
+          console.error('Invalid message payload:', message);
+          return;
+        }
+
+        const telegramApiUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const response = await fetch(telegramApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: message.payload.address,
+            text: message.payload.body,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorResponse = await response.json();
+          console.error('Error sending message to Telegram:', errorResponse);
+          return;
+        }
+
+        const telegramResponse = await response.json();
+        if (!telegramResponse.ok) {
+          console.error('Error sending message to Telegram:', telegramResponse);
+          return;
+        }
+
+        console.log('Message sent to Telegram successfully:', telegramResponse);
+      } catch (error) {
+        console.error('Error sending message to Telegram:', error);
       }
-
-      const telegramApiUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-      const response = await fetch(telegramApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: message.payload.address,
-          text: message.payload.body,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        console.error('Error sending message to Telegram:', errorResponse);
-        return;
-      }
-
-      const telegramResponse = await response.json();
-      if (!telegramResponse.ok) {
-        console.error('Error sending message to Telegram:', telegramResponse);
-        return;
-      }
-
-      console.log('Message sent to Telegram successfully:', telegramResponse);
-    } catch (error) {
-      console.error('Error sending message to Telegram:', error);
-    }
+    }else if(channelType === 'NEGARIT') {}
+    //beqi implement your logic here
   }
 }
