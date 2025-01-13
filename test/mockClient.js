@@ -1,12 +1,9 @@
 const io = require('socket.io-client');
 const readline = require('readline');
 
-const socket = io('http://localhost:3002', {
-  auth: {
-    token:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYzdhZTBlMS1jZWNmLTQ1MmYtOTFjMy0yZjMwZTY4YzM2YTYiLCJlbWFpbCI6ImJubW1hcmtvc0BnbWFpbC5jb20iLCJpbWFnZVVybCI6bnVsbCwiYWNjb3VudHMiOltdLCJpYXQiOjE3MzY2NDI1NTAsImV4cCI6MTczNjY0NjE1MH0.170OivapDl99tv3TTpMc40M-nF1Jwlzhseo0bDJq_SY',
-  },
-});
+const socket = io(
+  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkN2NmZTQwZC05Yzg0LTRiNmUtOWUwNS04M2YzOTE2YjQ4MTIiLCJlbWFpbCI6ImJubW1hcmtvc0BnbWFpbC5jb20iLCJpbWFnZVVybCI6bnVsbCwiYWNjb3VudHMiOltdLCJpYXQiOjE3MzY3Mjc0OTksImV4cCI6MTczNjczMTA5OX0.u1ZyknkQvrNjhLFCmiw91x3LukXxrlv1zBEviQqv3IQ',
+);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -36,12 +33,12 @@ rl.on('line', (line) => {
       JSON.stringify({
         type: 'CHAT',
         metadata: {
-          userId: '51eacba7-24b6-429f-9cd5-00d7bacacbb6',
+          userId: process.env.DEFAULT_MENTOR_ID,
           email: 'bnnmmarkos@gmail.com',
-          conversationId: 'd3a64e77-91cb-42db-a82a-d8ec5eb48adc',
+          conversationId: process.env.DEFAULT_CONVERSATION_ID,
         },
         payload: {
-          channelId: '118cb2b2-cbfa-4a3d-808c-485634155f83',
+          channelId: 'b0320efb-9e5f-4d22-9cbc-e11030b47359',
           body: line,
           address: '5209941226',
           type: 'SENT',

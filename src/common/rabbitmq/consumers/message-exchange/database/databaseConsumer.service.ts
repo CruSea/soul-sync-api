@@ -13,6 +13,7 @@ import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
+import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
 
 @Injectable()
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -28,6 +29,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
+    private readonly chatExchangeService: ChatExchangeService,
   ) {}
 
   async onModuleInit() {
@@ -90,8 +92,6 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
         if (chat.type === 'CHAT') {
           await this.sendChatExchangeData(chat);
-        } else if (chat.type === 'MESSAGE') {
-          await this.sendMessageExchangeData(message);
         }
 
         this.channel.ack(msg);
@@ -108,14 +108,12 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (message.type === 'CHAT') {
-      if (!message.payload.body) {
-        return null;
-      }
+      
       return {
-        channelId: message.payload.channelId,
-        address: message.payload.address,
+        channelId: (message.payload.channelId || message.payload.message.channelId).toString(),
+        address: message.payload.address || message.payload.message.address,
         type: 'SENT',
-        body: message.payload.body,
+        body: message.payload.body || message.payload.message.body,
       };
     } else if (message.metadata.type === 'TELEGRAM') {
       if (
@@ -233,53 +231,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         chat,
         socketId,
       );
-      await this.channel.sendToQueue(
-        'chat_queue',
-        Buffer.from(JSON.stringify(chatEchangeData)),
-      );
+      await this.chatExchangeService.send('chat', chatEchangeData);
+
     } catch (error) {
       console.error('Error sending chat exchange data:', error);
-    }
-  }
-
-  private async sendMessageExchangeData(message: any) {
-    try {
-      if (
-        !message.payload ||
-        !message.payload.address ||
-        !message.payload.body
-      ) {
-        console.error('Invalid message payload:', message);
-        return;
-      }
-
-      const telegramApiUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-      const response = await fetch(telegramApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: message.payload.address,
-          text: message.payload.body,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        console.error('Error sending message to Telegram:', errorResponse);
-        return;
-      }
-
-      const telegramResponse = await response.json();
-      if (!telegramResponse.ok) {
-        console.error('Error sending message to Telegram:', telegramResponse);
-        return;
-      }
-
-      console.log('Message sent to Telegram successfully:', telegramResponse);
-    } catch (error) {
-      console.error('Error sending message to Telegram:', error);
     }
   }
 }

@@ -26,6 +26,11 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
       durable: true,
     });
     await this.channel.assertQueue(this.QUEUE_NAME_CHAT, { durable: true });
+    await this.channel.bindQueue(
+      this.QUEUE_NAME_CHAT,
+      this.EXCHANGE_NAME,
+      'chat',
+    );
     await this.channel.assertQueue(this.QUEUE_NAME_DB, { durable: true });
     await this.channel.bindQueue(
       this.QUEUE_NAME_DB,

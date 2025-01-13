@@ -69,19 +69,19 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
       if (!msg || !msg.content || msg.content.length === 0) {
         console.error('Invalid message:', msg);
-        this.channel.nack(msg, false, false); 
+        this.channel.nack(msg, false, false);
         return;
       }
 
       try {
         if (await this.handleMessage(msg, email)) {
           this.channel.ack(msg);
-        }else {
+        } else {
           throw new Error('handleMessage returned false');
         }
       } catch (error) {
         console.error('Error processing message:', error);
-        this.channel.nack(msg, false, true); 
+        this.channel.nack(msg, false, true);
       }
     });
   }
@@ -89,12 +89,22 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
   private async handleMessage(msg: Message, email: string): Promise<boolean> {
     const chatContent = msg.content.toString();
     const chat = JSON.parse(chatContent);
-    console.log("this is the chat: ", chat);
+    console.log('this is the chat: ', chat);
+    console.log('this is the email: ', chat.metadata.email, "this is the passed email: ", email);
     try {
-      const user = await this.prismaService.user.findUniqueOrThrow({
+      const user = await this.prismaService.mentor.findFirst({
         where: { email: chat.metadata.email },
       });
       console.log('this is the user: ', user, ' email: ', email);
+
+      if (chat.payload.type === 'SENT') {
+        try {
+          await this.sendMessageExchangeData(chat);
+          return true;
+        } catch (error) {
+          throw new Error('Error sending the message to telegram: ' + error);
+        }
+      }
       if (!user || user.email !== email) {
         console.log('user.email: ', user.email, ' email: ', email);
         throw new Error('Unauthorized access');
@@ -108,10 +118,49 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
       console.log('Successfully sent the message!');
       return true;
     } catch (error) {
-      console.log("Error handling the message: ", error);
+      console.log('Error handling the message: ', error);
       return false;
     }
+  }
 
-    
+  private async sendMessageExchangeData(message: any) {
+    try {
+      if (
+        !message.payload ||
+        !message.payload.address ||
+        !message.payload.body
+      ) {
+        console.error('Invalid message payload:', message);
+        return;
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: message.payload.address,
+          text: message.payload.body,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        console.error('Error sending message to Telegram:', errorResponse);
+        return;
+      }
+
+      const telegramResponse = await response.json();
+      if (!telegramResponse.ok) {
+        console.error('Error sending message to Telegram:', telegramResponse);
+        return;
+      }
+
+      console.log('Message sent to Telegram successfully:', telegramResponse);
+    } catch (error) {
+      console.error('Error sending message to Telegram:', error);
+    }
   }
 }
