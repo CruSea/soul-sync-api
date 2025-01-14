@@ -80,9 +80,8 @@ export class ChatGateway implements OnGatewayInit {
         console.log('User disconnected: ', user.email, 'id: ', client.id);
       }
     } catch (error) {
-      console.log("Error in handleDisconnect: ", error);
+      console.log('Error in handleDisconnect: ', error);
     }
-    
   }
 
   @SubscribeMessage('message')

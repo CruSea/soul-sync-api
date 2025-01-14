@@ -8,7 +8,6 @@ import {
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { CreateConversationDto } from './dto/create-conversation.dto';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { RedisService } from 'src/common/redis/redis.service';
@@ -106,9 +105,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (message.type === 'CHAT') {
-      
       return {
-        channelId: (message.payload.channelId || message.payload.message.channelId).toString(),
+        channelId: (
+          message.payload.channelId || message.payload.message.channelId
+        ).toString(),
         address: message.payload.address || message.payload.message.address,
         type: 'SENT',
         body: message.payload.body || message.payload.message.body,
@@ -230,7 +230,6 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         socketId,
       );
       await this.chatExchangeService.send('chat', chatEchangeData);
-
     } catch (error) {
       console.error('Error sending chat exchange data:', error);
     }

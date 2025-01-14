@@ -95,7 +95,6 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
         where: { email: chat.metadata.email },
       });
 
-
       if (chat.payload.type === 'SENT') {
         try {
           await this.sendMessageExchangeData(chat);
@@ -166,7 +165,8 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
       } catch (error) {
         console.error('Error sending message to Telegram:', error);
       }
-    }else if(channelType === 'NEGARIT') {}
+    } else if (channelType === 'NEGARIT') {
+    }
     //beqi implement your logic here
   }
 }
