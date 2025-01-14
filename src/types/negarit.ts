@@ -5,6 +5,7 @@ export interface NegaritChat {
     type: string;
     channelId: string;
   };
+  message: string;
   payload: {
     id: number;
     sms_port_id: number;

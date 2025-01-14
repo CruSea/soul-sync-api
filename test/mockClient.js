@@ -2,7 +2,7 @@ const io = require('socket.io-client');
 const readline = require('readline');
 
 const socket = io(
-  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0OTM2MzY2Yi01ODk3LTRjYzYtYjA4NC1iZTBhYTRiODU5OTQiLCJlbWFpbCI6ImJubW1hcmtvc0BnbWFpbC5jb20iLCJpbWFnZVVybCI6bnVsbCwiYWNjb3VudHMiOltdLCJpYXQiOjE3MzY3NzA5MTEsImV4cCI6MTczNjc3NDUxMX0.aN8yKN1tm0xkWarVa9PO7D3j8Diue-ERUIdNh4Y_8Gg',
+  'http://localhost:4000?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NDAxOGFmYi1lMTNkLTQyNzUtYWNkYy0xODM2Yzg0YTYxMTgiLCJlbWFpbCI6ImJpa2lsYS5rZXRlbWEtdWdAYWF1LmVkdS5ldCIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W10sImlhdCI6MTczNjg1ODYyMSwiZXhwIjoxNzM2ODYyMjIxfQ.FPpWU7sLKbPxjqqxV4AoUzhGKq86yq09s4TsXNK3JO8',
 );
 
 const rl = readline.createInterface({
@@ -34,13 +34,13 @@ rl.on('line', (line) => {
         type: 'CHAT',
         metadata: {
           userId: process.env.DEFAULT_MENTOR_ID,
-          email: 'bnnmmarkos@gmail.com',
-          conversationId: '84a72230-b792-49a3-a0c8-2426bbafd8a9',
+          email: 'bikila.ketema-ug@aau.edu.et',
+          conversationId: '96a29df8-834b-4c9c-912a-e317e7a6debb',
         },
         payload: {
-          channelId: 'e73e88bb-cc40-4d65-8c62-0559951b594c',
+          channelId: '24723624-b7b3-4f6d-b057-e51d4fa65635',
           body: line,
-          address: '5209941226',
+          address: '0973983018',
           type: 'SENT',
         },
         socket: 'user1',

@@ -10,6 +10,7 @@ import { Message } from 'amqplib';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
+import { tr } from '@faker-js/faker/.';
 
 @Injectable()
 export class MentorChatService implements OnModuleInit, OnModuleDestroy {
@@ -24,7 +25,7 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     try {
@@ -166,6 +167,51 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
         console.error('Error sending message to Telegram:', error);
       }
     } else if (channelType === 'NEGARIT') {
+      try {
+        if (
+          !message.payload ||
+          !message.payload.address ||
+          !message.payload.body
+        ) {
+          console.error('Invalid negarit message payload:', message);
+          return;
+        }
+
+        const config = channel.configuration as { apiKey: string; campaignId: string };
+        const { apiKey, campaignId } = config;
+
+        // Send the SMS via Negarit API
+        const negaritApiUrl = `https://api.negarit.net/api/api_request/sent_message`;
+        const payload = {
+          API_KEY: apiKey,
+          sent_to: message.payload.address,
+          message: message.payload.body,
+          campaign_id: campaignId,
+        };
+        console.log('The data sent to negarit:', payload);
+
+        const response = await fetch(negaritApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorResponse = await response.json();
+          console.error('Error sending message to Negarit:', errorResponse);
+          return;
+        }
+
+        const negaritResponse = await response.json();
+
+        console.log('Message sent to Negarit successfully:', negaritResponse);
+        return true;
+      } catch (error) {
+        console.error('Error sending message to Negarit:', error);
+        return false;
+      }
     }
     //beqi implement your logic here
   }

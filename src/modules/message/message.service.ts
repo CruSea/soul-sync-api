@@ -21,11 +21,12 @@ export class MessageService {
   }
 
   async negarit(id: string, negaritChat: NegaritChat) {
-    const data = await this.rabbitmqService.getMessageEchangeData(
-      id,
-      negaritChat,
-    );
-    await this.messageExchangeService.send('message', data);
-    return 'ok';
+    if (negaritChat.message === 'received message hook') {
+      const data = await this.rabbitmqService.getMessageEchangeData(id, negaritChat);
+      await this.messageExchangeService.send('message', data);
+      return 'ok';
+    } else {
+      return 'ok';
+    }
   }
 }
