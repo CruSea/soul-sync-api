@@ -14,8 +14,7 @@ export class MessageService {
 
   async telegram(id: string, telegramChat: TelegramChat) {
     const data = await this.rabbitmqService.getMessageEchangeData(id, telegramChat);
-    console.log('data:', data);
-    // this.messageExchangeService.send('message', data);
+    this.messageExchangeService.send('message', data);
     return 'ok';
   }
 

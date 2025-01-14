@@ -89,13 +89,12 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
   private async handleMessage(msg: Message, email: string): Promise<boolean> {
     const chatContent = msg.content.toString();
     const chat = JSON.parse(chatContent);
-    console.log('this is the chat: ', chat);
-    console.log('this is the email: ', chat.metadata.email, "this is the passed email: ", email);
+
     try {
       const user = await this.prismaService.mentor.findFirst({
         where: { email: chat.metadata.email },
       });
-      console.log('this is the user: ', user, ' email: ', email);
+
 
       if (chat.payload.type === 'SENT') {
         try {
@@ -106,7 +105,6 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
         }
       }
       if (!user || user.email !== email) {
-        console.log('user.email: ', user.email, ' email: ', email);
         throw new Error('Unauthorized access');
       }
 
