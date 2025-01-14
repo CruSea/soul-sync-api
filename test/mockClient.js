@@ -2,7 +2,7 @@ const io = require('socket.io-client');
 const readline = require('readline');
 
 const socket = io(
-  'http://localhost:4000?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NDAxOGFmYi1lMTNkLTQyNzUtYWNkYy0xODM2Yzg0YTYxMTgiLCJlbWFpbCI6ImJpa2lsYS5rZXRlbWEtdWdAYWF1LmVkdS5ldCIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W10sImlhdCI6MTczNjg1ODYyMSwiZXhwIjoxNzM2ODYyMjIxfQ.FPpWU7sLKbPxjqqxV4AoUzhGKq86yq09s4TsXNK3JO8',
+  'http://localhost:4000?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NDAxOGFmYi1lMTNkLTQyNzUtYWNkYy0xODM2Yzg0YTYxMTgiLCJlbWFpbCI6ImJpa2lsYS5rZXRlbWEtdWdAYWF1LmVkdS5ldCIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W10sImlhdCI6MTczNjg2MjkxMywiZXhwIjoxNzM2ODY2NTEzfQ.6e2VDdptkp54zfk-u9KD5HeTXntoEh_E-iwVQb9S1dg',
 );
 
 const rl = readline.createInterface({
@@ -35,12 +35,12 @@ rl.on('line', (line) => {
         metadata: {
           userId: process.env.DEFAULT_MENTOR_ID,
           email: 'bikila.ketema-ug@aau.edu.et',
-          conversationId: '96a29df8-834b-4c9c-912a-e317e7a6debb',
+          conversationId: 'f0d1df70-5798-4c40-81aa-03a011e15bd9',
         },
         payload: {
-          channelId: '24723624-b7b3-4f6d-b057-e51d4fa65635',
+          channelId: '03609b84-8e20-426b-9de7-4f7bb65062bf',
           body: line,
-          address: '0973983018',
+          address: '5209941226',
           type: 'SENT',
         },
         socket: 'user1',
