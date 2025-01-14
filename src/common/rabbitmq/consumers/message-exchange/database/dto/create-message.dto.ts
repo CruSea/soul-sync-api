@@ -2,15 +2,15 @@ import { IsString, IsEnum } from 'class-validator';
 import { MessageType } from '@prisma/client';
 
 export class CreateMessageDto {
-    @IsString()
-    channelId: string;
+  @IsString()
+  channelId: string;
 
-    @IsString()
-    address: string;
+  @IsString()
+  address: string;
 
-    @IsEnum(MessageType)
-    type: MessageType;
+  @IsEnum(MessageType)
+  type: MessageType;
 
-    @IsString()
-    body: string;
+  @IsString()
+  body: string;
 }

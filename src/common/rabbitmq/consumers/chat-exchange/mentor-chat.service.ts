@@ -25,7 +25,7 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     try {
@@ -177,7 +177,10 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
           return;
         }
 
-        const config = channel.configuration as { apiKey: string; campaignId: string };
+        const config = channel.configuration as {
+          apiKey: string;
+          campaignId: string;
+        };
         const { apiKey, campaignId } = config;
 
         // Send the SMS via Negarit API

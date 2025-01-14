@@ -48,7 +48,12 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
 
   async send(routingKey: string, message: any) {
     const messageBuffer = Buffer.from(JSON.stringify(message));
-    console.log('chatexchange message: ', message, "messageBuffer: ", messageBuffer);
+    console.log(
+      'chatexchange message: ',
+      message,
+      'messageBuffer: ',
+      messageBuffer,
+    );
     if (this.channel) {
       this.channel.publish(this.EXCHANGE_NAME, routingKey, messageBuffer, {
         persistent: true,

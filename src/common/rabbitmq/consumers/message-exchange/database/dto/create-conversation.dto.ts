@@ -1,14 +1,14 @@
-import { IsBoolean, IsString } from "class-validator";
+import { IsBoolean, IsString } from 'class-validator';
 
 export class CreateConversationDto {
-    @IsString()
-    mentorId: string;
+  @IsString()
+  mentorId: string;
 
-    @IsString()
-    address: string;
+  @IsString()
+  address: string;
 
-    channelId: string;
+  channelId: string;
 
-    @IsBoolean()
-    isActive: boolean;
+  @IsBoolean()
+  isActive: boolean;
 }
