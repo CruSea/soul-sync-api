@@ -10,7 +10,6 @@ import { Message } from 'amqplib';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
-import { tr } from '@faker-js/faker/.';
 
 @Injectable()
 export class MentorChatService implements OnModuleInit, OnModuleDestroy {

@@ -1,8 +1,5 @@
 # Use Node.js image
-FROM node:20-alpine
-
-# Install OpenSSL dependencies
-RUN apk add --no-cache openssl
+FROM node:20
 
 # Set working directory
 WORKDIR /app
@@ -27,8 +24,11 @@ RUN npm run build
 
 # Expose application port
 EXPOSE 3000
-EXPOSE 5432
-EXPOSE 3002
+
+# Expose chat port
+EXPOSE 3002 
+
+# Expose redis port for development (for debbuging)
 EXPOSE 6379
 
 # Start the application
