@@ -10,6 +10,7 @@ import { Message } from 'amqplib';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
+import Twilio from 'twilio';
 
 @Injectable()
 export class MentorChatService implements OnModuleInit, OnModuleDestroy {
@@ -90,7 +91,12 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     const chatContent = msg.content.toString();
     const chat = JSON.parse(chatContent);
     console.log('this is the chat: ', chat);
-    console.log('this is the email: ', chat.metadata.email, "this is the passed email: ", email);
+    console.log(
+      'this is the email: ',
+      chat.metadata.email,
+      'this is the passed email: ',
+      email,
+    );
     try {
       const user = await this.prismaService.mentor.findFirst({
         where: { email: chat.metadata.email },
@@ -168,7 +174,38 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
       } catch (error) {
         console.error('Error sending message to Telegram:', error);
       }
-    }else if(channelType === 'NEGARIT') {}
-    //beqi implement your logic here
+    } else if (channelType === 'NEGARIT') {
+    } else if (channelType === 'TWILIO') {
+      try {
+        // Validate payload
+        if (
+          !message.payload ||
+          !message.payload.body ||
+          !message.payload.address
+        ) {
+          console.error('Invalid message payload:', message);
+          return;
+        }
+
+        const config = {
+          accountSid: process.env.TWILIO_ACCOUNT_SID,
+          authToken: process.env.TWILIO_AUTH_TOKEN,
+          from: process.env.TWILIO_FROM_NUMBER,
+        };
+
+        const twilioClient = Twilio(config.accountSid, config.authToken);
+
+        // Send message using Twilio
+        const twilioResponse = await twilioClient.messages.create({
+          from: config.from,
+          to: message.payload.address, // recipient phone number
+          body: message.payload.body, // message content
+        });
+
+        console.log('Message sent via Twilio successfully:', twilioResponse);
+      } catch (error) {
+        console.error('Error sending message via Twilio:', error);
+      }
+    }
   }
 }

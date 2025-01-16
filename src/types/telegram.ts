@@ -19,5 +19,3 @@ export interface TelegramChat {
     text: string;
   };
 }
-
-

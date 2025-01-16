@@ -1,10 +1,8 @@
 const io = require('socket.io-client');
 const readline = require('readline');
-
 const socket = io(
-  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA3OTJhY2Q1LWNjMjUtNDk2Yi1hNWYyLWRlNmQ4N2JjNzQyZCIsIm5hbWUiOiJNeSBBY2NvdW50IiwiZW1haWwiOiJqZXJyeUBnbWFpbC5jb20iLCJwYXNzd29yZCI6IiQyYSQxMCR5N3JIVnM1T2l4NThFRHM3cnE4enJlenpjZmREdlRhVGNnSmRPamdRcmhPdjdoeXBualpyUyIsImltYWdlVXJsIjpudWxsLCJkZWxldGVkQXQiOm51bGwsImNyZWF0ZWRBdCI6IjIwMjUtMDEtMTRUMDg6NTk6MzQuNjA0WiIsInVwZGF0ZWRBdCI6IjIwMjUtMDEtMTRUMDg6NTk6MzQuNjA0WiIsImlhdCI6MTczNjkyNjkxMH0.n2Q97QRKlDtE0HD4Qhc6XJmP4aWmbl02Oh23Cb80kiA',
+  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZmQzMGM5MS1mOWIxLTQyMGEtOTdhMy1lNTYyNzEyOWZmY2UiLCJlbWFpbCI6ImplcnVzYWxlbWdpcm1hNDIxQGdtYWlsLmNvbSIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W10sImlhdCI6MTczNzAyNDA4NiwiZXhwIjoxNzM3MDI3Njg2fQ.pvWh4eqB2wTx7r348TPRd1W3rY19qxZrBQdY8e_RH_g',
 );
-
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -28,19 +26,19 @@ socket.on('message', (message) => {
 
 rl.on('line', (line) => {
   if (line.trim() !== '') {
-    socket.emit(
-      'message',
+    // Send a mock payload to the "Twilio WebSocket Server"
+    socket.send(
       JSON.stringify({
         type: 'CHAT',
         metadata: {
           userId: process.env.DEFAULT_MENTOR_ID,
           email: 'jerusalemgirma421@gmail.com',
-          conversationId: '25e3fb48-e23a-4731-b99f-80932b634027',
+          conversationId: 'e2d6ed64-8b26-4db0-93d9-1ebe0ff20007',
         },
         payload: {
-          channelId: '12c5c903-5e63-4f2b-8b50-71b40466aba5',
+          channelId: 'afc2c786-3997-4d2f-bf9f-bbe9b2ff9e9e',
           body: line,
-          address: '411270067',
+          address: '+251966830049', // Example Twilio Sandbox/recipient WhatsApp number
           type: 'SENT',
         },
         socket: 'user1',

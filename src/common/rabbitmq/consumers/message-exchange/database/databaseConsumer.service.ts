@@ -8,7 +8,6 @@ import {
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { CreateConversationDto } from './dto/create-conversation.dto';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { RedisService } from 'src/common/redis/redis.service';
@@ -108,9 +107,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (message.type === 'CHAT') {
-      
       return {
-        channelId: (message.payload.channelId || message.payload.message.channelId).toString(),
+        channelId: (
+          message.payload.channelId || message.payload.message.channelId
+        ).toString(),
         address: message.payload.address || message.payload.message.address,
         type: 'SENT',
         body: message.payload.body || message.payload.message.body,
@@ -138,6 +138,17 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         address: message.payload.received_message.sent_from,
         type: 'RECEIVED',
         body: message.payload.received_message.message,
+      };
+    } else if (message.metadata.type === 'TWILIO') {
+      if (!message.payload.from || !message.payload.body) {
+        console.error('Invalid Twilio message structure:', message.payload);
+        return null;
+      }
+      return {
+        channelId: message.metadata.channelId,
+        address: message.payload.from, // Sender's phone number
+        type: 'RECEIVED', // Mark as "received" from Twilio
+        body: message.payload.body, // Message content
       };
     } else {
       console.error('Unsupported message type:', message.metadata);
@@ -232,7 +243,6 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         socketId,
       );
       await this.chatExchangeService.send('chat', chatEchangeData);
-
     } catch (error) {
       console.error('Error sending chat exchange data:', error);
     }

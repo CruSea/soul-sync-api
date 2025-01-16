@@ -1,8 +1,6 @@
-import { P } from '@faker-js/faker/dist/airline-BnpeTvY9';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { Chat } from 'src/types/chat';
-import { TelegramChat } from 'src/types/telegram';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -37,14 +35,14 @@ export class RabbitmqService {
       channelType = channel.type;
     } catch (error) {
       console.error(error);
-      throw new Error('Failed to retrieve channel type'); 
+      throw new Error('Failed to retrieve channel type');
     }
 
     return {
       id: uuidv4(),
       type: 'MESSAGE',
       metadata: {
-        type: channelType, 
+        type: channelType,
         channelId: channelId,
       },
       payload: payload,

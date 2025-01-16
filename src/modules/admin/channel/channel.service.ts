@@ -69,6 +69,26 @@ export class ChannelService {
     throw new HttpException('Channel not found', 404);
   }
 
+  async connectTwilio(id: string): Promise<{ webhookUrl: string }> {
+    const channel = await this.prisma.channel.findFirst({
+      where: { id, type: 'TWILIO' },
+    });
+
+    if (channel) {
+      const accountSid = (channel.configuration as any)?.accountSid;
+      const authToken = (channel.configuration as any)?.authToken;
+      const webhookUrl = `${process.env.HOST_URL}/message/twilio?id=${channel.id}`;
+
+      if (!accountSid || !authToken) {
+        throw new HttpException('Invalid Twilio configuration', 400);
+      }
+
+      return { webhookUrl };
+    }
+
+    throw new HttpException('Channel not found', 404);
+  }
+
   async findAll(getChannel: GetChannelDto): Promise<Channel[]> {
     const channels = await this.prisma.channel.findMany({
       where: { accountId: getChannel.accountId, deletedAt: null },
