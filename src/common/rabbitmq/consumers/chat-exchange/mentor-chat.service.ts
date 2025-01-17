@@ -16,7 +16,6 @@ import { Twilio } from 'twilio';
 export class MentorChatService implements OnModuleInit, OnModuleDestroy {
   private connection: amqp.Connection;
   private channel: amqp.Channel;
-
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly QUEUE_NAME = 'chat_queue';
   private client: Twilio;
@@ -102,13 +101,9 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
       });
 
       if (chat.payload.type === 'SENT') {
-        try {
-          await this.sendMessageExchangeData(chat);
-          return true;
-        } catch (error) {
-          throw new Error('Error sending the message to telegram: ' + error);
-        }
+        return await this.sendMessageExchangeData(chat);
       }
+
       if (!user || user.email !== email) {
         throw new Error('Unauthorized access');
       }
@@ -126,127 +121,95 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async sendMessageExchangeData(message: any) {
+  private async sendMessageExchangeData(message: any): Promise<boolean> {
     const channel = await this.prismaService.channel.findFirst({
       where: { id: message.payload.channelId },
     });
     const channelType = channel?.type;
-    if (channelType === 'TELEGRAM') {
-      try {
-        if (
-          !message.payload ||
-          !message.payload.address ||
-          !message.payload.body
-        ) {
-          console.error('Invalid message payload:', message);
-          return;
-        }
 
-        const config = channel.configuration as { token: string };
-        const telegramApiUrl = `https://api.telegram.org/bot${config.token}/sendMessage`;
-        const response = await fetch(telegramApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            chat_id: message.payload.address,
-            text: message.payload.body,
-          }),
-        });
-
-        if (!response.ok) {
-          const errorResponse = await response.json();
-          console.error('Error sending message to Telegram:', errorResponse);
-          return;
-        }
-
-        const telegramResponse = await response.json();
-        if (!telegramResponse.ok) {
-          console.error('Error sending message to Telegram:', telegramResponse);
-          return;
-        }
-
-        console.log('Message sent to Telegram successfully:', telegramResponse);
-      } catch (error) {
-        console.error('Error sending message to Telegram:', error);
-      }
-    } else if (channelType === 'NEGARIT') {
-      try {
-        if (
-          !message.payload ||
-          !message.payload.address ||
-          !message.payload.body
-        ) {
-          console.error('Invalid negarit message payload:', message);
-          return;
-        }
-
-        const config = channel.configuration as {
-          apiKey: string;
-          campaignId: string;
-        };
-        const { apiKey, campaignId } = config;
-
-        // Send the SMS via Negarit API
-        const negaritApiUrl = `https://api.negarit.net/api/api_request/sent_message`;
-        const payload = {
-          API_KEY: apiKey,
-          sent_to: message.payload.address,
-          message: message.payload.body,
-          campaign_id: campaignId,
-        };
-        console.log('The data sent to negarit:', payload);
-
-        const response = await fetch(negaritApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          const errorResponse = await response.json();
-          console.error('Error sending message to Negarit:', errorResponse);
-          return;
-        }
-
-        const negaritResponse = await response.json();
-
-        console.log('Message sent to Negarit successfully:', negaritResponse);
-        return true;
-      } catch (error) {
-        console.error('Error sending message to Negarit:', error);
+    switch (channelType) {
+      case 'TELEGRAM':
+        return await this.sendTelegramMessage(message);
+      case 'NEGARIT':
+        return await this.sendNegaritMessage(message);
+      case 'TWILIO':
+        return await this.sendTwilioMessage(message);
+      default:
+        console.error('Unsupported channel type:', channelType);
         return false;
-      }
     }
-    //beqi implement your logic here
-    } else if (channelType === 'NEGARIT') {
-    } else if (channelType === 'TWILIO') {
-      try {
-        if (
-          !message.payload ||
-          !message.payload.body ||
-          !message.payload.address
-        ) {
-          console.error('Invalid message payload:', message);
-          return;
-        }
+  }
 
+  private async sendTelegramMessage(message: any): Promise<boolean> {
+    const telegramApiUrl = `https://api.telegram.org/bot${message.configuration.token}/sendMessage`;
+    const response = await fetch(telegramApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: message.payload.address,
+        text: message.payload.body,
+      }),
+    });
 
-        const twilioResponse = await this.client.messages.create({
-          from: process.env.TWILIO_FROM_NUMBER,
-          to: message.payload.address,
-          body: message.payload.body,
-        });
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      console.error('Error sending message to Telegram:', errorResponse);
+      return false;
+    }
 
-        console.log('Message sent via Twilio successfully:', twilioResponse);
-        return true;
-      } catch (error) {
-        console.error('Error sending message via Twilio:', error);
-        return false;
-      }
+    const telegramResponse = await response.json();
+    if (!telegramResponse.ok) {
+      console.error('Error sending message to Telegram:', telegramResponse);
+      return false;
+    }
+
+    console.log('Message sent to Telegram successfully:', telegramResponse);
+    return true;
+  }
+
+  private async sendNegaritMessage(message: any): Promise<boolean> {
+    const negaritApiUrl = `https://api.negarit.net/api/api_request/sent_message`;
+    const payload = {
+      API_KEY: message.configuration.apiKey,
+      sent_to: message.payload.address,
+      message: message.payload.body,
+      campaign_id: message.configuration.campaignId,
+    };
+
+    const response = await fetch(negaritApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      console.error('Error sending message to Negarit:', errorResponse);
+      return false;
+    }
+
+    const negaritResponse = await response.json();
+    console.log('Message sent to Negarit successfully:', negaritResponse);
+    return true;
+  }
+
+  private async sendTwilioMessage(message: any): Promise<boolean> {
+    try {
+      const twilioResponse = await this.client.messages.create({
+        from: process.env.TWILIO_FROM_NUMBER,
+        to: message.payload.address,
+        body: message.payload.body,
+      });
+
+      console.log('Message sent via Twilio successfully:', twilioResponse);
+      return true;
+    } catch (error) {
+      console.error('Error sending message via Twilio:', error);
+      return false;
     }
   }
 }
