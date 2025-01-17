@@ -140,15 +140,15 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         body: message.payload.received_message.message,
       };
     } else if (message.metadata.type === 'TWILIO') {
-      if (!message.payload.from || !message.payload.body) {
+      if (!message.payload.From || !message.payload.Body) {
         console.error('Invalid Twilio message structure:', message.payload);
         return null;
       }
       return {
         channelId: message.metadata.channelId,
-        address: message.payload.from, // Sender's phone number
-        type: 'RECEIVED', // Mark as "received" from Twilio
-        body: message.payload.body, // Message content
+        address: message.payload.From,
+        type: 'RECEIVED',
+        body: message.payload.Body,
       };
     } else {
       console.error('Unsupported message type:', message.metadata);

@@ -10,7 +10,7 @@ import { Message } from 'amqplib';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
-import Twilio from 'twilio';
+import { Twilio } from 'twilio';
 
 @Injectable()
 export class MentorChatService implements OnModuleInit, OnModuleDestroy {
@@ -19,13 +19,18 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
 
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly QUEUE_NAME = 'chat_queue';
+  private client: Twilio;
 
   constructor(
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly prismaService: PrismaService,
-  ) {}
+  ) {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    this.client = new Twilio(accountSid, authToken);
+  }
 
   async onModuleInit() {
     try {
@@ -177,7 +182,6 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
     } else if (channelType === 'NEGARIT') {
     } else if (channelType === 'TWILIO') {
       try {
-        // Validate payload
         if (
           !message.payload ||
           !message.payload.body ||
@@ -187,24 +191,18 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
           return;
         }
 
-        const config = {
-          accountSid: process.env.TWILIO_ACCOUNT_SID,
-          authToken: process.env.TWILIO_AUTH_TOKEN,
+
+        const twilioResponse = await this.client.messages.create({
           from: process.env.TWILIO_FROM_NUMBER,
-        };
-
-        const twilioClient = Twilio(config.accountSid, config.authToken);
-
-        // Send message using Twilio
-        const twilioResponse = await twilioClient.messages.create({
-          from: config.from,
-          to: message.payload.address, // recipient phone number
-          body: message.payload.body, // message content
+          to: message.payload.address,
+          body: message.payload.body,
         });
 
         console.log('Message sent via Twilio successfully:', twilioResponse);
+        return true;
       } catch (error) {
         console.error('Error sending message via Twilio:', error);
+        return false;
       }
     }
   }

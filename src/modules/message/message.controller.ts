@@ -8,12 +8,6 @@ export class MessageController {
   @Post('negarit')
   @HttpCode(200)
   async negarit(@Query() param, @Body() negaritMessageDto: any) {
-    console.log(
-      'this is the id: ',
-      param.id,
-      ' this is the message: ',
-      negaritMessageDto,
-    );
     return await this.messageService.negarit(param.id, negaritMessageDto);
   }
 

@@ -1,7 +1,7 @@
 const io = require('socket.io-client');
 const readline = require('readline');
 const socket = io(
-  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzZmQzMGM5MS1mOWIxLTQyMGEtOTdhMy1lNTYyNzEyOWZmY2UiLCJlbWFpbCI6ImplcnVzYWxlbWdpcm1hNDIxQGdtYWlsLmNvbSIsImltYWdlVXJsIjpudWxsLCJhY2NvdW50cyI6W10sImlhdCI6MTczNzAyNDA4NiwiZXhwIjoxNzM3MDI3Njg2fQ.pvWh4eqB2wTx7r348TPRd1W3rY19qxZrBQdY8e_RH_g',
+  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNjIzZjE3MS0wOTU2LTQwMTEtODZlOC0xMTkyN2IyODhiNzEiLCJlbWFpbCI6ImJubW1hcmtvc0BnbWFpbC5jb20iLCJpbWFnZVVybCI6bnVsbCwiYWNjb3VudHMiOltdLCJpYXQiOjE3MzcxMTE3MTgsImV4cCI6MTczNzExNTMxOH0.gwPg5onc2y8KLz-Vh8EpGVlpnFImJQW-U-Oz3apSTm8',
 );
 const rl = readline.createInterface({
   input: process.stdin,
@@ -26,19 +26,18 @@ socket.on('message', (message) => {
 
 rl.on('line', (line) => {
   if (line.trim() !== '') {
-    // Send a mock payload to the "Twilio WebSocket Server"
     socket.send(
       JSON.stringify({
         type: 'CHAT',
         metadata: {
           userId: process.env.DEFAULT_MENTOR_ID,
-          email: 'jerusalemgirma421@gmail.com',
-          conversationId: 'e2d6ed64-8b26-4db0-93d9-1ebe0ff20007',
+          email: 'bnmmarkos@gmail.com',
+          conversationId: 'b2c2c530-e1e9-48ef-a7c6-e4fdf7ed1361',
         },
         payload: {
-          channelId: 'afc2c786-3997-4d2f-bf9f-bbe9b2ff9e9e',
+          channelId: '0ef07de8-24a5-4de3-99d9-17a85215b9df',
           body: line,
-          address: '+251966830049', // Example Twilio Sandbox/recipient WhatsApp number
+          address: 'whatsapp:+251973983018',
           type: 'SENT',
         },
         socket: 'user1',
