@@ -23,7 +23,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly QUEUE_NAME = 'database_queue';
 
   constructor(
-    private prisma: PrismaService,
+    private readonly prisma: PrismaService,
     private readonly rabbitmqService: RabbitmqService,
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => ChatService))
@@ -31,7 +31,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     private readonly chatExchangeService: ChatExchangeService,
   ) {}
 
-  async onModuleInit() {
+  async onModuleInit(): Promise<void> {
     try {
       await this.connect();
       await this.consume();
@@ -40,7 +40,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async onModuleDestroy() {
+  async onModuleDestroy(): Promise<void> {
     try {
       await this.disconnect();
     } catch (error) {
@@ -48,20 +48,20 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async connect() {
+  private async connect(): Promise<void> {
     this.connection = await amqp.connect(this.RABBITMQ_URL);
     this.channel = await this.connection.createChannel();
     await this.channel.assertQueue(this.QUEUE_NAME, { durable: true });
     console.log('DatabaseConsumerService Connected!');
   }
 
-  private async disconnect() {
+  private async disconnect(): Promise<void> {
     await this.channel.close();
     await this.connection.close();
     console.log('DatabaseConsumerService Disconnected!');
   }
 
-  private async consume() {
+  private async consume(): Promise<void> {
     this.channel.consume(this.QUEUE_NAME, async (msg) => {
       if (!msg || !msg.content) {
         console.error('Invalid message:', msg);
@@ -104,54 +104,71 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       return null;
     }
 
-    if (message.type === 'CHAT') {
-      return {
-        channelId: (
-          message.payload.channelId || message.payload.message.channelId
-        ).toString(),
-        address: message.payload.address || message.payload.message.address,
-        type: 'SENT',
-        body: message.payload.body || message.payload.message.body,
-      };
-    } else if (message.metadata.type === 'TELEGRAM') {
-      if (
-        !message.payload.message ||
-        !message.payload.message.chat ||
-        !message.payload.message.text
-      ) {
+    switch (message.type) {
+      case 'CHAT':
+        return this.validateChatMessage(message);
+      case 'TELEGRAM':
+        return this.validateTelegramMessage(message);
+      case 'NEGARIT':
+        return this.validateNegaritMessage(message);
+      case 'TWILIO':
+        return this.validateTwilioMessage(message);
+      default:
+        console.error('Unsupported message type:', message.metadata);
         return null;
-      }
-      return {
-        channelId: message.metadata.channelId,
-        address: message.payload.message.chat.id.toString(),
-        type: 'RECEIVED',
-        body: message.payload.message.text,
-      };
-    } else if (message.metadata.type === 'NEGARIT') {
-      if (!message.payload.received_message) {
-        return null;
-      }
-      return {
-        channelId: message.metadata.channelId,
-        address: message.payload.received_message.sent_from,
-        type: 'RECEIVED',
-        body: message.payload.received_message.message,
-      };
-    } else if (message.metadata.type === 'TWILIO') {
-      if (!message.payload.From || !message.payload.Body) {
-        console.error('Invalid Twilio message structure:', message.payload);
-        return null;
-      }
-      return {
-        channelId: message.metadata.channelId,
-        address: message.payload.From,
-        type: 'RECEIVED',
-        body: message.payload.Body,
-      };
-    } else {
-      console.error('Unsupported message type:', message.metadata);
+    }
+  }
+
+  private validateChatMessage(message: any): CreateMessageDto | null {
+    return {
+      channelId: (
+        message.payload.channelId || message.payload.message.channelId
+      ).toString(),
+      address: message.payload.address || message.payload.message.address,
+      type: 'SENT',
+      body: message.payload.body || message.payload.message.body,
+    };
+  }
+
+  private validateTelegramMessage(message: any): CreateMessageDto | null {
+    if (
+      !message.payload.message ||
+      !message.payload.message.chat ||
+      !message.payload.message.text
+    ) {
       return null;
     }
+    return {
+      channelId: message.metadata.channelId,
+      address: message.payload.message.chat.id.toString(),
+      type: 'RECEIVED',
+      body: message.payload.message.text,
+    };
+  }
+
+  private validateNegaritMessage(message: any): CreateMessageDto | null {
+    if (!message.payload.received_message) {
+      return null;
+    }
+    return {
+      channelId: message.metadata.channelId,
+      address: message.payload.received_message.sent_from,
+      type: 'RECEIVED',
+      body: message.payload.received_message.message,
+    };
+  }
+
+  private validateTwilioMessage(message: any): CreateMessageDto | null {
+    if (!message.payload.From || !message.payload.Body) {
+      console.error('Invalid Twilio message structure:', message.payload);
+      return null;
+    }
+    return {
+      channelId: message.metadata.channelId,
+      address: message.payload.From,
+      type: 'RECEIVED',
+      body: message.payload.Body,
+    };
   }
 
   private async processMessage(
@@ -218,7 +235,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async sendChatExchangeData(chat: Chat) {
+  private async sendChatExchangeData(chat: Chat): Promise<void> {
     try {
       const conversation = await this.prisma.conversation.findUnique({
         where: { id: chat.metadata.conversationId },
