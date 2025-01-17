@@ -1,8 +1,0 @@
-### Send message
-POST http://localhost:3000/message/negarit
-Content-Type: application/json
-
-{ 
-    "message": "Hello Negarit",
-    "phone": "+251911223344"
-}

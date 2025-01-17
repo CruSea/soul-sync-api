@@ -4,6 +4,7 @@ import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { TelegramChat } from 'src/types/telegram';
 import { NegaritChat } from 'src/types/negarit';
 import { TwilioChat } from 'src/types/twilio';
+
 @Injectable()
 export class MessageService {
   constructor(
@@ -31,5 +32,11 @@ export class MessageService {
     } else {
       return 'ok';
     }
+  }
+
+  async twilio(id: string, twilioChat: TwilioChat) {
+    const data = await this.rabbitmqService.getMessageEchangeData(id, twilioChat);
+    this.messageExchangeService.send('message', data);
+    return 'ok';
   }
 }
