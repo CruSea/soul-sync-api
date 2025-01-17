@@ -9,8 +9,8 @@ export class RabbitmqService {
   getChatEchangeData(chat: Chat, socketId: string): any {
     return {
       id: uuidv4(),
-      type: 'CHAT',
       metadata: {
+        type: 'CHAT',
         email: chat.metadata?.email,
         userId: chat.metadata?.userId,
         conversationId: chat.metadata.conversationId,

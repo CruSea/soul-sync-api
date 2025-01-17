@@ -104,7 +104,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       return null;
     }
 
-    switch (message.type) {
+    switch (message.metadata.type) {
       case 'CHAT':
         return this.validateChatMessage(message);
       case 'TELEGRAM':
