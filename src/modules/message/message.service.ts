@@ -35,7 +35,10 @@ export class MessageService {
   }
 
   async twilio(id: string, twilioChat: TwilioChat) {
-    const data = await this.rabbitmqService.getMessageEchangeData(id, twilioChat);
+    const data = await this.rabbitmqService.getMessageEchangeData(
+      id,
+      twilioChat,
+    );
     this.messageExchangeService.send('message', data);
     return 'ok';
   }
