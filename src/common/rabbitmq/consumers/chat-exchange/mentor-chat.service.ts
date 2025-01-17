@@ -95,18 +95,11 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
   private async handleMessage(msg: Message, email: string): Promise<boolean> {
     const chatContent = msg.content.toString();
     const chat = JSON.parse(chatContent);
-    console.log('this is the chat: ', chat);
-    console.log(
-      'this is the email: ',
-      chat.metadata.email,
-      'this is the passed email: ',
-      email,
-    );
+
     try {
       const user = await this.prismaService.mentor.findFirst({
         where: { email: chat.metadata.email },
       });
-      console.log('this is the user: ', user, ' email: ', email);
 
       if (chat.payload.type === 'SENT') {
         try {
@@ -117,7 +110,6 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
         }
       }
       if (!user || user.email !== email) {
-        console.log('user.email: ', user.email, ' email: ', email);
         throw new Error('Unauthorized access');
       }
 
@@ -179,6 +171,57 @@ export class MentorChatService implements OnModuleInit, OnModuleDestroy {
       } catch (error) {
         console.error('Error sending message to Telegram:', error);
       }
+    } else if (channelType === 'NEGARIT') {
+      try {
+        if (
+          !message.payload ||
+          !message.payload.address ||
+          !message.payload.body
+        ) {
+          console.error('Invalid negarit message payload:', message);
+          return;
+        }
+
+        const config = channel.configuration as {
+          apiKey: string;
+          campaignId: string;
+        };
+        const { apiKey, campaignId } = config;
+
+        // Send the SMS via Negarit API
+        const negaritApiUrl = `https://api.negarit.net/api/api_request/sent_message`;
+        const payload = {
+          API_KEY: apiKey,
+          sent_to: message.payload.address,
+          message: message.payload.body,
+          campaign_id: campaignId,
+        };
+        console.log('The data sent to negarit:', payload);
+
+        const response = await fetch(negaritApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorResponse = await response.json();
+          console.error('Error sending message to Negarit:', errorResponse);
+          return;
+        }
+
+        const negaritResponse = await response.json();
+
+        console.log('Message sent to Negarit successfully:', negaritResponse);
+        return true;
+      } catch (error) {
+        console.error('Error sending message to Negarit:', error);
+        return false;
+      }
+    }
+    //beqi implement your logic here
     } else if (channelType === 'NEGARIT') {
     } else if (channelType === 'TWILIO') {
       try {

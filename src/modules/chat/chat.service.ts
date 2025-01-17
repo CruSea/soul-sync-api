@@ -1,9 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { RedisService } from '../../common/redis/redis.service';
 import { Server } from 'socket.io';
 import { ChatGateway } from './chat.gateway';

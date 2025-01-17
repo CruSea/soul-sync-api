@@ -72,10 +72,8 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       try {
         const messageContent = msg.content.toString();
         const message = JSON.parse(messageContent);
-        console.log('Consumed message:', message);
 
         const createMessageDto = this.validateMessage(message);
-        console.log('Validated message: ', createMessageDto);
         if (!createMessageDto) {
           console.error('Invalid message structure:', message);
           this.channel.nack(msg);

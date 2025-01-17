@@ -16,25 +16,20 @@ export class MessageService {
       id,
       telegramChat,
     );
-    console.log('data:', data);
-    // this.messageExchangeService.send('message', data);
+    this.messageExchangeService.send('message', data);
     return 'ok';
   }
 
   async negarit(id: string, negaritChat: NegaritChat) {
-    const data = await this.rabbitmqService.getMessageEchangeData(
-      id,
-      negaritChat,
-    );
-    await this.messageExchangeService.send('message', data);
-    return 'ok';
-  }
-  async twilio(id: string, twilioChat: TwilioChat) {
-    const data = await this.rabbitmqService.getMessageEchangeData(
-      id,
-      twilioChat,
-    );
-    await this.messageExchangeService.send('message', data);
-    return 'ok';
+    if (negaritChat.message === 'received message hook') {
+      const data = await this.rabbitmqService.getMessageEchangeData(
+        id,
+        negaritChat,
+      );
+      await this.messageExchangeService.send('message', data);
+      return 'ok';
+    } else {
+      return 'ok';
+    }
   }
 }

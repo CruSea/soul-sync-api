@@ -1,10 +1,9 @@
-import { IsString } from "class-validator";
+import { IsString } from 'class-validator';
 
 export class CreateThreadDto {
-    @IsString()
-    conversationId: string;
+  @IsString()
+  conversationId: string;
 
-    @IsString()
-    messageId: string;
-
+  @IsString()
+  messageId: string;
 }
