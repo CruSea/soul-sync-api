@@ -1,7 +1,7 @@
 const io = require('socket.io-client');
 const readline = require('readline');
 const socket = io(
-  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNjIzZjE3MS0wOTU2LTQwMTEtODZlOC0xMTkyN2IyODhiNzEiLCJlbWFpbCI6ImJubW1hcmtvc0BnbWFpbC5jb20iLCJpbWFnZVVybCI6bnVsbCwiYWNjb3VudHMiOltdLCJpYXQiOjE3MzcxMTE3MTgsImV4cCI6MTczNzExNTMxOH0.gwPg5onc2y8KLz-Vh8EpGVlpnFImJQW-U-Oz3apSTm8',
+  'http://localhost:3002?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOTM4YzA4My03NThkLTQ4NzAtOWM0Mi1mMTg3MjEzZDM2YTUiLCJlbWFpbCI6ImJubW1hcmtvc0BnbWFpbC5jb20iLCJpbWFnZVVybCI6bnVsbCwiYWNjb3VudHMiOltdLCJpYXQiOjE3Mzc0NDc1MTYsImV4cCI6MTczNzQ1MTExNn0.xgxLXoqAvNe7hFCHoRzYsENl5sUH3869ffRwQJCF1bA',
 );
 const rl = readline.createInterface({
   input: process.stdin,

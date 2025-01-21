@@ -13,14 +13,9 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'https://rl1s5vc7-3000.uks1.devtunnels.ms',
-      'https://sbkh2slb-3000.uks1.devtunnels.ms',
-    ],
-    credentials: true,
-    allowedHeaders: 'Authorization, Content-Type',
+    origin: '*',
   });
+
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
   await app.listen(process.env.PORT);
