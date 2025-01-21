@@ -12,6 +12,7 @@ import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
+import { MessageValidator } from './message-validator';
 
 @Injectable()
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -29,6 +30,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly chatExchangeService: ChatExchangeService,
+    private readonly validators: MessageValidator[], 
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -88,79 +90,18 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       }
     });
   }
-
   private validateMessage(message: any): CreateMessageDto | null {
-    if (!message.metadata || !message.payload) {
+    const validator = this.validators.find((validate) =>
+      validate.supports(message.metadata.type),
+    );
+
+    if (!validator) {
+      console.error('Unsupported message type:', message.metadata.type);
       return null;
     }
 
-    switch (message.metadata.type) {
-      case 'CHAT':
-        return this.validateChatMessage(message);
-      case 'TELEGRAM':
-        return this.validateTelegramMessage(message);
-      case 'NEGARIT':
-        return this.validateNegaritMessage(message);
-      case 'TWILIO':
-        return this.validateTwilioMessage(message);
-      default:
-        console.error('Unsupported message type:', message.metadata);
-        return null;
-    }
+    return validator.validate(message);
   }
-
-  private validateChatMessage(message: any): CreateMessageDto | null {
-    return {
-      channelId: (
-        message.payload.channelId || message.payload.message.channelId
-      ).toString(),
-      address: message.payload.address || message.payload.message.address,
-      type: 'SENT',
-      body: message.payload.body || message.payload.message.body,
-    };
-  }
-
-  private validateTelegramMessage(message: any): CreateMessageDto | null {
-    if (
-      !message.payload.message ||
-      !message.payload.message.chat ||
-      !message.payload.message.text
-    ) {
-      return null;
-    }
-    return {
-      channelId: message.metadata.channelId,
-      address: message.payload.message.chat.id.toString(),
-      type: 'RECEIVED',
-      body: message.payload.message.text,
-    };
-  }
-
-  private validateNegaritMessage(message: any): CreateMessageDto | null {
-    if (!message.payload.received_message) {
-      return null;
-    }
-    return {
-      channelId: message.metadata.channelId,
-      address: message.payload.received_message.sent_from,
-      type: 'RECEIVED',
-      body: message.payload.received_message.message,
-    };
-  }
-
-  private validateTwilioMessage(message: any): CreateMessageDto | null {
-    if (!message.payload.From || !message.payload.Body) {
-      console.error('Invalid Twilio message structure:', message.payload);
-      return null;
-    }
-    return {
-      channelId: message.metadata.channelId,
-      address: message.payload.From,
-      type: 'RECEIVED',
-      body: message.payload.Body,
-    };
-  }
-
   private async processMessage(
     createMessageDto: CreateMessageDto,
   ): Promise<any> {
@@ -197,5 +138,4 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       return null;
     }
   }
-
 }
