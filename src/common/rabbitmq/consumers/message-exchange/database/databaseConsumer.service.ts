@@ -9,7 +9,6 @@ import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
-import { Chat } from 'src/types/chat';
 import { RedisService } from 'src/common/redis/redis.service';
 import { ChatService } from 'src/modules/chat/chat.service';
 import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
@@ -22,6 +21,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly QUEUE_NAME = 'database_queue';
 
+  //I used forwardRef to avoid circular dependency
   constructor(
     private readonly prisma: PrismaService,
     private readonly rabbitmqService: RabbitmqService,
@@ -80,17 +80,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           return;
         }
 
-        const chat = await this.processMessage(createMessageDto);
-        if (!chat) {
-          console.error('Error processing message:', message);
-          this.channel.nack(msg);
-          return;
-        }
-
-        if (chat.type === 'CHAT') {
-          await this.sendChatExchangeData(chat);
-        }
-
+        await this.processMessage(createMessageDto);
         this.channel.ack(msg);
       } catch (error) {
         console.error('Error processing message:', error);
@@ -202,64 +192,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
           messageId: createdMessage.id,
         },
       });
-
-      if (createdMessage.type === 'RECEIVED') {
-        return {
-          type: 'CHAT',
-          metadata: {
-            conversationId,
-            email: (
-              await this.prisma.mentor.findUnique({
-                where: {
-                  id: (
-                    await this.prisma.conversation.findUnique({
-                      where: { id: conversationId },
-                    })
-                  ).mentorId,
-                },
-              })
-            )?.email,
-          },
-          payload: {
-            message: createdMessage,
-          },
-        };
-      } else {
-        return {
-          type: 'MESSAGE',
-        };
-      }
     } catch (error) {
       console.error('Error processing message:', error);
       return null;
     }
   }
 
-  private async sendChatExchangeData(chat: Chat): Promise<void> {
-    try {
-      const conversation = await this.prisma.conversation.findUnique({
-        where: { id: chat.metadata.conversationId },
-      });
-      const mentor = await this.prisma.mentor.findUnique({
-        where: { id: conversation.mentorId },
-      });
-      let socketId = await this.redisService.get(mentor.email.toString());
-      if (!socketId) {
-        if (mentor) {
-          this.chatService.setSocket(
-            mentor.email.toString(),
-            'mentor is offline',
-          );
-        }
-        socketId = 'mentor is offline';
-      }
-      const chatEchangeData = this.rabbitmqService.getChatEchangeData(
-        chat,
-        socketId,
-      );
-      await this.chatExchangeService.send('chat', chatEchangeData);
-    } catch (error) {
-      console.error('Error sending chat exchange data:', error);
-    }
-  }
 }
