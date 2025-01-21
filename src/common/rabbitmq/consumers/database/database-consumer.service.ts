@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -23,7 +19,8 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     try {
-      const { connection, channel } = await this.rabbitMQConnectionService.createConnection(this.QUEUE_NAME);
+      const { connection, channel } =
+        await this.rabbitMQConnectionService.createConnection(this.QUEUE_NAME);
       this.connection = connection;
       this.channel = channel;
       await this.consume();
