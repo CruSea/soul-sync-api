@@ -11,13 +11,13 @@ export class RabbitMQConnectionService {
     const connection = await amqp.connect(process.env.RABBITMQ_URL);
     const channel = await connection.createChannel();
     if (rabbitMQConnectionDto) {
-      await channel.assertQueue(rabbitMQConnectionDto.QueueName, {
+      await channel.assertQueue(rabbitMQConnectionDto.queueName, {
         durable: true,
       });
       await channel.bindQueue(
-        rabbitMQConnectionDto.QueueName,
-        rabbitMQConnectionDto.ExchangeName,
-        rabbitMQConnectionDto.RoutingKey,
+        rabbitMQConnectionDto.queueName,
+        rabbitMQConnectionDto.exchangeName,
+        rabbitMQConnectionDto.routingKeys,
       );
     }
     return { connection, channel };

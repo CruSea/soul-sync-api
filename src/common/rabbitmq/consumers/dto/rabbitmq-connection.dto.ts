@@ -1,19 +1,28 @@
-import { IsString, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  ArrayMinSize,
+} from 'class-validator';
 
 export class RabbitMQConnectionDto {
   @IsOptional()
   @IsString()
-  QueueName?: string;
+  queueName?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1, {
+    message: 'At least one routing key must be provided if specified.',
+  })
+  @IsString({ each: true, message: 'Each routing key must be a string.' })
+  routingKeys?: string[];
 
   @IsOptional()
   @IsString()
-  RoutingKey?: string;
+  exchangeName?: string;
 
   @IsOptional()
   @IsString()
-  ExchangeName?: string;
-
-  @IsOptional()
-  @IsString()
-  ExchangeType?: string;
+  exchangeType?: string;
 }

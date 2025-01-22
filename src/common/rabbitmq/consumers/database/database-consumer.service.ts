@@ -21,7 +21,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     try {
       const { connection, channel } =
-        await this.rabbitMQConnectionService.createConnection(this.QUEUE_NAME);
+        await this.rabbitMQConnectionService.createConnection();
       this.connection = connection;
       this.channel = channel;
       await this.consume();
