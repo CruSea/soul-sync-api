@@ -9,7 +9,13 @@ import { RabbitMQConnectionService } from '../rabbit-connection.service';
 export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   private connection: amqp.Connection;
   private channel: amqp.Channel;
-  private QUEUE_NAME = process.env.DATABASE_QUEUE_NAME;
+  private QUEUE_NAME = 'database_queue';
+  private rabbitConnectionDetails = {
+    queueName: this.QUEUE_NAME,
+    routingKeys: ['message'],
+    exchangeName: 'message',
+    exchangeType: 'topic',
+  };
 
   constructor(
     private readonly prisma: PrismaService,
@@ -21,7 +27,9 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit(): Promise<void> {
     try {
       const { connection, channel } =
-        await this.rabbitMQConnectionService.createConnection();
+        await this.rabbitMQConnectionService.createConnection(
+          this.rabbitConnectionDetails,
+        );
       this.connection = connection;
       this.channel = channel;
       await this.consume();

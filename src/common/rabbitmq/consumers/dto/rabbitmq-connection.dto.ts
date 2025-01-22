@@ -1,9 +1,4 @@
-import {
-  IsString,
-  IsOptional,
-  IsArray,
-  ArrayMinSize,
-} from 'class-validator';
+import { IsString, IsOptional, IsArray, ArrayMinSize } from 'class-validator';
 
 export class RabbitMQConnectionDto {
   @IsOptional()
