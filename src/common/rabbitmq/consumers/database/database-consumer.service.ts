@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Inject,
+} from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -12,7 +17,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   private QUEUE_NAME = 'database_queue';
   private rabbitConnectionDetails = {
     queueName: this.QUEUE_NAME,
-    routingKeys: ['message'],
+    routingKeys: ['telegram'],
     exchangeName: 'message',
     exchangeType: 'topic',
   };
