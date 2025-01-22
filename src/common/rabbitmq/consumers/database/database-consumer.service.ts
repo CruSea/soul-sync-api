@@ -36,10 +36,9 @@ export class DatabaseConsumerService
 
   async onModuleInit(): Promise<void> {
     try {
-      const { connection, channel } =
-        await this.rabbitMQConnectionService.createConnection(
-          this.rabbitConnectionDetails,
-        );
+      const { channel } = await this.rabbitMQConnectionService.createConnection(
+        this.rabbitConnectionDetails,
+      );
       this.channel = channel;
       await this.consume();
     } catch (error) {
