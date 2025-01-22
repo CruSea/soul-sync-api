@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -14,6 +14,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
+    @Inject('MessageValidators')
     private readonly validators: MessageValidator[],
   ) {}
 
@@ -31,6 +32,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy(): Promise<void> {
     try {
+      await this.rabbitMQConnectionService.disconnect(
+        this.connection,
+        this.channel,
+      );
     } catch (error) {
       console.error('Error destroying DatabaseConsumerService:', error);
     }
