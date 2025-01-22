@@ -14,11 +14,13 @@ export class RabbitMQConnectionService {
       await channel.assertQueue(rabbitMQConnectionDto.queueName, {
         durable: true,
       });
-      await channel.bindQueue(
-        rabbitMQConnectionDto.queueName,
-        rabbitMQConnectionDto.exchangeName,
-        rabbitMQConnectionDto.routingKeys,
-      );
+      if (rabbitMQConnectionDto.queueName && rabbitMQConnectionDto.exchangeName && rabbitMQConnectionDto.routingKeys) {
+        await channel.bindQueue(
+          rabbitMQConnectionDto.queueName,
+          rabbitMQConnectionDto.exchangeName,
+          rabbitMQConnectionDto.routingKeys,
+        );
+      }
     }
     return { connection, channel };
   }
