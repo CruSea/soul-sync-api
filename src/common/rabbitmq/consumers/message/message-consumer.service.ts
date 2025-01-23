@@ -20,9 +20,9 @@ export class MessageConsumerService
   };
   constructor(
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
-     @Inject('MessageValidators')
+    @Inject('MessageValidators')
     private readonly validators: MessageTransmitterValidator[],
-     private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService,
   ) {
     super({ queueName: 'message_queue', channel: null });
   }
@@ -63,34 +63,72 @@ export class MessageConsumerService
       return;
     }
     const processedMessage = await this.processMessage(message, conversationId);
-    if(!processedMessage){
+    if (!processedMessage) {
       console.error('Error processing message:', message);
       this.nackMessage(msg);
       return;
     }
-    
   }
 
-  private async extractMenteeAddress(message: any): Promise<string | null> { 
-    const validator = await this.validators.find((validator) => validator.supports(message.type));
+  private async extractMenteeAddress(message: any): Promise<string | null> {
+    const validator = await this.validators.find((validator) =>
+      validator.supports(message.type),
+    );
     if (!validator) {
       return null;
     }
     return validator.extractmenteeAddress(message);
   }
 
-  private async fetchConversationId(menteeAddress: string): Promise<string | null> {
+  private async fetchConversationId(
+    menteeAddress: string,
+  ): Promise<string | null> {
     const conversation = await this.prisma.conversation.findFirst({
       where: { address: menteeAddress, isActive: true },
     });
     return conversation ? conversation.id : null;
   }
-  private async processMessage(message: any, conversationId: string): Promise<MessageDto | null> {
-    const validator = await this.validators.find((validator) => validator.supports(message.type));
+  private async processMessage(
+    message: any,
+    conversationId: string,
+  ): Promise<MessageDto | null> {
+    const validator = await this.validators.find((validator) =>
+      validator.supports(message.type),
+    );
     if (!validator) {
       return null;
     }
     const messageDto = await validator.processMessage(message, conversationId);
     return;
   }
+
+  // private async emitMessage(message: MessageDto) {
+  //   const { mentorEmail, socketId } = await this.getMentorEmail(message.conversationId);
+  //   if (!mentorEmail) {
+  //     console.error('Mentor email not found for conversation:', message.conversationId);
+  //     return;
+  //   }
+  // }
+  // private async getMentorEmail(conversationId: string): Promise<string | null> {
+  //   const conversation = await this.prisma.conversation.findFirst({
+  //     where: { id: conversationId },
+  //   });
+  //   if (!conversation) {
+  //     console.error('Conversation not found:', conversationId);
+  //     return;
+  //   }
+  //   const mentor = await this.prisma.mentor.findFirst({
+  //     where: { id: conversation.mentorId },
+  //   });
+  //   if (!mentor) {
+  //     console.error(
+  //       'Mentor not found for conversation:',
+  //       conversationId,
+  //     );
+  //     return;
+  //   }
+
+
+  //   return mentor.email;
+  // }
 }
