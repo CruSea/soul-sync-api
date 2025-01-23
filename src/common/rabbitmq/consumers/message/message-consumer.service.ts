@@ -3,6 +3,7 @@ import * as amqp from 'amqplib';
 import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
 import { MessageTransmitterValidator } from './message-validators/message-validator';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
 export class MessageConsumerService
@@ -19,7 +20,8 @@ export class MessageConsumerService
   constructor(
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
      @Inject('MessageValidators')
-        private readonly validators: MessageTransmitterValidator[],
+    private readonly validators: MessageTransmitterValidator[],
+     private readonly prisma: PrismaService,
   ) {
     super({ queueName: 'message_queue', channel: null });
   }
@@ -47,13 +49,18 @@ export class MessageConsumerService
     }
   }
   async handleMessage(message: any, msg: amqp.Message): Promise<void> {
-    const menteeAdresss = await this.extractMenteeAddress(message);
-    if (!menteeAdresss) {
+    const menteeAddress = await this.extractMenteeAddress(message);
+    if (!menteeAddress) {
       console.error('Invalid message structure:', message);
       this.nackMessage(msg);
       return;
     }
-    
+    const conversationId = await this.fetchConversationId(menteeAddress);
+    if (!conversationId) {
+      console.error('Conversation not found for mentee:', menteeAddress);
+      this.nackMessage(msg);
+      return;
+    }
     return;
   }
 
@@ -62,6 +69,13 @@ export class MessageConsumerService
     if (!validator) {
       return null;
     }
-    return validator.extractAdress(message);
+    return validator.extractmenteeAddress(message);
+  }
+
+  private async fetchConversationId(menteeAddress: string): Promise<string | null> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { address: menteeAddress, isActive: true },
+    });
+    return conversation ? conversation.id : null;
   }
 }
