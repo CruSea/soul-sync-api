@@ -11,6 +11,7 @@ import { MessageTransmitterValidator } from './message-validators/message-valida
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { MessageDto } from './dto/message.dto';
 import { RedisService } from '../../../redis/redis.service';
+import { ChatService } from '../../../../modules/chat/chat.service';
 
 @Injectable()
 export class MessageConsumerService
@@ -30,6 +31,7 @@ export class MessageConsumerService
     private readonly validators: MessageTransmitterValidator[],
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
+    private readonly chatService: ChatService,
   ) {
     super({ queueName: 'message_queue', channel: null });
   }
@@ -76,6 +78,7 @@ export class MessageConsumerService
       return;
     }
     await this.emitMessage(processedMessage);
+    this.ackMessage(msg);
     return;
   }
 
@@ -122,6 +125,8 @@ export class MessageConsumerService
       );
       return;
     }
+    this.chatService.send(socketId, message);
+    return;
   }
   private async getMentorEmail(
     conversationId: string,
