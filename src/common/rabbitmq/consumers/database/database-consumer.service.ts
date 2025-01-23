@@ -17,13 +17,20 @@ export class DatabaseConsumerService
   implements OnModuleInit, OnModuleDestroy
 {
   private QUEUE_NAME = 'database_queue';
-  private connection: amqp.Connection;
-  private rabbitConnectionDetails = {
-    queueName: this.QUEUE_NAME,
-    routingKeys: ['telegram'],
-    exchangeName: 'message',
-    exchangeType: 'topic',
-  };
+  private rabbitConnectionDetails = [
+    {
+      queueName: this.QUEUE_NAME,
+      routingKeys: ['telegram'],
+      exchangeName: 'message',
+      exchangeType: 'topic',
+    },
+    {
+      queueName: this.QUEUE_NAME,
+      routingKeys: ['chat'],
+      exchangeName: 'chat',
+      exchangeType: 'topic',
+    },
+  ];
 
   constructor(
     private readonly prisma: PrismaService,
@@ -36,11 +43,12 @@ export class DatabaseConsumerService
 
   async onModuleInit(): Promise<void> {
     try {
-      const { channel, connection } =
-        await this.rabbitMQConnectionService.createConnection(
-          this.rabbitConnectionDetails,
-        );
-      this.channel = channel;
+      const connections = await Promise.all(
+        this.rabbitConnectionDetails.map((details) =>
+          this.rabbitMQConnectionService.createConnection(details),
+        ),
+      );
+      const { channel, connection } = connections[0];
       this.connection = connection;
       await this.consume();
     } catch (error) {
