@@ -1,7 +1,8 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
+import { MessageTransmitterValidator } from './message-validators/message-validator';
 
 @Injectable()
 export class MessageConsumerService
@@ -17,6 +18,8 @@ export class MessageConsumerService
   };
   constructor(
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
+     @Inject('MessageValidators')
+        private readonly validators: MessageTransmitterValidator[],
   ) {
     super({ queueName: 'message_queue', channel: null });
   }
@@ -43,7 +46,22 @@ export class MessageConsumerService
       console.error('Error destroying MessageConsumerService:', error);
     }
   }
-  handleMessage(message: any, msg: amqp.Message): Promise<void> {
+  async handleMessage(message: any, msg: amqp.Message): Promise<void> {
+    const menteeAdresss = await this.extractMenteeAddress(message);
+    if (!menteeAdresss) {
+      console.error('Invalid message structure:', message);
+      this.nackMessage(msg);
+      return;
+    }
+    
     return;
+  }
+
+  private async extractMenteeAddress(message: any): Promise<string | null> { 
+    const validator = await this.validators.find((validator) => validator.supports(message.type));
+    if (!validator) {
+      return null;
+    }
+    return validator.extractAdress(message);
   }
 }
