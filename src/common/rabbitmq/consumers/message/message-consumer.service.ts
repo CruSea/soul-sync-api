@@ -19,11 +19,11 @@ export class MessageConsumerService
   implements OnModuleInit, OnModuleDestroy
 {
   private connection: amqp.Connection;
-  private rabbitConnectionDetails: {
-    queueName: 'message_queue';
-    routingKeys: ['telegram'];
-    exchangeName: 'message';
-    exchangeType: 'topic';
+  private rabbitConnectionDetails = {
+    queueName: 'message_queue',
+    routingKeys: ['telegram'],
+    exchangeName: 'message',
+    exchangeType: 'topic',
   };
   constructor(
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
@@ -45,7 +45,7 @@ export class MessageConsumerService
       this.connection = connection;
       await this.consume();
     } catch (error) {
-      console.error('Error initializing MessageConsumerService:', error);
+      console.error('Error initializing DatabaseConsumerService:', error);
     }
   }
   async onModuleDestroy(): Promise<void> {
