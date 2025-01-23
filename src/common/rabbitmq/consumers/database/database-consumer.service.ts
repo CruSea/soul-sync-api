@@ -7,7 +7,7 @@ import {
 import * as amqp from 'amqplib';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { MessageValidator } from './Message-validator';
+import { MessageValidator } from './message-validators/Message-validator';
 import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
 
@@ -36,9 +36,10 @@ export class DatabaseConsumerService
 
   async onModuleInit(): Promise<void> {
     try {
-      const { channel, connection } = await this.rabbitMQConnectionService.createConnection(
-        this.rabbitConnectionDetails,
-      );
+      const { channel, connection } =
+        await this.rabbitMQConnectionService.createConnection(
+          this.rabbitConnectionDetails,
+        );
       this.channel = channel;
       this.connection = connection;
       await this.consume();
