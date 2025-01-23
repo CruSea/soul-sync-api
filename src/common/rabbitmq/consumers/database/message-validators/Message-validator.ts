@@ -1,4 +1,4 @@
-import { CreateMessageDto } from './dto/create-message.dto';
+import { CreateMessageDto } from '../dto/create-message.dto';
 
 export interface MessageValidator {
   supports(type: string): boolean;
