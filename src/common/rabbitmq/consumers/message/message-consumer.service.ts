@@ -108,7 +108,7 @@ export class MessageConsumerService
       return null;
     }
     const messageDto = await validator.processMessage(message, conversationId);
-    return;
+    return messageDto ? messageDto : null;
   }
 
   private async emitMessage(message: MessageDto) {
