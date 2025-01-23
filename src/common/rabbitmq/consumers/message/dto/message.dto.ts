@@ -1,19 +1,22 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, IsDateString } from 'class-validator';
+
+export enum MessageType {
+  RECEIVED = 'RECEIVED',
+}
 
 export class MessageDto {
   @IsString()
   @IsNotEmpty()
   conversationId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  type: string;
+  @IsEnum(MessageType)
+  type: MessageType;
 
   @IsString()
   @IsNotEmpty()
   body: string;
 
-  @IsString()
+  @IsDateString()
   @IsNotEmpty()
-  createdAt: Date;
+  createdAt: string;
 }
