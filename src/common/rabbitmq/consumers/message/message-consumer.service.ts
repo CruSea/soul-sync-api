@@ -5,6 +5,7 @@ import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
 import { MessageTransmitterValidator } from './message-validators/message-validator';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { MessageDto } from './dto/message.dto';
+import { RedisService } from '../../../redis/redis.service';
 
 @Injectable()
 export class MessageConsumerService
@@ -23,6 +24,7 @@ export class MessageConsumerService
     @Inject('MessageValidators')
     private readonly validators: MessageTransmitterValidator[],
     private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
   ) {
     super({ queueName: 'message_queue', channel: null });
   }
@@ -68,6 +70,8 @@ export class MessageConsumerService
       this.nackMessage(msg);
       return;
     }
+    await this.emitMessage(processedMessage);
+    return;
   }
 
   private async extractMenteeAddress(message: any): Promise<string | null> {
@@ -102,33 +106,35 @@ export class MessageConsumerService
     return;
   }
 
-  // private async emitMessage(message: MessageDto) {
-  //   const { mentorEmail, socketId } = await this.getMentorEmail(message.conversationId);
-  //   if (!mentorEmail) {
-  //     console.error('Mentor email not found for conversation:', message.conversationId);
-  //     return;
-  //   }
-  // }
-  // private async getMentorEmail(conversationId: string): Promise<string | null> {
-  //   const conversation = await this.prisma.conversation.findFirst({
-  //     where: { id: conversationId },
-  //   });
-  //   if (!conversation) {
-  //     console.error('Conversation not found:', conversationId);
-  //     return;
-  //   }
-  //   const mentor = await this.prisma.mentor.findFirst({
-  //     where: { id: conversation.mentorId },
-  //   });
-  //   if (!mentor) {
-  //     console.error(
-  //       'Mentor not found for conversation:',
-  //       conversationId,
-  //     );
-  //     return;
-  //   }
+  private async emitMessage(message: MessageDto) {
+    const { mentorEmail, socketId } = await this.getMentorEmail(message.conversationId);
+    if (!mentorEmail || !socketId) {
+      console.error('Invalid mentor email or socketId:', message.conversationId);
+      return;
+    }
 
+  }
+  private async getMentorEmail(conversationId: string): Promise<{ mentorEmail: string; socketId: string; } | null> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: { id: conversationId },
+    });
+    if (!conversation) {
+      console.error('Conversation not found:', conversationId);
+      return;
+    }
+    const mentor = await this.prisma.mentor.findFirst({
+      where: { id: conversation.mentorId },
+    });
+    if (!mentor) {
+      console.error(
+        'Mentor not found for conversation:',
+        conversationId,
+      );
+      return;
+    }
+    const mentorEmail = mentor.email;
+    const socketId = await this.redisService.get(mentorEmail);
 
-  //   return mentor.email;
-  // }
+    return { mentorEmail, socketId };
+  }
 }
