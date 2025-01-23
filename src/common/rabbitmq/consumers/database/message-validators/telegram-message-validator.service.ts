@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from '../dto/create-message.dto';
-import { MessageValidator } from '../Message-validator';
+import { MessageValidator } from './Message-validator';
 
 @Injectable()
 export class TelegramMessageValidator implements MessageValidator {
