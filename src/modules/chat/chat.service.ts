@@ -6,9 +6,7 @@ import { ChatGateway } from './chat.gateway';
 export class ChatService {
   private server: Server;
 
-  constructor(
-    private chatGateway: ChatGateway,
-  ) {
+  constructor(private chatGateway: ChatGateway) {
     this.server = this.chatGateway.server;
   }
 
@@ -20,8 +18,8 @@ export class ChatService {
     const socket = this.server.sockets.sockets.get(socketId);
 
     if (!socket) {
-        throw new Error(`Socket with ID ${socketId} not found`);
-        return;
+      throw new Error(`Socket with ID ${socketId} not found`);
+      return;
     }
 
     socket.emit('message', JSON.stringify(message));
