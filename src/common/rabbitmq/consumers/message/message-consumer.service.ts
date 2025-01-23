@@ -4,6 +4,7 @@ import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
 import { MessageTransmitterValidator } from './message-validators/message-validator';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { MessageDto } from './dto/message.dto';
 
 @Injectable()
 export class MessageConsumerService
@@ -61,7 +62,13 @@ export class MessageConsumerService
       this.nackMessage(msg);
       return;
     }
-    return;
+    const processedMessage = await this.processMessage(message, conversationId);
+    if(!processedMessage){
+      console.error('Error processing message:', message);
+      this.nackMessage(msg);
+      return;
+    }
+    
   }
 
   private async extractMenteeAddress(message: any): Promise<string | null> { 
@@ -77,5 +84,13 @@ export class MessageConsumerService
       where: { address: menteeAddress, isActive: true },
     });
     return conversation ? conversation.id : null;
+  }
+  private async processMessage(message: any, conversationId: string): Promise<MessageDto | null> {
+    const validator = await this.validators.find((validator) => validator.supports(message.type));
+    if (!validator) {
+      return null;
+    }
+    const messageDto = await validator.processMessage(message, conversationId);
+    return;
   }
 }
