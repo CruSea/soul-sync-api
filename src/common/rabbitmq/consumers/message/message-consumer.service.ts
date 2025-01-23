@@ -1,4 +1,9 @@
-import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
@@ -107,14 +112,20 @@ export class MessageConsumerService
   }
 
   private async emitMessage(message: MessageDto) {
-    const { mentorEmail, socketId } = await this.getMentorEmail(message.conversationId);
+    const { mentorEmail, socketId } = await this.getMentorEmail(
+      message.conversationId,
+    );
     if (!mentorEmail || !socketId) {
-      console.error('Invalid mentor email or socketId:', message.conversationId);
+      console.error(
+        'Invalid mentor email or socketId:',
+        message.conversationId,
+      );
       return;
     }
-
   }
-  private async getMentorEmail(conversationId: string): Promise<{ mentorEmail: string; socketId: string; } | null> {
+  private async getMentorEmail(
+    conversationId: string,
+  ): Promise<{ mentorEmail: string; socketId: string } | null> {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id: conversationId },
     });
@@ -126,10 +137,7 @@ export class MessageConsumerService
       where: { id: conversation.mentorId },
     });
     if (!mentor) {
-      console.error(
-        'Mentor not found for conversation:',
-        conversationId,
-      );
+      console.error('Mentor not found for conversation:', conversationId);
       return;
     }
     const mentorEmail = mentor.email;
