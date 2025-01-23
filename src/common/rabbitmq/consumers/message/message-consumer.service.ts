@@ -27,7 +27,7 @@ export class MessageConsumerService
   };
   constructor(
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
-    @Inject('MessageValidators')
+    @Inject('MessageTransmitterValidator')
     private readonly validators: MessageTransmitterValidator[],
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
