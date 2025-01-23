@@ -56,6 +56,47 @@ export class ChannelService {
     return Channel.create(channel);
   }
 
+  async disconnect(
+    id: string,
+  ): Promise<{ ok: boolean; result: boolean; description: string }> {
+    const channel = await this.prisma.channel.findFirst({
+      where: { id, type: 'TELEGRAM' },
+    });
+
+    if (!channel) {
+      throw new HttpException('Channel not found', 404);
+    }
+
+    const token = (channel.configuration as any)?.token;
+
+    if (!token) {
+      throw new HttpException('Invalid Telegram configuration', 400);
+    }
+
+    const resp = await fetch(
+      'https://api.telegram.org/bot' + token + '/deleteWebhook',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    if (!resp.ok) {
+      throw new HttpException(
+        `Failed to disconnect: ${resp.statusText}`,
+        resp.status,
+      );
+    }
+
+    return {
+      ok: true,
+      result: false,
+      description: 'Webhook was disconnected',
+    };
+  }
+
   async connectNegarit(id: string): Promise<{ success: string }> {
     const channel = await this.prisma.channel.findFirst({
       where: { id, type: 'NEGARIT' },

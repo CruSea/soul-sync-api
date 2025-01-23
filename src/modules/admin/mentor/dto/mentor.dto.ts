@@ -38,7 +38,10 @@ export class MentorDto {
       id: partial.id,
       name: partial.name,
       email: partial.email,
+      expertise: partial.expertise,
+      availability: partial.availability,
       age: partial.age,
+      gender: partial.gender,
       location: partial.location,
       user: partial.user ? new UserDto(partial.user) : null,
     });
