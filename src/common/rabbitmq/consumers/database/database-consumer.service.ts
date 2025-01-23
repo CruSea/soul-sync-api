@@ -36,10 +36,11 @@ export class DatabaseConsumerService
 
   async onModuleInit(): Promise<void> {
     try {
-      const { channel } = await this.rabbitMQConnectionService.createConnection(
+      const { channel, connection } = await this.rabbitMQConnectionService.createConnection(
         this.rabbitConnectionDetails,
       );
       this.channel = channel;
+      this.connection = connection;
       await this.consume();
     } catch (error) {
       console.error('Error initializing DatabaseConsumerService:', error);
