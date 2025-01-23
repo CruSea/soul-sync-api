@@ -17,6 +17,7 @@ export class DatabaseConsumerService
   implements OnModuleInit, OnModuleDestroy
 {
   private QUEUE_NAME = 'database_queue';
+  private connection: amqp.Connection;
   private rabbitConnectionDetails = [
     {
       queueName: this.QUEUE_NAME,
@@ -49,6 +50,7 @@ export class DatabaseConsumerService
         ),
       );
       const { channel, connection } = connections[0];
+      this.channel = channel;
       this.connection = connection;
       await this.consume();
     } catch (error) {
