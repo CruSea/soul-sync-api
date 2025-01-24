@@ -1,2 +1,1 @@
-export interface SendChatInterface {
-}
+export interface SendChatInterface {}
