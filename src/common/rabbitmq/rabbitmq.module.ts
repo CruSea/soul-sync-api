@@ -9,6 +9,7 @@ import { RabbitMQConnectionService } from './consumers/rabbit-connection.service
 import { MessageConsumerService } from './consumers/message/message-consumer.service';
 import { RedisModule } from '../redis/redis.module';
 import { ChatModule } from 'src/modules/chat/chat.module';
+import { TelegramMessageValidatorService } from './consumers/message/message-validators/telegram-message.service';
 
 @Module({
   imports: [PrismaModule, RedisModule, forwardRef(() => ChatModule)],
@@ -25,7 +26,7 @@ import { ChatModule } from 'src/modules/chat/chat.module';
     },
     {
       provide: 'MessageTransmitterValidator',
-      useFactory: () => [],
+      useFactory: () => [new TelegramMessageValidatorService()],
     },
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
