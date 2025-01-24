@@ -1,7 +1,8 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
+import { SendChatInterface } from './chat-out-let-implementations/send-chat.interface';
 
 @Injectable()
 export class ChatConsumerService
@@ -17,6 +18,8 @@ export class ChatConsumerService
   };
   constructor(
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
+    @Inject('SendChatInterface')
+    private readonly validators: SendChatInterface[],
   ) {
     super({ queueName: 'chat_queue', channel: null });
     this.rabbitMQConnectionService
@@ -44,6 +47,15 @@ export class ChatConsumerService
     }
   }
   handleMessage(message: any, msg: amqp.Message): Promise<void> {
+    try {
+      const validator = this.validators.find((validator) => {
+        return validator.support() === message.metadata.type;
+      });
+      this.ackMessage(msg);
+    } catch (error) {
+      console.error('Error handling message:', error);
+      this.nackMessage(msg);
+    }
     return;
   }
 }

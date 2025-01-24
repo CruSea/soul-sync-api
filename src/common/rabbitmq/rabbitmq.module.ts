@@ -29,6 +29,10 @@ import { ChatConsumerService } from './consumers/chat/chat-consumer.service';
       provide: 'MessageTransmitterValidator',
       useFactory: () => [],
     },
+    {
+      provide: 'SendChatInterface',
+      useFactory: () => [],
+    },
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
 })
