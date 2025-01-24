@@ -7,7 +7,7 @@ export class TelegramMessageValidatorService
   implements MessageTransmitterValidator
 {
   supports(type: string): boolean {
-    return type === 'telegram';
+    return type === 'TELEGRAM';
   }
   extractmenteeAddress(message: any): string | null {
     if (

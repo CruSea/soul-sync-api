@@ -11,6 +11,7 @@ import { RedisModule } from '../redis/redis.module';
 import { ChatModule } from 'src/modules/chat/chat.module';
 import { ChatConsumerService } from './consumers/chat/chat-consumer.service';
 import { TelegramChatValidator } from './consumers/chat/chat-out-let-implementations/telegram-chat.service';
+import { TelegramMessageValidatorService } from './consumers/message/message-validators/telegram-message.service';
 
 @Module({
   imports: [PrismaModule, RedisModule, forwardRef(() => ChatModule)],
@@ -28,7 +29,7 @@ import { TelegramChatValidator } from './consumers/chat/chat-out-let-implementat
     },
     {
       provide: 'MessageTransmitterValidator',
-      useFactory: () => [],
+      useFactory: () => [new TelegramMessageValidatorService()],
     },
     {
       provide: 'SendChatInterface',

@@ -84,7 +84,7 @@ export class MessageConsumerService
 
   private async extractMenteeAddress(message: any): Promise<string | null> {
     const validator = await this.validators.find((validator) =>
-      validator.supports(message.type),
+      validator.supports(message.metadata.type),
     );
     if (!validator) {
       return null;
@@ -105,7 +105,7 @@ export class MessageConsumerService
     conversationId: string,
   ): Promise<MessageDto | null> {
     const validator = await this.validators.find((validator) =>
-      validator.supports(message.type),
+      validator.supports(message.metadata.type),
     );
     if (!validator) {
       return null;
@@ -120,8 +120,7 @@ export class MessageConsumerService
     );
     if (!mentorEmail || !socketId) {
       console.error(
-        'Invalid mentor email or socketId:',
-        message.conversationId,
+        'Invalid mentor email or socketId (mentor is not connected)',
       );
       return;
     }
