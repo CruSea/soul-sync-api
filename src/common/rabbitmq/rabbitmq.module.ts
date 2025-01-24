@@ -10,6 +10,7 @@ import { MessageConsumerService } from './consumers/message/message-consumer.ser
 import { RedisModule } from '../redis/redis.module';
 import { ChatModule } from 'src/modules/chat/chat.module';
 import { ChatConsumerService } from './consumers/chat/chat-consumer.service';
+import { TelegramChatValidator } from './consumers/chat/chat-out-let-implementations/telegram-chat.service';
 
 @Module({
   imports: [PrismaModule, RedisModule, forwardRef(() => ChatModule)],
@@ -31,7 +32,7 @@ import { ChatConsumerService } from './consumers/chat/chat-consumer.service';
     },
     {
       provide: 'SendChatInterface',
-      useFactory: () => [],
+      useFactory: () => [new TelegramChatValidator()],
     },
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
