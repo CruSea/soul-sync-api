@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - '3000:3000'
+      - '5555:5555'
+      - '3002:3002'
     volumes:
       - .:/app
     depends_on:
