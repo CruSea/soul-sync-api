@@ -5,7 +5,6 @@ import { SentChatDto } from '../dto/sent-chat.dto';
 
 @Injectable()
 export class TelegramChatValidator implements SendChatInterface {
-  constructor(private readonly prismaService: PrismaService) {}
   support(): string {
     return 'TELEGRAM';
   }
