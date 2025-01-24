@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { SendChatInterface } from './send-chat.interface';
-import { PrismaService } from '../../../../../modules/prisma/prisma.service';
 import { SentChatDto } from '../dto/sent-chat.dto';
 
 @Injectable()
