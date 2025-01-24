@@ -9,6 +9,7 @@ import { RabbitMQConnectionService } from '../rabbit-connection.service';
 import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
 import { SendChatInterface } from './chat-out-let-implementations/send-chat.interface';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
+import { SentChatDto } from './dto/sent-chat.dto';
 
 @Injectable()
 export class ChatConsumerService
@@ -53,10 +54,10 @@ export class ChatConsumerService
       console.error('Error destroying ChatConsumerService:', error);
     }
   }
-  async handleMessage(message: any, msg: amqp.Message): Promise<void> {
+  async handleMessage(chat: any, msg: amqp.Message): Promise<void> {
     try {
       const channelType = await this.fetchChannelType(
-        message.metadata.conversationId,
+        chat.metadata.conversationId,
       );
       const validator = this.validators.find((validator) => {
         return validator.support() === channelType;
@@ -64,8 +65,11 @@ export class ChatConsumerService
       if (!validator) {
         throw new Error('Validator not found');
       }
-      validator.send(message);
-      this.ackMessage(msg);
+      const processedChat = await this.processChat(chat);
+      if (validator.send(processedChat)) {
+        this.ackMessage(msg);
+      }
+      this.nackMessage(msg);
     } catch (error) {
       console.error('Error handling message:', error);
       this.nackMessage(msg);
@@ -94,5 +98,25 @@ export class ChatConsumerService
       console.error('Error fetching channel type:', error);
       return null;
     }
+  }
+  private async processChat(chat: any): Promise<SentChatDto> {
+    const { channel, conversation } = await this.fetchChannelandConversation(
+      chat.metadata.conversationId,
+    );
+    return {
+      body: chat.payload,
+      address: conversation.address,
+      channelId: channel.id,
+      channelConfig: JSON.parse(channel.configuration as string),
+    };
+  }
+  async fetchChannelandConversation(conversationlId: string) {
+    const conversation = await this.prismaService.conversation.findFirst({
+      where: { id: conversationlId },
+    });
+    const channel = await this.prismaService.channel.findFirst({
+      where: { id: conversation.channelId },
+    });
+    return { channel, conversation };
   }
 }

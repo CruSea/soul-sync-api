@@ -1,30 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { SendChatInterface } from './send-chat.interface';
+import { PrismaService } from '../../../../../modules/prisma/prisma.service';
+import { SentChatDto } from '../dto/sent-chat.dto';
 
 @Injectable()
 export class TelegramChatValidator implements SendChatInterface {
+  constructor(private readonly prismaService: PrismaService) {}
   support(): string {
     return 'TELEGRAM';
   }
 
-  async send(message: any): Promise<boolean> {
-    const telegramApiUrl = `https://api.telegram.org/bot${message.configuration.token}/sendMessage`;
+  async send(chat: SentChatDto): Promise<boolean> {
+    const token = chat.channelConfig?.token;
+    const address = chat.address;
+    const body = chat.body;
+    const telegramApiUrl = `https://api.telegram.org/bot${token}/sendMessage`;
     const response = await fetch(telegramApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        chat_id: message.payload.address,
-        text: message.payload.body,
+        chat_id: address,
+        text: body,
       }),
     });
-
-    if (!response.ok) {
-      const errorResponse = await response.json();
-      console.error('Error sending message to Telegram:', errorResponse);
-      return false;
-    }
 
     const telegramResponse = await response.json();
     if (!telegramResponse.ok) {
