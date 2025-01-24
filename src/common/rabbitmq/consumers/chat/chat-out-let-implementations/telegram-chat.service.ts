@@ -4,8 +4,8 @@ import { SentChatDto } from '../dto/sent-chat.dto';
 
 @Injectable()
 export class TelegramChatValidator implements SendChatInterface {
-  support(): string {
-    return 'TELEGRAM';
+  supports(type: string): boolean {
+    return type === 'TELEGRAM';
   }
 
   async send(chat: SentChatDto): Promise<boolean> {

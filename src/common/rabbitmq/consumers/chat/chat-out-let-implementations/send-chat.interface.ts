@@ -1,6 +1,6 @@
 import { SentChatDto } from '../dto/sent-chat.dto';
 
 export interface SendChatInterface {
-  support(): string;
+  supports(type: string): boolean;
   send(chat: SentChatDto): Promise<any>;
 }

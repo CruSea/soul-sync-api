@@ -59,8 +59,8 @@ export class ChatConsumerService
       const channelType = await this.fetchChannelType(
         chat.metadata.conversationId,
       );
-      const validator = this.validators.find((validator) => {
-        return validator.support() === channelType;
+      const validator = this.validators.find((validators) => {
+        validators.supports(channelType);
       });
       if (!validator) {
         throw new Error('Validator not found');
@@ -78,22 +78,19 @@ export class ChatConsumerService
   }
   private async fetchChannelType(conversationId: string) {
     try {
-      return await this.prismaService.conversation
-        .findFirst({
-          where: { id: conversationId, isActive: true },
-        })
-        .then(
-          (conversation: {
-            channelId: string;
-            isActive: boolean;
-            type?: string;
-          }) => {
-            if (conversation && conversation.type) {
-              return conversation.type;
-            }
-            throw new Error('Channel type not found');
-          },
-        );
+      const conversation = await this.prismaService.conversation.findFirst({
+        where: { id: conversationId },
+      });
+      if (!conversation) {
+        throw new Error('Conversation not found');
+      }
+      const channel = await this.prismaService.channel.findFirst({
+        where: { id: conversation.channelId },
+      });
+      if (!channel) {
+        throw new Error('Channel not found');
+      }
+      return channel.type;
     } catch (error) {
       console.error('Error fetching channel type:', error);
       return null;
