@@ -1,13 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { ChatGateway } from './chat.gateway';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class ChatService {
   private server: Server;
-
-  constructor(private chatGateway: ChatGateway) {
+  constructor(
+    private chatGateway: ChatGateway,
+    private readonly jwtService: JwtService,
+  ) {
     this.server = this.chatGateway.server;
+  }
+
+  async getUserFromToken(client: any) {
+    const token = this.getTokenFromClient(client);
+    const user = await this.verifyToken(token);
+    return user;
+  }
+  private getTokenFromClient(client: Socket): string {
+    return (
+      client.handshake?.auth?.token ||
+      client.handshake?.headers?.authorization ||
+      client.handshake?.query?.token
+    );
+  }
+
+  private async verifyToken(token: string): Promise<any> {
+    const parsedToken = token.startsWith('Bearer ') ? token.slice(7) : token;
+    try {
+      return await this.jwtService.verifyAsync(parsedToken, {
+        secret: process.env.JWT_SECRET,
+        ignoreExpiration: false,
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
   async send(socketId: string, message: any): Promise<void> {
@@ -19,7 +47,6 @@ export class ChatService {
 
     if (!socket) {
       throw new Error(`Socket with ID ${socketId} not found`);
-      return;
     }
 
     socket.emit('message', JSON.stringify(message));
