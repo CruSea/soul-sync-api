@@ -11,6 +11,8 @@ import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
 import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
+import { ChatService } from './chat.service';
+import { RedisService } from 'src/common/redis/redis.service';
 
 @WebSocketGateway(Number(process.env.CHAT_PORT), {
   cors: {
@@ -25,17 +27,23 @@ export class ChatGateway {
   constructor(
     private readonly chatExchangeService: ChatExchangeService,
     private readonly rabbitmqService: RabbitmqService,
+    private readonly chatService: ChatService,
+    private readonly reddisService: RedisService,
   ) {}
 
   afterInit(server: any) {
     console.log('ChatGateway Initialized', server);
   }
 
-  handleConnection(client: any) {
+  async handleConnection(client: any) {
+    const user = await this.chatService.getUserFromToken(client);
+    await this.reddisService.set(user.email, client.id);
     console.log('Client connected:', client);
   }
 
-  handleDisconnect(client: any) {
+  async handleDisconnect(client: any) {
+    const user = await this.chatService.getUserFromToken(client);
+    await this.reddisService.delete(user.email);
     console.log('Client disconnected:', client);
   }
 
