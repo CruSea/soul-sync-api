@@ -13,6 +13,7 @@ import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { ChatService } from './chat.service';
 import { RedisService } from 'src/common/redis/redis.service';
+import { SocketService } from './socket.service';
 
 @WebSocketGateway(Number(process.env.CHAT_PORT), {
   cors: {
@@ -29,9 +30,11 @@ export class ChatGateway {
     private readonly rabbitmqService: RabbitmqService,
     private readonly chatService: ChatService,
     private readonly reddisService: RedisService,
+    private readonly socketService: SocketService,
   ) {}
 
   afterInit(server: any) {
+    this.socketService.server = server;
     console.log('ChatGateway Initialized', server);
   }
 

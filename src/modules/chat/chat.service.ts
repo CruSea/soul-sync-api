@@ -1,17 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import { ChatGateway } from './chat.gateway';
+import { Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
+import { SocketService } from './socket.service';
 
 @Injectable()
 export class ChatService {
-  private server: Server;
   constructor(
-    private chatGateway: ChatGateway,
+    private readonly socketService: SocketService,
     private readonly jwtService: JwtService,
-  ) {
-    this.server = this.chatGateway.server;
-  }
+  ) {}
 
   async getUserFromToken(client: any) {
     const token = this.getTokenFromClient(client);
@@ -39,11 +36,11 @@ export class ChatService {
   }
 
   async send(socketId: string, message: any): Promise<void> {
-    if (!this.server) {
+    if (!this.socketService.server) {
       throw new Error('Server is not initialized');
     }
 
-    const socket = this.server.sockets.sockets.get(socketId);
+    const socket = this.socketService.server.sockets.sockets.get(socketId);
 
     if (!socket) {
       throw new Error(`Socket with ID ${socketId} not found`);
