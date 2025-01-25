@@ -11,9 +11,20 @@ export class ChatService {
   ) {}
 
   async getUserFromToken(client: any) {
-    const token = this.getTokenFromClient(client);
-    const user = await this.verifyToken(token);
-    return user;
+    try {
+      const token = this.getTokenFromClient(client);
+      if (!token) {
+        throw new Error('Token not found');
+      }
+      const user = await this.verifyToken(token);
+      if (!user) {
+        throw new Error('Invalid or expired token');
+      }
+      return user;
+    } catch (error) {
+      console.log('error in extracting user from token: ', error);
+      return null;
+    }
   }
   private getTokenFromClient(client: Socket): string {
     return (
@@ -31,7 +42,8 @@ export class ChatService {
         ignoreExpiration: false,
       });
     } catch (error) {
-      throw error;
+      console.log('error in verifying token (invalid or expired): ', error);
+      return null;
     }
   }
 

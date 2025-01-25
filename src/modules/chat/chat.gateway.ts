@@ -39,28 +39,38 @@ export class ChatGateway {
   }
 
   async handleConnection(client: any) {
-    const user = await this.chatService.getUserFromToken(client);
-    await this.reddisService.set(user.email, client.id);
-    console.log('Client connected:', client);
+    try {
+      const user = await this.chatService.getUserFromToken(client);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      await this.reddisService.set(user.email, client.id);
+      console.log('Client connected:', client.id);
+    } catch (error) {
+      console.log('error in handle connection', error);
+      client.disconnect();
+    }
   }
 
   async handleDisconnect(client: any) {
     const user = await this.chatService.getUserFromToken(client);
-    await this.reddisService.delete(user.email);
-    console.log('Client disconnected:', client);
+    if (user) {
+      await this.reddisService.delete(user.email);
+    }
+    console.log('Client disconnected:', client.id);
   }
 
   @SubscribeMessage('message')
   @UseGuards(WsGuardGuard)
-  handleMessage(
+  async handleMessage(
     @MessageBody() data: string,
     @ConnectedSocket() client: any,
-  ): string {
+  ): Promise<string> {
     try {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
         const data = this.rabbitmqService.getChatEchangeData(chatData, client);
-        this.chatExchangeService.send('chat', data);
+        await this.chatExchangeService.send('chat', data);
         return 'AKC';
       }
     } catch (e) {
