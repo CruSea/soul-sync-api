@@ -87,7 +87,9 @@ export class DatabaseConsumerService
     }
   }
 
-  private async validateMessage(message: any): Promise<CreateMessageDto | null> {
+  private async validateMessage(
+    message: any,
+  ): Promise<CreateMessageDto | null> {
     const validator = this.validators.find((validate) =>
       validate.supports(message.metadata.type),
     );
