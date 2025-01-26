@@ -64,12 +64,11 @@ export class ChatGateway {
   @UseGuards(WsGuardGuard)
   async handleMessage(
     @MessageBody() data: string,
-    @ConnectedSocket() client: any,
   ): Promise<string> {
     try {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
-        const data = this.rabbitmqService.getChatEchangeData(chatData, client);
+        // const data = this.rabbitmqService.getChatEchangeData(chatData, client);
         await this.chatExchangeService.send('chat', data);
         return 'AKC';
       }
