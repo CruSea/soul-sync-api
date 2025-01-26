@@ -12,7 +12,10 @@ export class MessageService {
   ) {}
 
   async telegram(id: string, telegramChat: TelegramChat) {
-    const data = await this.rabbitmqService.getMessageEchangeData(id, telegramChat);
+    const data = await this.rabbitmqService.getMessageEchangeData(
+      id,
+      telegramChat,
+    );
     this.messageExchangeService.send('telegram', data);
     return 'ok';
   }
