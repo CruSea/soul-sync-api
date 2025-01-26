@@ -71,7 +71,7 @@ export class DatabaseConsumerService
 
   async handleMessage(message: any, msg: amqp.Message): Promise<void> {
     try {
-      const createMessageDto = this.validateMessage(message);
+      const createMessageDto = await this.validateMessage(message);
       console.log(CreateMessageDto);
       if (!createMessageDto) {
         console.error('Invalid message structure:', message);
@@ -87,7 +87,7 @@ export class DatabaseConsumerService
     }
   }
 
-  private validateMessage(message: any): CreateMessageDto | null {
+  private async validateMessage(message: any): Promise<CreateMessageDto | null> {
     const validator = this.validators.find((validate) =>
       validate.supports(message.metadata.type),
     );
@@ -97,7 +97,7 @@ export class DatabaseConsumerService
       return null;
     }
 
-    return validator.validate(message);
+    return await validator.validate(message);
   }
 
   private async processMessage(
