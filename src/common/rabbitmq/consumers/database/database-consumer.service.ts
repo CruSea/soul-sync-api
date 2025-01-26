@@ -76,7 +76,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         const messageContent = msg.content.toString();
         const message = JSON.parse(messageContent);
 
-        const createMessageDto = this.validateMessage(message);
+        const createMessageDto = await this.validateMessage(message);
         if (!createMessageDto) {
           console.error('Invalid message structure:', message);
           this.channel.nack(msg, false, false);
@@ -91,7 +91,9 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       }
     });
   }
-  private validateMessage(message: any): CreateMessageDto | null {
+  private async validateMessage(
+    message: any,
+  ): Promise<CreateMessageDto | null> {
     const validator = this.validators.find((validate) =>
       validate.supports(message.metadata.type),
     );
@@ -101,7 +103,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       return null;
     }
 
-    return validator.validate(message);
+    return await validator.validate(message);
   }
   private async processMessage(
     createMessageDto: CreateMessageDto,

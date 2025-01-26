@@ -10,14 +10,16 @@ export class TelegramMessageValidator implements MessageValidator {
     return type === 'CHAT';
   }
 
-  validate(message: any): CreateMessageDto | null {
+  async validate(message: any): Promise<CreateMessageDto | null> {
     if (!message.payload) {
       return null;
     }
-    const conversation = this.fetchConversatio(message.metadata.conversationId);
+    const conversation = await this.fetchConversatio(
+      message.metadata.conversationId,
+    );
     return {
-      channelId: message.metadata.channelId,
-      address: message.payload.message.chat.id.toString(),
+      channelId: conversation.channelId,
+      address: conversation.address.toString(),
       type: 'SENT',
       body: message.payload,
     };
