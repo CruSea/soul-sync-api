@@ -59,17 +59,18 @@ export class ChatConsumerService
       const channelType = await this.fetchChannelType(
         chat.metadata.conversationId,
       );
-      const validator = this.validators.find((validators) => {
-        validators.supports(channelType);
-      });
+      const validator = this.validators.find((validate) =>
+        validate.supports(channelType),
+      );
       if (!validator) {
         throw new Error('Validator not found');
       }
       const processedChat = await this.processChat(chat);
       if (validator.send(processedChat)) {
         this.ackMessage(msg);
+      } else {
+        this.nackMessage(msg);
       }
-      this.nackMessage(msg);
     } catch (error) {
       console.error('Error handling message:', error);
       this.nackMessage(msg);
@@ -104,7 +105,7 @@ export class ChatConsumerService
       body: chat.payload,
       address: conversation.address,
       channelId: channel.id,
-      channelConfig: JSON.parse(channel.configuration as string),
+      channelConfig: channel.configuration as Record<string, any>,
     };
   }
   async fetchChannelandConversation(conversationlId: string) {
