@@ -1,6 +1,5 @@
 import { NotFoundException, UseGuards } from '@nestjs/common';
 import {
-  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
@@ -62,13 +61,11 @@ export class ChatGateway {
 
   @SubscribeMessage('message')
   @UseGuards(WsGuardGuard)
-  async handleMessage(
-    @MessageBody() data: string,
-  ): Promise<string> {
+  async handleMessage(@MessageBody() data: string): Promise<string> {
     try {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
-        // const data = this.rabbitmqService.getChatEchangeData(chatData, client);
+        const data = this.rabbitmqService.getChatEchangeData(chatData);
         await this.chatExchangeService.send('chat', data);
         return 'AKC';
       }
