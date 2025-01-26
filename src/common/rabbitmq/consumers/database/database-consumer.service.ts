@@ -97,7 +97,7 @@ export class DatabaseConsumerService
       return null;
     }
 
-    return validator.validate(message);
+    return await validator.validate(message);
   }
 
   private async processMessage(
