@@ -8,7 +8,7 @@ export class TelegramMessageValidator implements MessageValidator {
     return type === 'TELEGRAM';
   }
 
-  validate(message: any): CreateMessageDto | null {
+  async validate(message: any): Promise<CreateMessageDto | null> {
     if (
       !message.payload.message ||
       !message.payload.message.chat ||
