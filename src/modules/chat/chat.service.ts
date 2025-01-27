@@ -55,7 +55,8 @@ export class ChatService {
     const socket = this.socketService.server.sockets.sockets.get(socketId);
 
     if (!socket) {
-      throw new Error(`Socket with ID ${socketId} not found`);
+      console.log(`Socket with ID ${socketId} not found`);
+      return;
     }
 
     socket.emit('message', JSON.stringify(message));
