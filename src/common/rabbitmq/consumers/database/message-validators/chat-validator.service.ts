@@ -4,7 +4,7 @@ import { MessageValidator } from './Message-validator';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
-export class TelegramMessageValidator implements MessageValidator {
+export class ChatMessageValidator implements MessageValidator {
   constructor(private prismaService: PrismaService) {}
   supports(type: string): boolean {
     return type === 'CHAT';
