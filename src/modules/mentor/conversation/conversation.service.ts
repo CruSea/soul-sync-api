@@ -11,7 +11,34 @@ export class ConversationService {
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} conversation`;
+    return this.prisma.conversation
+      .findFirst({
+        where: { id: id },
+        include: {
+          Threads: {
+            include: {
+              Message: true,
+            },
+          },
+        },
+      })
+      .then((conversation) => {
+        if (conversation) {
+          const formattedMessages = conversation.Threads.flatMap((thread) =>
+            (Array.isArray(thread.Message)
+              ? thread.Message
+              : [thread.Message]
+            ).map((message) => ({
+              type: message.type,
+              body: message.body,
+              createdAt: message.createdAt.toISOString(),
+            })),
+          );
+
+          return formattedMessages;
+        }
+        return [];
+      });
   }
 
   update(id: string, updateConversationDto: UpdateConversationDto) {
