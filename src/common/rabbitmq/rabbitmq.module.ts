@@ -6,6 +6,8 @@ import { TelegramMessageValidator } from './consumers/database/message-validator
 import { DatabaseConsumerService } from './consumers/database/database-consumer.service';
 import { PrismaModule } from 'src/modules/prisma/prisma.module';
 import { RabbitMQConnectionService } from './consumers/rabbit-connection.service';
+import { ChatMessageValidator } from './consumers/database/message-validators/chat-validator.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Module({
   imports: [PrismaModule],
@@ -17,7 +19,10 @@ import { RabbitMQConnectionService } from './consumers/rabbit-connection.service
     RabbitMQConnectionService,
     {
       provide: 'MessageValidators',
-      useFactory: () => [new TelegramMessageValidator()],
+      useFactory: () => [
+        new TelegramMessageValidator(),
+        new ChatMessageValidator(new PrismaService()),
+      ],
     },
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
