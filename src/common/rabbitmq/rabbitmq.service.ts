@@ -12,6 +12,7 @@ export class RabbitmqService {
       // id: uuidv4(), // I may have not understand this (so far this has no use)
       type: 'CHAT',
       metadata: {
+        type: 'CHAT',
         // userId: socket.user.id, // I may have not understand this (so far this has no use)
         conversationId: chat.metadata.conversationId,
       },
