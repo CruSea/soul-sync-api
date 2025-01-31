@@ -32,6 +32,11 @@ export class ChannelController {
     return this.channelService.connect(id);
   }
 
+  @Post(':id/disconnect')
+  disconnect(@Param('id') id: string) {
+    return this.channelService.disconnect(id);
+  }
+
   @Get()
   findAll(@Query() getChannel: GetChannelDto) {
     return this.channelService.findAll(getChannel);
