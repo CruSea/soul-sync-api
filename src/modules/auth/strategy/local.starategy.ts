@@ -5,7 +5,10 @@ import { AuthService } from '../auth.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class GoogleLocalStrategy extends PassportStrategy(Strategy, 'google-local') {
+export class GoogleLocalStrategy extends PassportStrategy(
+  Strategy,
+  'google-local',
+) {
   constructor(
     private authService: AuthService,
     private jwtService: JwtService,

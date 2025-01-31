@@ -28,7 +28,6 @@ export class AuthController {
     res.redirect(`${process.env.WEB_CALLBACK_URL}?token=${req.user}`);
   }
 
-
   @Get('google-local')
   @UseGuards(AuthGuard('google-local'))
   async googleLocalAuth() {}
