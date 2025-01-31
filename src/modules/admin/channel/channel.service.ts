@@ -42,6 +42,9 @@ export class ChannelService {
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({
+            url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
+          }),
         },
       );
 
@@ -51,6 +54,7 @@ export class ChannelService {
           resp.status,
         );
       }
+      return resp.json();
     }
     await this.prisma.channel.update({
       where: { id },
@@ -87,6 +91,9 @@ export class ChannelService {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
+        }),
       },
     );
 
