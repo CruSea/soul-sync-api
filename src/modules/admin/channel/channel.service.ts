@@ -26,7 +26,9 @@ export class ChannelService {
     return Channel.create(channel);
   }
 
-  async connect(id: string): Promise<Channel> {
+  async connect(
+    id: string,
+  ): Promise<{ ok: boolean; result: boolean; description: string }> {
     const channel = await this.prisma.channel.findFirst({
       where: { id, type: 'TELEGRAM' },
     });
@@ -40,20 +42,26 @@ export class ChannelService {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
-          }),
         },
       );
 
       if (!resp.ok) {
-        throw new HttpException(resp.body, resp.status);
+        throw new HttpException(
+          `Failed to connect: ${resp.statusText}`,
+          resp.status,
+        );
       }
-
-      return resp.json();
     }
+    await this.prisma.channel.update({
+      where: { id },
+      data: { is_on: true },
+    });
 
-    return Channel.create(channel);
+    return {
+      ok: true,
+      result: true,
+      description: 'Webhook is connected',
+    };
   }
 
   async disconnect(
@@ -89,6 +97,10 @@ export class ChannelService {
         resp.status,
       );
     }
+    await this.prisma.channel.update({
+      where: { id },
+      data: { is_on: false },
+    });
 
     return {
       ok: true,

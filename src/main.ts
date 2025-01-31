@@ -13,7 +13,10 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: ['https://f7xs9l1w-9000.uks1.devtunnels.ms'],
+    origin: [
+      'https://f7xs9l1w-9000.uks1.devtunnels.ms',
+      'https://sbkh2slb-9000.uks1.devtunnels.ms',
+    ],
     credentials: true,
     allowedHeaders: 'Authorization, Content-Type',
   });
