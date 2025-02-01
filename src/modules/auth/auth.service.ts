@@ -14,7 +14,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async signIn(signInUserDto: SignInUserDto): Promise<AuthDto> {
     const user = await this.prisma.user.findUnique({
@@ -128,23 +128,28 @@ export class AuthService {
   }
 
   async getUserAccounts(userId: string) {
-    const accounts = this.prisma.account.findMany({
+    const accounts = await this.prisma.account.findMany({
       where: { AccountUser: { some: { userId } } },
       select: {
         id: true,
         name: true,
-        AccountUser: { select: { Role: { select: { id: true, name: true } } } },
+        AccountUser: {
+          select: {
+            userId: true,
+            Role: { select: { id: true, name: true } },
+          },
+        },
       },
     });
 
-    return (await accounts).map((account) => ({
-      id: account.id,
-      name: account.name,
-      role:
-        account.AccountUser.map((accountUser) => ({
-          id: accountUser.Role.id,
-          name: accountUser.Role.name,
-        }))[0] ?? null,
-    }));
+    return accounts.map((account) => {
+      const userRole = account.AccountUser.find((au) => au.userId === userId);
+
+      return {
+        id: account.id,
+        name: account.name,
+        role: userRole ? { id: userRole.Role.id, name: userRole.Role.name } : null,
+      };
+    });
   }
 }
