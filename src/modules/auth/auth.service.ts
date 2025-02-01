@@ -148,7 +148,9 @@ export class AuthService {
       return {
         id: account.id,
         name: account.name,
-        role: userRole?{ id: userRole.Role.id, name: userRole.Role.name } : null,
+        role: userRole
+          ? { id: userRole.Role.id, name: userRole.Role.name }
+          : null,
       };
     });
   }
