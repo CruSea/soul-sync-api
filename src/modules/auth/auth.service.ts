@@ -14,7 +14,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async signIn(signInUserDto: SignInUserDto): Promise<AuthDto> {
     const user = await this.prisma.user.findUnique({
@@ -148,7 +148,7 @@ export class AuthService {
       return {
         id: account.id,
         name: account.name,
-        role: userRole ? { id: userRole.Role.id, name: userRole.Role.name } : null,
+        role: userRole?{ id: userRole.Role.id, name: userRole.Role.name } : null,
       };
     });
   }

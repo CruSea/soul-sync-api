@@ -11,7 +11,7 @@ export class MentorService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
-  ) { }
+  ) {}
 
   async findAll(getMentor: GetMentorDto): Promise<MentorDto[]> {
     const mentors = await this.prisma.mentor.findMany({
