@@ -32,14 +32,21 @@ export class MentorDto {
   @Expose()
   availability?: any;
 
+  @Expose()
+  isActive?: any;
+
   constructor(partial: Partial<MentorDto>) {
     console.log('partial', partial);
     Object.assign(this, {
       id: partial.id,
       name: partial.name,
       email: partial.email,
+      expertise: partial.expertise,
+      availability: partial.availability,
       age: partial.age,
+      gender: partial.gender,
       location: partial.location,
+      isActive: partial.isActive,
       user: partial.user ? new UserDto(partial.user) : null,
     });
   }
