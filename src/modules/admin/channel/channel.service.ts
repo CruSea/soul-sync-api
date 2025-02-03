@@ -33,28 +33,28 @@ export class ChannelService {
       where: { id, type: 'TELEGRAM' },
     });
 
-    if (channel) {
-      const token = (channel.configuration as any)?.token;
-      const resp = await fetch(
-        'https://api.telegram.org/bot' + token + '/setWebhook',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
-          }),
+    if (!channel) {
+      throw new HttpException('Channel not found', 404);
+    }
+    const token = (channel.configuration as any)?.token;
+    const resp = await fetch(
+      'https://api.telegram.org/bot' + token + '/setWebhook',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
+        }),
+      },
+    );
 
-      if (!resp.ok) {
-        throw new HttpException(
-          `Failed to connect: ${resp.statusText}`,
-          resp.status,
-        );
-      }
-      return resp.json();
+    if (!resp.ok) {
+      throw new HttpException(
+        `Failed to connect: ${resp.statusText}`,
+        resp.status,
+      );
     }
     await this.prisma.channel.update({
       where: { id },
