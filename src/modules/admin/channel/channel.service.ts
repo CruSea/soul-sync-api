@@ -5,12 +5,13 @@ import { REQUEST } from '@nestjs/core';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { Channel } from './entities/channel.entity';
 import { GetChannelDto } from './dto/get-channel.dto';
-
+import { ChannelFactory } from './channel-platforms/channel-factory';
 @Injectable()
 export class ChannelService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
+    private strategyFactory: ChannelFactory,
   ) {}
 
   async create(createChannelDto: CreateChannelDto): Promise<Channel> {
@@ -29,90 +30,57 @@ export class ChannelService {
   async connect(
     id: string,
   ): Promise<{ ok: boolean; result: boolean; description: string }> {
-    const channel = await this.prisma.channel.findFirst({
-      where: { id, type: 'TELEGRAM' },
-    });
+    try {
+      const channel = await this.prisma.channel.findFirst({ where: { id } });
 
-    if (!channel) {
-      throw new HttpException('Channel not found', 404);
+      if (!channel) {
+        throw new HttpException('Channel not found', 404);
+      }
+
+      const strategy = this.strategyFactory.getStrategy(channel.type);
+      const result = await strategy.connect(channel);
+
+      await this.prisma.channel.update({
+        where: { id },
+        data: { is_on: true },
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error in connect method:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to connect channel', 500);
     }
-    const token = (channel.configuration as any)?.token;
-    const resp = await fetch(
-      'https://api.telegram.org/bot' + token + '/setWebhook',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
-        }),
-      },
-    );
-
-    if (!resp.ok) {
-      throw new HttpException(
-        `Failed to connect: ${resp.statusText}`,
-        resp.status,
-      );
-    }
-    await this.prisma.channel.update({
-      where: { id },
-      data: { is_on: true },
-    });
-
-    return {
-      ok: true,
-      result: true,
-      description: 'Webhook is connected',
-    };
   }
+
   async disconnect(
     id: string,
   ): Promise<{ ok: boolean; result: boolean; description: string }> {
-    const channel = await this.prisma.channel.findFirst({
-      where: { id, type: 'TELEGRAM' },
-    });
+    try {
+      const channel = await this.prisma.channel.findFirst({ where: { id } });
 
-    if (!channel) {
-      throw new HttpException('Channel not found', 404);
+      if (!channel) {
+        throw new HttpException('Channel not found', 404);
+      }
+
+      const strategy = this.strategyFactory.getStrategy(channel.type);
+      const result = await strategy.disconnect(channel);
+
+      await this.prisma.channel.update({
+        where: { id },
+        data: { is_on: false },
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error in disconnect method:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to disconnect channel', 500);
     }
-
-    const token = (channel.configuration as any)?.token;
-
-    if (!token) {
-      throw new HttpException('Invalid Telegram configuration', 400);
-    }
-
-    const resp = await fetch(
-      'https://api.telegram.org/bot' + token + '/deleteWebhook',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: process.env.HOST_URL + '/message/telegram?id=' + channel.id,
-        }),
-      },
-    );
-
-    if (!resp.ok) {
-      throw new HttpException(
-        `Failed to disconnect: ${resp.statusText}`,
-        resp.status,
-      );
-    }
-    await this.prisma.channel.update({
-      where: { id },
-      data: { is_on: false },
-    });
-
-    return {
-      ok: true,
-      result: false,
-      description: 'Webhook is disconnected',
-    };
   }
 
   async findAll(getChannel: GetChannelDto): Promise<Channel[]> {

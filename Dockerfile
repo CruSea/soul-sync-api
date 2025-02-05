@@ -28,4 +28,4 @@ EXPOSE 3002
 EXPOSE 5555
 
 # Start the application
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:dev"]
