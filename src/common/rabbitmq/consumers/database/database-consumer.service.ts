@@ -9,12 +9,15 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { MessageValidator } from './message-validators/Message-validator';
 import { RabbitMQConnectionService } from '../rabbit-connection.service';
+import { RabbitMQAbstractConsumer } from '../rabbitmq-abstract-consumer';
 
 @Injectable()
-export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
-  private connection: amqp.Connection;
-  private channel: amqp.Channel;
+export class DatabaseConsumerService
+  extends RabbitMQAbstractConsumer
+  implements OnModuleInit, OnModuleDestroy
+{
   private QUEUE_NAME = 'database_queue';
+  private connection: amqp.Connection;
   private rabbitConnectionDetails = [
     {
       queueName: this.QUEUE_NAME,
@@ -35,7 +38,9 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     private readonly rabbitMQConnectionService: RabbitMQConnectionService,
     @Inject('MessageValidators')
     private readonly validators: MessageValidator[],
-  ) {}
+  ) {
+    super({ queueName: 'database_queue', channel: null });
+  }
 
   async onModuleInit(): Promise<void> {
     try {
@@ -45,8 +50,8 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
         ),
       );
       const { channel, connection } = connections[0];
-      this.connection = connection;
       this.channel = channel;
+      this.connection = connection;
       await this.consume();
     } catch (error) {
       console.error('Error initializing DatabaseConsumerService:', error);
@@ -64,33 +69,24 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async consume(): Promise<void> {
-    this.channel.consume(this.QUEUE_NAME, async (msg) => {
-      if (!msg || !msg.content) {
-        console.error('Invalid message:', msg);
-        this.channel.nack(msg, false, false);
+  async handleMessage(message: any, msg: amqp.Message): Promise<void> {
+    try {
+      const createMessageDto = await this.validateMessage(message);
+      console.log(CreateMessageDto);
+      if (!createMessageDto) {
+        console.error('Invalid message structure:', message);
+        this.nackMessage(msg);
         return;
       }
 
-      try {
-        const messageContent = msg.content.toString();
-        const message = JSON.parse(messageContent);
-
-        const createMessageDto = await this.validateMessage(message);
-        if (!createMessageDto) {
-          console.error('Invalid message structure:', message);
-          this.channel.nack(msg, false, false);
-          return;
-        }
-
-        await this.processMessage(createMessageDto);
-        this.channel.ack(msg);
-      } catch (error) {
-        console.error('Error processing message:', error);
-        this.channel.nack(msg, false, false);
-      }
-    });
+      await this.processMessage(createMessageDto);
+      this.ackMessage(msg);
+    } catch (error) {
+      console.error('Error processing message:', error);
+      this.nackMessage(msg);
+    }
   }
+
   private async validateMessage(
     message: any,
   ): Promise<CreateMessageDto | null> {
@@ -105,9 +101,10 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
 
     return await validator.validate(message);
   }
+
   private async processMessage(
     createMessageDto: CreateMessageDto,
-  ): Promise<any> {
+  ): Promise<void> {
     try {
       const createdMessage = await this.prisma.message.create({
         data: createMessageDto,
@@ -138,7 +135,7 @@ export class DatabaseConsumerService implements OnModuleInit, OnModuleDestroy {
       });
     } catch (error) {
       console.error('Error processing message:', error);
-      return null;
+      throw error;
     }
   }
 }
