@@ -58,7 +58,7 @@ export class ChannelService {
     }
     await this.prisma.channel.update({
       where: { id },
-      data: { is_on: true },
+      data: { isOn: true },
     });
 
     return {
@@ -105,7 +105,7 @@ export class ChannelService {
     }
     await this.prisma.channel.update({
       where: { id },
-      data: { is_on: false },
+      data: { isOn: false },
     });
 
     return {
