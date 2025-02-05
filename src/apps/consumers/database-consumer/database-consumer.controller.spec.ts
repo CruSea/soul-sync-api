@@ -9,7 +9,9 @@ describe('DatabaseConsumerController', () => {
       controllers: [DatabaseConsumerController],
     }).compile();
 
-    controller = module.get<DatabaseConsumerController>(DatabaseConsumerController);
+    controller = module.get<DatabaseConsumerController>(
+      DatabaseConsumerController,
+    );
   });
 
   it('should be defined', () => {
