@@ -51,6 +51,22 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
+  
+  chat-consumer:
+    build:
+      context: .
+    platform: linux/amd64
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    command: ["node", "dist/src/apps/consumers/chat-consumer/main.js"]
+
+  database-consumer:
+    build:
+      context: .
+    platform: linux/amd64
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    command: ["node", "dist/src/apps/consumers/database-consumer/main.js"]
 
 volumes:
   postgres_data:
