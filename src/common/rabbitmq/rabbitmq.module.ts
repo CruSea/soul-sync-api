@@ -11,6 +11,8 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { MessageConsumerService } from './consumers/message/message-consumer.service';
 import { RedisModule } from '../redis/redis.module';
 import { ChatModule } from 'src/modules/chat/chat.module';
+import { ChatConsumerService } from './consumers/chat/chat-consumer.service';
+import { TelegramChatValidator } from './consumers/chat/chat-out-let-implementations/telegram-chat.service';
 import { TelegramMessageValidatorService } from './consumers/message/message-validators/telegram-message.service';
 
 @Module({
@@ -22,6 +24,7 @@ import { TelegramMessageValidatorService } from './consumers/message/message-val
     DatabaseConsumerService,
     RabbitMQConnectionService,
     MessageConsumerService,
+    ChatConsumerService,
     {
       provide: 'MessageValidators',
       useFactory: () => [
@@ -32,6 +35,10 @@ import { TelegramMessageValidatorService } from './consumers/message/message-val
     {
       provide: 'MessageTransmitterValidator',
       useFactory: () => [new TelegramMessageValidatorService()],
+    },
+    {
+      provide: 'SendChatInterface',
+      useFactory: () => [new TelegramChatValidator()],
     },
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
