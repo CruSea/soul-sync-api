@@ -10,8 +10,8 @@ export class ConversationService {
     return this.prisma.conversation.findMany();
   }
 
-  findOne(id: string) {
-    return this.prisma.conversation
+  async findOne(id: string) {
+    return await this.prisma.conversation
       .findFirst({
         where: { id: id },
         include: {
