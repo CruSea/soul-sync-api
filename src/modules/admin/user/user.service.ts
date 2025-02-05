@@ -4,7 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
