@@ -1,5 +1,12 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+enum ChannelType {
+  NEGARIT,
+  TELEGRAM,
+  WHATSAPP,
+  TWILIO,
+}
+
 export class CreateChannelDto {
   @IsString()
   name: string;
@@ -7,6 +14,9 @@ export class CreateChannelDto {
   @IsNotEmpty()
   @IsString()
   accountId: string;
+
+  @IsNotEmpty()
+  type: ChannelType;
 
   @IsOptional()
   metadata?: Record<string, any>;

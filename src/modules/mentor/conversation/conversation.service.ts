@@ -6,8 +6,17 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 export class ConversationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.conversation.findMany();
+  async findAll() {
+    const conversations = await this.prisma.conversation.findMany({
+      include: {
+        Channel: true,
+      },
+    });
+
+    return conversations.map((conversation) => ({
+      conversation_id: conversation.id,
+      platform: conversation.Channel.type,
+    }));
   }
 
   async findOne(id: string) {
