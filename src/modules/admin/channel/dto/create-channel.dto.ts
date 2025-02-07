@@ -5,6 +5,8 @@ export class CreateChannelDto {
   @IsString()
   name: string;
 
+  @IsNotEmpty()
+  @IsString()
   type: ChannelType;
 
   @IsNotEmpty()
