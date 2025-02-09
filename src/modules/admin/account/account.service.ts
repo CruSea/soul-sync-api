@@ -41,22 +41,47 @@ export class AccountService {
 
   async findAll() {
     const user = this.request.user;
-    return await this.prisma.account.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
+    const accounts = await this.prisma.account.findMany({
+      where: {
+        AccountUser: { some: { userId: user.id } },
+        deletedAt: null,
+      },
     });
+
+    if (accounts.length === 0) {
+      throw new Error('No account found');
+    }
+    return accounts;
   }
 
   async findOne(id: string) {
     const user = this.request.user;
-    return await this.prisma.account.findFirst({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id,
+        AccountUser: { some: { userId: user.id } },
+        deletedAt: null,
+      },
     });
-  }
 
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    return account;
+  }
   async update(id: string, updateAccountDto: UpdateAccountDto) {
     const user = this.request.user;
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id,
+        AccountUser: { some: { userId: user.id } },
+        deletedAt: null,
+      },
+    });
+    if (!account) throw new Error('Account not found');
     return await this.prisma.account.update({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+      where: { id },
       data: updateAccountDto,
     });
   }
