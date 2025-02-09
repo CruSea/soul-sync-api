@@ -62,8 +62,10 @@ export class AccountService {
   }
 
   async remove(id: string) {
+    const user = this.request.user;
+
     const account = await this.prisma.account.findUnique({
-      where: { id },
+      where: { id, AccountUser: { some: { userId: user.id } }  },
       select: { deletedAt: true },
     });
 
