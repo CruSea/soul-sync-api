@@ -10,7 +10,7 @@ export class AccountService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
-  ) { }
+  ) {}
 
   async create(createAccountDto: CreateAccountDto) {
     const user = this.request.user;
@@ -65,20 +65,24 @@ export class AccountService {
     const user = this.request.user;
 
     const account = await this.prisma.account.findUnique({
-      where: { id, AccountUser: { some: { userId: user.id } }  },
+      where: { id, AccountUser: { some: { userId: user.id } } },
       select: { deletedAt: true },
     });
 
-    if (!account) throw new Error("Account not found");
-    if (account.deletedAt) return { message: "Account is already deleted" };
+    if (!account) throw new Error('Account not found');
+    if (account.deletedAt) return { message: 'Account is already deleted' };
 
     await this.prisma.$transaction([
-      this.prisma.account.update({ where: { id }, data: { deletedAt: new Date() } }),
-      this.prisma.accountUser.updateMany({ where: { accountId: id }, data: { deletedAt: new Date() } }),
+      this.prisma.account.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      }),
+      this.prisma.accountUser.updateMany({
+        where: { accountId: id },
+        data: { deletedAt: new Date() },
+      }),
     ]);
 
-    return { message: "Account deleted successfully" };
+    return { message: 'Account deleted successfully' };
   }
-
-
 }
