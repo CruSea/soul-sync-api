@@ -4,6 +4,8 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { REQUEST } from '@nestjs/core';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { RoleType } from '@prisma/client';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginate } from 'src/common/utils/pagination.util';
 
 @Injectable()
 export class AccountService {
@@ -39,11 +41,31 @@ export class AccountService {
     });
   }
 
-  async findAll() {
+  async findAll(paginationDto: PaginationDto) {
     const user = this.request.user;
-    return await this.prisma.account.findMany({
-      where: { AccountUser: { some: { userId: user.id } } },
-    });
+    const { page, limit } = paginationDto;
+    const { skip, take } = paginate(page, limit);
+
+    const [accounts, total] = await Promise.all([
+      this.prisma.account.findMany({
+        where: { AccountUser: { some: { userId: user.id } } },
+        skip,
+        take,
+      }),
+      this.prisma.account.count({
+        where: { AccountUser: { some: { userId: user.id } } },
+      }),
+    ]);
+
+    return {
+      data: accounts,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
