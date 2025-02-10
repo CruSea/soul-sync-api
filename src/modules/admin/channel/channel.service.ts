@@ -5,23 +5,21 @@ import { REQUEST } from '@nestjs/core';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { Channel } from './entities/channel.entity';
 import { GetChannelDto } from './dto/get-channel.dto';
-import { ChannelFactory } from './channel-platforms/channel-factory';
+import { ChannelStrategy } from './interface/channelStrategy.interface';
+import { StrategyResolver } from './strategy/strategy';
+
 @Injectable()
 export class ChannelService {
+  private strategies: Record<string, ChannelStrategy>;
   constructor(
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
-    private strategyFactory: ChannelFactory,
+    private readonly strategyResolver: StrategyResolver,
   ) {}
 
   async create(createChannelDto: CreateChannelDto): Promise<Channel> {
     const channel = await this.prisma.channel.create({
-      data: {
-        name: createChannelDto.name,
-        type: createChannelDto.type as unknown as import('@prisma/client').$Enums.ChannelType,
-        configuration: createChannelDto.configuration,
-        accountId: createChannelDto.accountId,
-      },
+      data: createChannelDto,
     });
 
     return Channel.create(channel);
@@ -37,7 +35,7 @@ export class ChannelService {
         throw new HttpException('Channel not found', 404);
       }
 
-      const strategy = this.strategyFactory.getStrategy(channel.type);
+      const strategy = this.strategyResolver.resolve(channel.type);
       const result = await strategy.connect(channel);
 
       await this.prisma.channel.update({
@@ -47,7 +45,6 @@ export class ChannelService {
 
       return result;
     } catch (error) {
-      console.error('Error in connect method:', error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -65,7 +62,7 @@ export class ChannelService {
         throw new HttpException('Channel not found', 404);
       }
 
-      const strategy = this.strategyFactory.getStrategy(channel.type);
+      const strategy = this.strategyResolver.resolve(channel.type);
       const result = await strategy.disconnect(channel);
 
       await this.prisma.channel.update({
@@ -75,7 +72,6 @@ export class ChannelService {
 
       return result;
     } catch (error) {
-      console.error('Error in disconnect method:', error);
       if (error instanceof HttpException) {
         throw error;
       }
