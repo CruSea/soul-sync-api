@@ -8,7 +8,6 @@ import { GetChannelDto } from './dto/get-channel.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginate, PaginationResult } from 'src/common/helpers/pagination';
 
-
 @Injectable()
 export class ChannelService {
   constructor(

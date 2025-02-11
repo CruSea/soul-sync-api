@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
@@ -39,7 +39,6 @@ export class ChannelController {
   ) {
     return this.channelService.findAll(query);
   }
-
 
   @Get(':id')
   findOne(@Param('id') id: string, @Query() getChannel: GetChannelDto) {
