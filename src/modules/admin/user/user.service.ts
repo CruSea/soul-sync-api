@@ -13,8 +13,16 @@ export class UserService {
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
   ) {}
-  async create(accountId: string, createUserDto: CreateUserDto) {
-    await this.validateAccountAccess(accountId);
+  async create(createUserDto: CreateUserDto) {
+    await this.validateAccountAccess(createUserDto.accountId);
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new Error('Email already in use');
+    }
 
     const hashedPassword = await bcrypt.hash(
       createUserDto.password,
@@ -28,7 +36,7 @@ export class UserService {
         password: hashedPassword,
         AccountUser: {
           create: {
-            accountId: accountId,
+            accountId: createUserDto.accountId,
             roleId: createUserDto.roleId,
           },
         },
