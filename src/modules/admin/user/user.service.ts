@@ -6,6 +6,8 @@ import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { paginate, PaginationResult } from 'src/common/helpers/pagination';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -73,18 +75,27 @@ export class UserService {
     return new UserDto(userData);
   }
 
-  async findAllUsers(accountId: string) {
+  async findAllUsers(
+    accountId: string,
+    paginationDto: PaginationDto,
+  ): Promise<PaginationResult<UserDto>> {
     await this.validateAccountAccess(accountId);
 
-    return this.prisma.user.findMany({
-      where: {
+    const { page, limit } = paginationDto;
+
+    return paginate(
+      this.prisma,
+      this.prisma.user,
+      {
         AccountUser: {
           some: {
             accountId: accountId,
           },
         },
       },
-    });
+      page,
+      limit,
+    );
   }
 
   async updateUser(
