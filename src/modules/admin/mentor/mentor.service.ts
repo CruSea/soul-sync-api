@@ -5,7 +5,6 @@ import { MentorDto } from './dto/mentor.dto';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
-import { RoleType } from '@prisma/client';
 @Injectable()
 export class MentorService {
   constructor(
@@ -51,17 +50,17 @@ export class MentorService {
     return new MentorDto({ ...mentor, user: { ...user } });
   }
 
-  async create(createMentorDto: CreateMentorDto): Promise<MentorDto> {
+  async create(createMentor: CreateMentorDto): Promise<MentorDto> {
     let mentor = await this.prisma.mentor.findFirst({
-      where: { email: createMentorDto.email, deletedAt: null },
+      where: { email: createMentor.email, deletedAt: null },
     });
 
     if (!mentor) {
       mentor = await this.prisma.mentor.create({
         data: {
-          name: createMentorDto.name,
-          email: createMentorDto.email,
-          accountId: createMentorDto.accountId,
+          name: createMentor.name,
+          email: createMentor.email,
+          accountId: createMentor.accountId,
         },
       });
 
@@ -74,25 +73,6 @@ export class MentorService {
           data: { name: mentor.name, email: mentor.email, password: '' },
         });
       }
-
-      const role = await this.prisma.role.findFirst({
-        where: {
-          type: RoleType.MENTOR,
-          isDefault: true,
-        },
-      });
-
-      if (!role) {
-        throw new NotFoundException('Default mentor role not found');
-      }
-
-      await this.prisma.accountUser.create({
-        data: {
-          userId: user.id,
-          accountId: createMentorDto.accountId,
-          roleId: role.id,
-        },
-      });
 
       return new MentorDto({ ...mentor, user: { ...user } });
     }
