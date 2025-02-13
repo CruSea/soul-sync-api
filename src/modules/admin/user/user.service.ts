@@ -16,16 +16,14 @@ export class UserService {
     private prisma: PrismaService,
   ) {}
   async create(createUserDto: CreateUserDto) {
-
-        const account = await this.prisma.account.findUnique({
+    const account = await this.prisma.account.findUnique({
       where: { id: createUserDto.accountId },
     });
 
     if (!account) {
       throw new Error('Account does not exist');
-      
     }
-    
+
     await this.validateAccountAccess(createUserDto.accountId);
 
     const existingUser = await this.prisma.user.findUnique({
