@@ -8,7 +8,10 @@ import { Message } from '@prisma/client';
 export class MessageService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllMessages(accountId: string, query: Record<string, any>): Promise<PaginationResult<Message>> {
+  async getAllMessages(
+    accountId: string,
+    query: Record<string, any>,
+  ): Promise<PaginationResult<Message>> {
     const paginationDto = new PaginationDto();
     paginationDto.page = query.page ? parseInt(query.page) : 1;
     paginationDto.limit = query.limit ? parseInt(query.limit) : 10;
@@ -25,7 +28,7 @@ export class MessageService {
       where,
       paginationDto.page,
       paginationDto.limit,
-            {
+      {
         Channel: {
           select: {
             name: true,
@@ -36,4 +39,3 @@ export class MessageService {
     );
   }
 }
-

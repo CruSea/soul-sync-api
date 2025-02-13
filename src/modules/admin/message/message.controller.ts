@@ -1,4 +1,11 @@
-import { Controller, Get, Query, UseGuards, ValidationPipe, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  ValidationPipe,
+  Param,
+} from '@nestjs/common';
 import { MessageService } from './message.service';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 
