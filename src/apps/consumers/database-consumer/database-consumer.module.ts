@@ -3,7 +3,6 @@ import { DatabaseConsumerController } from './database-consumer.controller';
 import { DatabaseConsumerService } from './database-consumer.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'src/modules/prisma/prisma.module';
-import RabbitMQConnectionService from './handle-rabbitmq-connection/rabbitmq-connection.service';
 
 @Module({
   imports: [
@@ -14,6 +13,6 @@ import RabbitMQConnectionService from './handle-rabbitmq-connection/rabbitmq-con
     PrismaModule,
   ],
   controllers: [DatabaseConsumerController],
-  providers: [DatabaseConsumerService, RabbitMQConnectionService],
+  providers: [DatabaseConsumerService],
 })
 export class DatabaseConsumerModule {}
