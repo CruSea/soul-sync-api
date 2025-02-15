@@ -24,7 +24,11 @@ export class DatabaseConsumerService {
       channel.nack(originalMsg);
     }
   }
-  async setStrategy(type: string) {}
+  async setStrategy(type: string) {
+    this.strategy = await this.concreteStrategies.find((strategy) =>
+      strategy.SupportChannelType(type),
+    );
+  }
   async saveToDatabase(data: CreateMessageDto) {}
 }
 
