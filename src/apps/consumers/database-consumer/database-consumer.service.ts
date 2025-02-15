@@ -7,5 +7,8 @@ export class DatabaseConsumerService {
   async handleMessage(data: MessagePayload, context: RmqContext) {
     console.log(data);
     console.log(context);
+    const channel = context.getChannelRef();
+    const originalMsg = context.getMessage();
+    channel.ack(originalMsg);
   }
 }
