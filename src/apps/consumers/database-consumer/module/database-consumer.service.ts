@@ -7,8 +7,22 @@ import { CreateMessageDto } from './dto/create-message.dto';
 @Injectable()
 export class DatabaseConsumerService {
   private strategy: Strategy;
-  async handleMessage(data: MessagePayload, context: RmqContext) {}
-  async setStrategy(strategy: Strategy) {}
+  
+  async handleMessage(data: MessagePayload, context: RmqContext) {
+    const channel = context.getChannelRef();
+    const originalMsg = context.getMessage();
+    try {
+      await this.setStrategy(data.metadata?.type);
+      const message = await this.strategy.FormatIncomingMessage(data);
+      await this.saveToDatabase(message);
+      channel.ack(originalMsg);
+    } catch (error) {
+      console.log('error saving the new message', error);
+      channel.nack(originalMsg);
+    }
+  }
+  
+  async setStrategy(type: string) { }
   async saveToDatabase(data: CreateMessageDto) {}
 }
 
