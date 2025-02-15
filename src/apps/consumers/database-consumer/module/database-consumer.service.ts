@@ -3,6 +3,7 @@ import { RmqContext } from '@nestjs/microservices';
 import { MessagePayload } from 'src/types/message';
 import { Strategy } from '../strategy/strategy';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
 export class DatabaseConsumerService {
@@ -10,6 +11,7 @@ export class DatabaseConsumerService {
   constructor(
     @Inject('database-consumer-concrete-strategy')
     private readonly concreteStrategies: Strategy[],
+    private readonly prisma: PrismaService,
   ) {}
   async handleMessage(data: MessagePayload, context: RmqContext) {
     const channel = context.getChannelRef();
@@ -29,11 +31,47 @@ export class DatabaseConsumerService {
       strategy.SupportChannelType(type),
     );
   }
-  async saveToDatabase(data: CreateMessageDto) {}
-}
+  async saveToDatabase(message: CreateMessageDto) {
+    try {
+      return this.prisma.$transaction(async (tx) => {
+        const channel = await this.prisma.channel.findFirst({
+          where: {
+            id: message.channelId,
+          },
+        });
+        const accountId = channel?.accountId;
+        const mentor = await this.prisma.mentor.findFirst({
+          where: { accountId },
+        });
+        const createdMessage = await this.prisma.message.create({
+          data: message,
+        });
 
-// console.log(data);
-// console.log(context);
-// const channel = context.getChannelRef();
-// const originalMsg = context.getMessage();
-// channel.ack(originalMsg);
+        const existingConversation = await this.prisma.conversation.findFirst({
+          where: { address: message.address, isActive: true },
+        });
+
+        const conversationId = existingConversation
+          ? existingConversation.id
+          : (
+              await this.prisma.conversation.create({
+                data: {
+                  address: message.address,
+                  channelId: message.channelId,
+                  isActive: true,
+                  mentorId: mentor.id,
+                },
+              })
+            ).id;
+        await this.prisma.thread.create({
+          data: {
+            messageId: createdMessage.id,
+            conversationId,
+          },
+        });
+      });
+    } catch (error) {
+      console.log('error in db transaction', error);
+    }
+  }
+}
