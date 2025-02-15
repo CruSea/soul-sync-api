@@ -10,6 +10,7 @@ import { MessageExchangeQueuesService } from './message-exchange/message-exchang
     MessageExchangeService,
     ChatExchangeService,
     MessageExchangeQueuesService,
+    ChatExchangeQueuesService
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
 })
