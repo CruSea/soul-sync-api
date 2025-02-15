@@ -13,7 +13,7 @@ export class MessageService {
 
   telegram(id: string, telegramChat: TelegramChat) {
     const data = this.rabbitmqService.getMessageEchangeData(id, telegramChat);
-    this.messageExchangeService.send('telegram', data);
+    this.messageExchangeService.send('message', data);
     return 'ok';
   }
 
