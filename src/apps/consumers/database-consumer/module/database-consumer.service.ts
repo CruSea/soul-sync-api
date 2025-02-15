@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { RmqContext } from '@nestjs/microservices';
 import { MessagePayload } from 'src/types/message';
 import { Strategy } from '../strategy/strategy';
@@ -7,7 +7,10 @@ import { CreateMessageDto } from './dto/create-message.dto';
 @Injectable()
 export class DatabaseConsumerService {
   private strategy: Strategy;
-  
+  constructor(
+    @Inject('database-consumer-concrete-strategy')
+    private readonly concreteStrategies: Strategy[],
+  ) {}
   async handleMessage(data: MessagePayload, context: RmqContext) {
     const channel = context.getChannelRef();
     const originalMsg = context.getMessage();
@@ -21,8 +24,7 @@ export class DatabaseConsumerService {
       channel.nack(originalMsg);
     }
   }
-  
-  async setStrategy(type: string) { }
+  async setStrategy(type: string) {}
   async saveToDatabase(data: CreateMessageDto) {}
 }
 

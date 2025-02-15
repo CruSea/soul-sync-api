@@ -3,6 +3,7 @@ import { DatabaseConsumerController } from './database-consumer.controller';
 import { DatabaseConsumerService } from './database-consumer.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'src/modules/prisma/prisma.module';
+import { TelegramStrategyService } from '../concrete-strategies/telegram-strategy.service';
 
 @Module({
   imports: [
@@ -13,6 +14,14 @@ import { PrismaModule } from 'src/modules/prisma/prisma.module';
     PrismaModule,
   ],
   controllers: [DatabaseConsumerController],
-  providers: [DatabaseConsumerService],
+  providers: [
+    DatabaseConsumerService,
+    {
+      provide: 'database-consumer-concrete-strategy',
+      useFactory: () => {
+        new TelegramStrategyService();
+      },
+    },
+  ],
 })
 export class DatabaseConsumerModule {}
