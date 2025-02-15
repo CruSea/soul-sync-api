@@ -10,12 +10,6 @@ async function bootstrap() {
       options: {
         urls: [process.env.RABBITMQ_URL],
         queue: 'database',
-        queueOptions: {
-          durable: true,
-          messageTtl: 60000,
-          deadLetterExchange: 'message',
-          deadLetterRoutingKey: 'dead',
-        },
         noAck: false,
         prefetchCount: 1,
       },
