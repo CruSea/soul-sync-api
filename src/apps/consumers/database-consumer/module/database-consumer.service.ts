@@ -7,9 +7,9 @@ import { CreateMessageDto } from './dto/create-message.dto';
 @Injectable()
 export class DatabaseConsumerService {
   private strategy: Strategy;
-  async handleMessage(data: MessagePayload, context: RmqContext) { }
-  async setStrategy(strategy: Strategy) { }
-  async saveToDatabase(data: CreateMessageDto) { }
+  async handleMessage(data: MessagePayload, context: RmqContext) {}
+  async setStrategy(strategy: Strategy) {}
+  async saveToDatabase(data: CreateMessageDto) {}
 }
 
 // console.log(data);
