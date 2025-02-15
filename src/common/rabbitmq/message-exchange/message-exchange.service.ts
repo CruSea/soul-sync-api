@@ -28,16 +28,16 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
       durable: true,
     });
     console.log('MessageExchangeService Connected!');
+    await this.messageExchangeQueuesService.init(
+      this.channel,
+      this.EXCHANGE_NAME,
+    );
   }
 
   private async disconnect() {
     await this.channel.close();
     await this.connection.close();
     console.log('MessageExchangeService Disconnected!');
-    await this.messageExchangeQueuesService.init(
-      this.channel,
-      this.EXCHANGE_NAME,
-    );
   }
 
   async send(routingKey: string, message: any) {
