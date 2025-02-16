@@ -4,6 +4,11 @@ import { MessageConsumerService } from './message-consumer.service';
 
 @Module({
   controllers: [MessageConsumerController],
-  providers: [MessageConsumerService]
+  providers: [MessageConsumerService,
+    {
+      provide: 'message-consumer-concrete-strategies',
+      useFactory: () => []
+    }
+  ]
 })
 export class MessageConsumerModule {}
