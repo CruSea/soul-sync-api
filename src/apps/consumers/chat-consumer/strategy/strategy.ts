@@ -1,4 +1,4 @@
 export interface Strategy {
-  supportChannelType();
+  supportChannelType(type: string): boolean;
   sendMessage(message: any);
 }
