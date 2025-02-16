@@ -4,6 +4,7 @@ import { MessageExchangeService } from './message-exchange/message-exchange.serv
 import { ChatExchangeService } from './chat-exchange/chat-exchange.service';
 import { MessageExchangeQueuesService } from './message-exchange/message-exchange-queues.service';
 import { ChatExchangeQueuesService } from './chat-exchange/chat-exchange-queues.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Module({
   providers: [
@@ -11,7 +12,8 @@ import { ChatExchangeQueuesService } from './chat-exchange/chat-exchange-queues.
     MessageExchangeService,
     ChatExchangeService,
     MessageExchangeQueuesService,
-    ChatExchangeQueuesService
+    ChatExchangeQueuesService,
+    PrismaService,
   ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
 })
