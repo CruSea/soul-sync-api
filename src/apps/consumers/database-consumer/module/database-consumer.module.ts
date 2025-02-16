@@ -21,10 +21,11 @@ import { ChatStrategyService } from '../concrete-strategies/chat-strategy.servic
     DatabaseConsumerService,
     {
       provide: 'database-consumer-concrete-strategies',
+
       useFactory: () => [
         new TelegramStrategyService(),
         new ChatStrategyService(new PrismaService()),
-        ],
+      ],
     },
   ],
 })
