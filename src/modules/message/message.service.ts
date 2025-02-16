@@ -11,8 +11,8 @@ export class MessageService {
     private readonly rabbitmqService: RabbitmqService,
   ) {}
 
-  telegram(id: string, telegramChat: TelegramChat) {
-    const data = this.rabbitmqService.getMessageEchangeData(id, telegramChat);
+  async telegram(id: string, telegramChat: TelegramChat) {
+    const data = await this.rabbitmqService.getMessageEchangeData(id, telegramChat);
     this.messageExchangeService.send('message', data);
     return 'ok';
   }
