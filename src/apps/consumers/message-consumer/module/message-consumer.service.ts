@@ -27,7 +27,7 @@ export class MessageConsumerService {
       if (!this.strategy) {
         throw new Error('Strategy not found');
       }
-      const message = await this.strategy.FormatIncomingMessage(data);
+      const message = await this.strategy.formatIncomingMessage(data);
       this.sendMessage(message);
       channel.ack(originalMsg);
     } catch (error) {
@@ -39,7 +39,7 @@ export class MessageConsumerService {
   async setStrategy(type: string) {
     try {
       this.strategy = this.concreteStrategies.find((strategy) =>
-        strategy.SupportChannelType(type),
+        strategy.supportChannelType(type),
       );
     } catch (error) {
       console.log('Error setting strategy', error);
