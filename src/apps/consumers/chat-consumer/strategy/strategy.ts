@@ -1,4 +1,4 @@
-export interface Strategy { 
-    supportChannelType()
-    sendMessage()
+export interface Strategy {
+  supportChannelType();
+  sendMessage(message: any);
 }
