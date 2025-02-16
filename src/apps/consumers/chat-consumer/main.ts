@@ -17,7 +17,7 @@ async function bootstrap() {
           deadLetterRoutingKey: 'dead',
         },
         noAck: false,
-        prefetchCount: 1,
+        prefetchCount: 5,
       },
     },
   );
