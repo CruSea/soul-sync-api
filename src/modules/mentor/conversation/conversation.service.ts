@@ -6,12 +6,48 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
 export class ConversationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.conversation.findMany();
+  async findAll() {
+    const conversations = await this.prisma.conversation.findMany({
+      include: {
+        Channel: true,
+      },
+    });
+
+    return conversations.map((conversation) => ({
+      conversation_id: conversation.id,
+      platform: conversation.Channel.type,
+    }));
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} conversation`;
+    return this.prisma.conversation
+      .findFirst({
+        where: { id: id },
+        include: {
+          Threads: {
+            include: {
+              Message: true,
+            },
+          },
+        },
+      })
+      .then((conversation) => {
+        if (conversation) {
+          const formattedMessages = conversation.Threads.flatMap((thread) =>
+            (Array.isArray(thread.Message)
+              ? thread.Message
+              : [thread.Message]
+            ).map((message) => ({
+              type: message.type,
+              body: message.body,
+              createdAt: message.createdAt.toISOString(),
+            })),
+          );
+
+          return formattedMessages;
+        }
+        return [];
+      });
   }
 
   update(id: string, updateConversationDto: UpdateConversationDto) {

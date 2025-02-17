@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { SocketService } from './socket.service';
+import { Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
+import { SocketService } from './socket.service';
 
 @Injectable()
 export class ChatService {
