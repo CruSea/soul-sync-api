@@ -51,7 +51,8 @@ export class ChatService {
     if (!this.socketService.server) {
       throw new Error('Server is not initialized');
     }
-
+    console.log('send() message: ', message);
+    console.log('send() socketId: ', socketId);
     const socket = this.socketService.server.sockets.sockets.get(socketId);
 
     if (!socket) {
@@ -60,5 +61,6 @@ export class ChatService {
     }
 
     socket.emit('message', JSON.stringify(message));
+    console.log('Sent message to socket:', socketId, message);
   }
 }
