@@ -16,10 +16,13 @@ import { PrismaService } from 'src/modules/prisma/prisma.service';
   ],
   controllers: [ChatConsumerController],
   providers: [
+    PrismaService,
     ChatConsumerService,
     {
       provide: 'chat-consumer-concrete-strategies',
-      useFactory: () => [new TelegramConcreteStrategyService(new PrismaService())],
+      useFactory: () => [
+        new TelegramConcreteStrategyService(new PrismaService()),
+      ],
     },
   ],
 })
