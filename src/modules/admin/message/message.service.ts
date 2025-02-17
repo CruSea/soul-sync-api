@@ -4,6 +4,13 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { paginate, PaginationResult } from 'src/common/helpers/pagination';
 import { Message } from '@prisma/client';
 
+type MessageWithChannel = Message & {
+  Channel: {
+    name: string;
+    type: string;
+  };
+};
+
 @Injectable()
 export class MessageService {
   constructor(private readonly prisma: PrismaService) {}
@@ -22,7 +29,7 @@ export class MessageService {
       },
     };
 
-    return paginate<Message>(
+    const result = await paginate<MessageWithChannel>(
       this.prisma,
       this.prisma.message,
       where,
@@ -37,5 +44,19 @@ export class MessageService {
         },
       },
     );
+
+    const transformedData = result.data.map((message) => {
+      const { Channel, ...rest } = message;
+      return {
+        ...rest,
+        name: Channel.name,
+        platform: Channel.type,
+      };
+    });
+
+    return {
+      ...result,
+      data: transformedData,
+    };
   }
 }
