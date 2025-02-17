@@ -5,11 +5,11 @@ import { Strategy } from '../strategy/strategy';
 
 @Injectable()
 export class TelegramStrategyService implements Strategy {
-  async SupportChannelType(type: string): Promise<boolean> {
+  supportChannelType(type: string): boolean {
     return type === 'TELEGRAM';
   }
 
-  async FormatIncomingMessage(payload: any): Promise<CreateMessageDto> {
+  async formatIncomingMessage(payload: any): Promise<CreateMessageDto> {
     return {
       type: MessageType.RECEIVED,
       body: payload.payload.message.text,
