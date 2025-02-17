@@ -15,7 +15,7 @@ export class TelegramStrategyService implements Strategy {
     return {
       conversationId: conversationId,
       type: MessageType.RECEIVED,
-      body: payload.message.text,
+      body: payload.payload.message.text,
       createdAt: new Date().toISOString(),
     };
   }

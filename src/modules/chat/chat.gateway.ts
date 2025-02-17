@@ -1,5 +1,6 @@
 import { NotFoundException, UseGuards } from '@nestjs/common';
 import {
+  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
@@ -35,6 +36,9 @@ export class ChatGateway {
   afterInit(server: any) {
     this.socketService.server = server;
     console.log('ChatGateway Initialized', server);
+    server.on('disconnect', (socket) => {
+      this.handleDisconnect(socket);
+    });
   }
 
   async handleConnection(client: any) {
@@ -43,6 +47,9 @@ export class ChatGateway {
       if (!user) {
         throw new NotFoundException('User not found');
       }
+      // Remove any existing socket ID for the user
+      await this.reddisService.delete(user.email);
+      // Store the new socket ID
       await this.reddisService.set(user.email, client.id);
       console.log('Client connected:', client.id);
     } catch (error) {
@@ -60,10 +67,13 @@ export class ChatGateway {
   }
 
   @SubscribeMessage('message')
-  @UseGuards(WsGuardGuard)
-  async handleMessage(@MessageBody() data: string): Promise<string> {
+  @UseGuards(WsGuardGuard)  async handleMessage(
+    @MessageBody() data: string,
+    @ConnectedSocket() client: any,
+  ): Promise<string> {
     try {
       const chatData: Chat = JSON.parse(data);
+      console.log('client is : ', client.id);
       if (chatData.type === 'CHAT') {
         const data = this.rabbitmqService.getChatEchangeData(chatData);
         await this.chatExchangeService.send('chat', data);
