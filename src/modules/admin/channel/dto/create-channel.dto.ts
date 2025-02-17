@@ -1,18 +1,9 @@
 import { ChannelType } from '@prisma/client';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-enum ChannelType {
-  NEGARIT,
-  TELEGRAM,
-  WHATSAPP,
-  TWILIO,
-}
-
 export class CreateChannelDto {
   @IsString()
   name: string;
-
-  type: ChannelType;
 
   @IsNotEmpty()
   @IsString()
