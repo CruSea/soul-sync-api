@@ -5,7 +5,12 @@ import { ChatExchangeService } from './chat-exchange/chat-exchange.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Module({
-  providers: [RabbitmqService, MessageExchangeService, ChatExchangeService, PrismaService],
+  providers: [
+    RabbitmqService,
+    MessageExchangeService,
+    ChatExchangeService,
+    PrismaService,
+  ],
   exports: [RabbitmqService, MessageExchangeService, ChatExchangeService],
 })
 export class RabbitmqModule {}
