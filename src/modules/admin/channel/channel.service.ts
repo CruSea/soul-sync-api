@@ -7,6 +7,8 @@ import { Channel } from './entities/channel.entity';
 import { GetChannelDto } from './dto/get-channel.dto';
 import { ChannelStrategy } from './interface/channelStrategy.interface';
 import { StrategyResolver } from './strategy/strategy';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginate, PaginationResult } from 'src/common/helpers/pagination';
 
 @Injectable()
 export class ChannelService {
@@ -79,12 +81,23 @@ export class ChannelService {
     }
   }
 
-  async findAll(getChannel: GetChannelDto): Promise<Channel[]> {
-    const channels = await this.prisma.channel.findMany({
-      where: { accountId: getChannel.accountId, deletedAt: null },
-    });
+  async findAll(
+    query: Record<string, any>,
+  ): Promise<PaginationResult<GetChannelDto>> {
+    const getChannelDto = new GetChannelDto();
+    getChannelDto.accountId = query.accountId;
 
-    return channels.map((channel) => Channel.create(channel));
+    const paginationDto = new PaginationDto();
+    paginationDto.page = query.page ? parseInt(query.page) : 1;
+    paginationDto.limit = query.limit ? parseInt(query.limit) : 10;
+
+    return paginate(
+      this.prisma,
+      this.prisma.channel,
+      { accountId: getChannelDto.accountId, deletedAt: null },
+      paginationDto.page,
+      paginationDto.limit,
+    );
   }
 
   async findOne(id: string, getChannel: GetChannelDto): Promise<Channel> {
