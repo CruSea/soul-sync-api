@@ -74,22 +74,4 @@ export class ChatGateway {
       throw new NotFoundException('Invalid Chat Data');
     }
   }
-
-  @SubscribeMessage('internal')
-  async handleChat(@MessageBody() data: string): Promise<string> {
-    try {
-      const chatData = typeof(data) ? data : JSON.parse(data);
-      console.log('Received Internal Chat Data:', chatData);
-      const socket = this.server.sockets.sockets.get(chatData.socketId);
-      if (!socket) {
-        throw new NotFoundException('Socket not found');
-      }
-      socket.emit('message', chatData.message);
-      console.log('Message Sent: ', chatData.message);
-      return 'AKG';
-    } catch (e) {
-      console.log(e);
-      throw new NotFoundException('Invalid Chat Data');
-    }
-  }
 }

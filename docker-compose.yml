@@ -21,8 +21,6 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
 
   postgres:
     image: postgres
@@ -57,51 +55,20 @@ services:
   chat-consumer:
     build:
       context: .
-    volumes:
-      - .:/app
     platform: linux/amd64
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_started
     environment:
-       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
-       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - DATABASE_URL=${DATABASE_URL}
     command: ["node", "dist/src/apps/consumers/chat-consumer/main.js"]
 
   database-consumer:
     build:
       context: .
-    volumes:
-      - .:/app
     platform: linux/amd64
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_started
     environment:
-       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
-       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - DATABASE_URL=${DATABASE_URL}
     command: ["node", "dist/src/apps/consumers/database-consumer/main.js"]
 
-  message-consumer:
-    build:
-      context: .
-    volumes:
-      - .:/app
-    platform: linux/amd64
-    depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_started
-    environment:
-       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
-       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
-       REDIS_HOST: redis
-       REDIS_PORT: 6379
-    command: ["node", "dist/src/apps/consumers/message-consumer/main.js"]
 volumes:
   postgres_data:

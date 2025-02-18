@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ChatConsumerModule } from './module/chat-consumer.module';
+import { ChatConsumerModule } from './chat-consumer.module';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -17,7 +17,7 @@ async function bootstrap() {
           deadLetterRoutingKey: 'dead',
         },
         noAck: false,
-        prefetchCount: 5,
+        prefetchCount: 1,
       },
     },
   );

@@ -15,8 +15,6 @@ export class ChatService {
       const token = this.getTokenFromClient(client);
       if (!token) {
         throw new Error('Token not found');
-      }else if (token === 'message-consumer') {
-        return { email: 'message-consumer' };
       }
       const user = await this.verifyToken(token);
       if (!user) {
