@@ -1,5 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqplib';
+import { MessageExchangeQueuesService } from './message-exchange-queues.service';
 
 @Injectable()
 export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
@@ -10,6 +11,9 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly EXCHANGE_NAME = 'message';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
 
+  constructor(
+    private readonly messageExchangeQueuesService: MessageExchangeQueuesService,
+  ) {}
   async onModuleInit() {
     await this.connect();
   }
@@ -24,6 +28,10 @@ export class MessageExchangeService implements OnModuleInit, OnModuleDestroy {
       durable: true,
     });
     console.log('MessageExchangeService Connected!');
+    await this.messageExchangeQueuesService.init(
+      this.channel,
+      this.EXCHANGE_NAME,
+    );
   }
 
   private async disconnect() {
