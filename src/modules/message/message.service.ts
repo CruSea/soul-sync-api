@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { MessageStrategyResolver } from './strategy/strategy';
+import { TelegramChat } from 'src/types/telegram';
+import { NegaritMessageDto } from './dto/negarit-message.dto';
+import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class MessageService {
   constructor(
     private readonly strategyResolver: MessageStrategyResolver,
-    private readonly prisma: PrismaService,
+    private readonly rabbitmqService: RabbitmqService,
+    private readonly messageExchangeService: any, // Add the correct type here
   ) {}
 
   async telegram(id: string, telegramChat: TelegramChat) {
