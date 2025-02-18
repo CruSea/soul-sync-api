@@ -8,6 +8,7 @@ import {
   Body,
   Patch,
   Delete,
+  ValidationPipe,
 } from '@nestjs/common';
 import { MentorService } from './mentor.service';
 import { Roles } from 'src/modules/auth/auth.decorator';
@@ -23,8 +24,10 @@ export class MentorController {
   constructor(private readonly mentorService: MentorService) {}
 
   @Get()
-  async findAll(@Query() getMentor: GetMentorDto) {
-    return this.mentorService.findAll(getMentor);
+  async getMentors(
+    @Query(new ValidationPipe({ transform: true })) query: Record<string, any>,
+  ) {
+    return this.mentorService.findAll(query);
   }
 
   @Get(':id')
