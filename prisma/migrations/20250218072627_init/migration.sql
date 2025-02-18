@@ -109,6 +109,7 @@ CREATE TABLE "Channel" (
     "name" TEXT NOT NULL,
     "type" "ChannelType" NOT NULL DEFAULT 'NEGARIT',
     "configuration" JSONB,
+    "isOn" BOOLEAN NOT NULL DEFAULT false,
     "deletedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

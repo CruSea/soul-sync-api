@@ -139,7 +139,7 @@ model Channel {
   name          String
   type          ChannelType @default(NEGARIT)
   configuration Json?
-
+  isOn         Boolean     @default(false)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
