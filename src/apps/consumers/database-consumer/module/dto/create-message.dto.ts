@@ -1,4 +1,4 @@
-import { IsString, IsEnum } from 'class-validator';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
 import { MessageType } from '@prisma/client';
 
 export class CreateMessageDto {
@@ -13,4 +13,7 @@ export class CreateMessageDto {
 
   @IsString()
   body: string;
+
+  @IsOptional()
+  conversationId?: string;
 }

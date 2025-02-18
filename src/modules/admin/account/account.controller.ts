@@ -8,14 +8,12 @@ import {
   Delete,
   UseGuards,
   UsePipes,
-  Query,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { AccountIdPipe } from './pipe/account-id/account-id.pipe';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('admin/account')
 @UseGuards(AuthGuard)
@@ -28,8 +26,8 @@ export class AccountController {
   }
 
   @Get()
-  async findAll(@Query() paginationDto: PaginationDto) {
-    return this.accountService.findAll(paginationDto);
+  findAll() {
+    return this.accountService.findAll();
   }
 
   @UsePipes(AccountIdPipe)

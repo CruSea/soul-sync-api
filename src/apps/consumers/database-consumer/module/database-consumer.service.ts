@@ -4,6 +4,7 @@ import { MessagePayload } from 'src/types/message';
 import { Strategy } from '../strategy/strategy';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { Channel, channel } from 'diagnostics_channel';
 
 @Injectable()
 export class DatabaseConsumerService {
@@ -44,31 +45,29 @@ export class DatabaseConsumerService {
       console.log('Error setting strategy', error);
     }
   }
-
+//use convId conditionally
   async saveToDatabase(message: CreateMessageDto) {
     try {
+      
+
       return this.prisma.$transaction(async (tx) => {
-        const channel = await tx.channel.findFirst({
-          where: {
-            id: message.channelId,
-          },
-        });
-        const accountId = channel?.accountId;
-        const mentor = await tx.mentor.findFirst({
-          where: { accountId },
-        });
         const createdMessage = await tx.message.create({
           data: message,
         });
 
-        const existingConversation = await tx.conversation.findFirst({
-          where: { address: message.address, isActive: true },
+        if(!(message.conversationId) ){
+        const mentor = await tx.mentor.findFirst({
+          where: {
+            Account: {
+              Channel: {
+                some: {
+                  id: message.channelId
+                }
+              }
+            }
+          }
         });
-
-        const conversationId = existingConversation
-          ? existingConversation.id
-          : (
-              await tx.conversation.create({
+          message.conversationId = (await tx.conversation.create({
                 data: {
                   address: message.address,
                   channelId: message.channelId,
@@ -77,10 +76,12 @@ export class DatabaseConsumerService {
                 },
               })
             ).id;
+        } 
+        
         await tx.thread.create({
           data: {
             messageId: createdMessage.id,
-            conversationId,
+            conversationId: message.conversationId,
           },
         });
       });

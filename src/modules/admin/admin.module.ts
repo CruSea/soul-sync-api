@@ -12,7 +12,6 @@ import { ChannelModule } from './channel/channel.module';
     AccountModule,
     MentorModule,
     ChannelModule,
-    MessageModule,
   ],
 })
 export class AdminModule {}

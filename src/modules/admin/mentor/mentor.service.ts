@@ -5,9 +5,6 @@ import { MentorDto } from './dto/mentor.dto';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginate, PaginationResult } from 'src/common/helpers/pagination';
-
 @Injectable()
 export class MentorService {
   constructor(
@@ -15,22 +12,21 @@ export class MentorService {
     private prisma: PrismaService,
   ) {}
 
-  async findAll(
-    query: Record<string, any>,
-  ): Promise<PaginationResult<MentorDto>> {
-    const getMentorDto = new GetMentorDto();
-    getMentorDto.accountId = query.accountId;
+  async findAll(getMentor: GetMentorDto): Promise<MentorDto[]> {
+    const mentors = await this.prisma.mentor.findMany({
+      where: {
+        accountId: getMentor.accountId,
+        deletedAt: null,
+      },
+    });
 
-    const paginationDto = new PaginationDto();
-    paginationDto.page = query.page ? parseInt(query.page) : 1;
-    paginationDto.limit = query.limit ? parseInt(query.limit) : 10;
-
-    return paginate(
-      this.prisma,
-      this.prisma.mentor,
-      { accountId: getMentorDto.accountId, deletedAt: null },
-      paginationDto.page,
-      paginationDto.limit,
+    return await Promise.all(
+      mentors.map(async (mentor) => {
+        const user = await this.prisma.user.findFirst({
+          where: { email: mentor.email },
+        });
+        return new MentorDto({ ...mentor, user: { ...user } });
+      }),
     );
   }
 

@@ -5,12 +5,10 @@ import { PrismaModule } from 'src/modules/prisma/prisma.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
-import { StrategyResolver } from './strategy/strategy';
-import { PlatformModule } from './platforms/telegram/platform.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, JwtModule, PlatformModule],
+  imports: [PrismaModule, AuthModule, JwtModule],
   controllers: [ChannelController],
-  providers: [ChannelService, PrismaService, StrategyResolver],
+  providers: [ChannelService, PrismaService],
 })
 export class ChannelModule {}

@@ -4,7 +4,7 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateChannelDto {
   @IsString()
   name: string;
-  @IsNotEmpty()
+
   type: ChannelType;
 
   @IsNotEmpty()

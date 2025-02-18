@@ -1,15 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ChatConsumerModule } from './module/chat-consumer.module';
+import { MessageConsumerModule } from './module/message-consumer.module';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    ChatConsumerModule,
+    MessageConsumerModule,
     {
       transport: Transport.RMQ,
       options: {
         urls: [process.env.RABBITMQ_URL],
-        queue: 'chat',
+        queue: 'message',
         queueOptions: {
           durable: true,
           messageTtl: 60000,
