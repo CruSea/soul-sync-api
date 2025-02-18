@@ -4,5 +4,7 @@ import { MessagePayload } from 'src/types/message';
 
 @Injectable()
 export class ChatConsumerService {
+    
     async handleMessage(data: MessagePayload, context: RmqContext) { }
+    setStrategy(channelId: string) { }
 }
