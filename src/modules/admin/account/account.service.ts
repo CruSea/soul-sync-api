@@ -63,8 +63,26 @@ export class AccountService {
 
   async remove(id: string) {
     const user = this.request.user;
-    return await this.prisma.account.delete({
+
+    const account = await this.prisma.account.findUnique({
       where: { id, AccountUser: { some: { userId: user.id } } },
+      select: { deletedAt: true },
     });
+
+    if (!account) throw new Error('Account not found');
+    if (account.deletedAt) return { message: 'Account is already deleted' };
+
+    await this.prisma.$transaction([
+      this.prisma.account.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      }),
+      this.prisma.accountUser.updateMany({
+        where: { accountId: id },
+        data: { deletedAt: new Date() },
+      }),
+    ]);
+
+    return { message: 'Account deleted successfully' };
   }
 }
