@@ -18,33 +18,15 @@ export class RabbitmqService {
     };
   }
 
-  async getMessageEchangeData(
-    channelId: string,
-    payload: TelegramChat,
-  ): Promise<any> {
-    let channelType;
-
-    try {
-      const channel = await this.prisma.channel.findUnique({
-        where: { id: channelId },
-      });
-
-      if (!channel) {
-        throw new Error(`Channel with ID ${channelId} not found`);
-      }
-
-      channelType = channel.type;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to retrieve channel type');
-    }
+  async getMessageEchangeData(payload: any): Promise<any> {
     return {
       type: 'MESSAGE',
       metadata: {
-        type: channelType,
-        channelId: channelId,
+        channelId: payload.channelId,
+        address: payload.address,
+        conversationId: payload.conversationId,
       },
-      payload: payload,
+      payload: payload.body,
     };
   }
 }
