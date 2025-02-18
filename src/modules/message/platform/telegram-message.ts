@@ -15,7 +15,7 @@ export class TelegramMessageStrategy implements MessageStrategy {
   async processMessage(id: string, message: TelegramChat): Promise<string> {
     const formattedMessage = await this.formatMessage(id, message);
     const data =
-      await this.rabbitmqService.getMessageEchangeData(formattedMessage);
+      JSON.stringify(await this.rabbitmqService.getMessageEchangeData(formattedMessage));
     this.messageExchangeService.send('message', data);
 
     return 'ok';

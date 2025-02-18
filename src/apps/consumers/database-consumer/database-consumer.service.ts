@@ -25,26 +25,35 @@ export class DatabaseConsumerService {
     }
   }
   async formatMessage(data: any): Promise<CreateMessageDto> {
-    let type: MessageType;
-    const message = JSON.parse(data);
-    if (message.type === 'MESSAGE') {
-      type = MessageType.RECEIVED;
-    } else {
-      type = MessageType.SENT;
+    try {
+      let type: MessageType;
+      const message = await typeof data === 'string' ?  JSON.parse(data): data;
+      if (message.type === 'MESSAGE') {
+        type = MessageType.RECEIVED;
+      } else {
+        type = MessageType.SENT;
+      }
+      return {
+        channelId: message.metadata.channelId,
+        address: message.metadata.address,
+        type: type,
+        body: message.payload,
+        conversationId: message.metadata.conversationId,
+      };
+    } catch (error) {
+      console.log('Error formatting message', error);
     }
-    return {
-      channelId: message.metadata.channelId,
-      address: message.address,
-      type: type,
-      body: message.payload,
-      conversationId: message.metadata.conversationId,
-    };
   }
   async saveToDatabase(message: CreateMessageDto) {
     try {
       return this.prisma.$transaction(async (tx) => {
         const createdMessage = await tx.message.create({
-          data: message,
+          data: {
+            type: message.type,
+            body: message.body,
+            channelId: message.channelId,
+            address: message.address,
+          },
         });
 
         if (!message.conversationId) {
