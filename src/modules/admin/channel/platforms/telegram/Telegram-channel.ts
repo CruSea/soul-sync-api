@@ -17,7 +17,7 @@ export class TelegramChannel implements ChannelStrategy {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url: `${process.env.HOST_URL}/message/telegram?id=${channel.id}`,
+          url: `${process.env.HOST_URL}/message?id=${channel.id}`,
         }),
       },
     );
@@ -46,7 +46,7 @@ export class TelegramChannel implements ChannelStrategy {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url: `${process.env.HOST_URL}/message/telegram?id=${channel.id}`,
+          url: `${process.env.HOST_URL}/message?id=${channel.id}`,
         }),
       },
     );
