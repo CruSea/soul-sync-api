@@ -56,23 +56,58 @@ export class AccountService {
 
   async findOne(id: string) {
     const user = this.request.user;
-    return await this.prisma.account.findFirst({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id,
+        AccountUser: { some: { userId: user.id } },
+        deletedAt: null,
+      },
     });
-  }
 
+    if (!account) {
+      throw new Error('Account not found');
+    }
+
+    return account;
+  }
   async update(id: string, updateAccountDto: UpdateAccountDto) {
     const user = this.request.user;
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id,
+        AccountUser: { some: { userId: user.id } },
+        deletedAt: null,
+      },
+    });
+    if (!account) throw new Error('Account not found');
     return await this.prisma.account.update({
-      where: { id, AccountUser: { some: { userId: user.id } } },
+      where: { id },
       data: updateAccountDto,
     });
   }
 
   async remove(id: string) {
     const user = this.request.user;
-    return await this.prisma.account.delete({
+
+    const account = await this.prisma.account.findUnique({
       where: { id, AccountUser: { some: { userId: user.id } } },
+      select: { deletedAt: true },
     });
+
+    if (!account) throw new Error('Account not found');
+    if (account.deletedAt) return { message: 'Account is already deleted' };
+
+    await this.prisma.$transaction([
+      this.prisma.account.update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      }),
+      this.prisma.accountUser.updateMany({
+        where: { accountId: id },
+        data: { deletedAt: new Date() },
+      }),
+    ]);
+
+    return { message: 'Account deleted successfully' };
   }
 }

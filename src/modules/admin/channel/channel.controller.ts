@@ -32,7 +32,10 @@ export class ChannelController {
   connect(@Param('id') id: string) {
     return this.channelService.connect(id);
   }
-
+  @Post(':id/disconnect')
+  disconnect(@Param('id') id: string) {
+    return this.channelService.disconnect(id);
+  }
   @Get()
   async getChannels(
     @Query(new ValidationPipe({ transform: true })) query: Record<string, any>,
