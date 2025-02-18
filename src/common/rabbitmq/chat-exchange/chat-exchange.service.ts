@@ -1,5 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as amqp from 'amqplib';
+import { ChatExchangeQueuesService } from './chat-exchange-queues.service';
 
 @Injectable()
 export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
@@ -9,6 +10,10 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
   private readonly RABBITMQ_URL = process.env.RABBITMQ_URL;
   private readonly EXCHANGE_NAME = 'chat';
   private readonly EXCHANGE_TYPE = 'topic'; // (direct, fanout, topic)
+
+  constructor(
+    private readonly chatExchangeQueuesService: ChatExchangeQueuesService,
+  ) {}
 
   async onModuleInit() {
     await this.connect();
@@ -24,6 +29,7 @@ export class ChatExchangeService implements OnModuleInit, OnModuleDestroy {
       durable: true,
     });
     console.log('ChatExchangeService Connected!');
+    await this.chatExchangeQueuesService.init(this.channel, this.EXCHANGE_NAME);
   }
 
   private async disconnect() {
