@@ -58,6 +58,7 @@ services:
     platform: linux/amd64
     environment:
       - RABBITMQ_URL=${RABBITMQ_URL}
+      - DATABASE_URL=${DATABASE_URL}
     command: ["node", "dist/src/apps/consumers/chat-consumer/main.js"]
 
   database-consumer:
@@ -66,6 +67,7 @@ services:
     platform: linux/amd64
     environment:
       - RABBITMQ_URL=${RABBITMQ_URL}
+      - DATABASE_URL=${DATABASE_URL}
     command: ["node", "dist/src/apps/consumers/database-consumer/main.js"]
 
 volumes:
