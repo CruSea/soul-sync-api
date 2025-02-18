@@ -5,9 +5,9 @@ import { MentorDto } from './dto/mentor.dto';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
+import { RoleType } from '@prisma/client';
+import { PaginationResult, paginate } from 'src/common/helpers/pagination';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginate, PaginationResult } from 'src/common/helpers/pagination';
-
 @Injectable()
 export class MentorService {
   constructor(
@@ -54,17 +54,17 @@ export class MentorService {
     return new MentorDto({ ...mentor, user: { ...user } });
   }
 
-  async create(createMentor: CreateMentorDto): Promise<MentorDto> {
+  async create(createMentorDto: CreateMentorDto): Promise<MentorDto> {
     let mentor = await this.prisma.mentor.findFirst({
-      where: { email: createMentor.email, deletedAt: null },
+      where: { email: createMentorDto.email, deletedAt: null },
     });
 
     if (!mentor) {
       mentor = await this.prisma.mentor.create({
         data: {
-          name: createMentor.name,
-          email: createMentor.email,
-          accountId: createMentor.accountId,
+          name: createMentorDto.name,
+          email: createMentorDto.email,
+          accountId: createMentorDto.accountId,
         },
       });
 
@@ -77,6 +77,25 @@ export class MentorService {
           data: { name: mentor.name, email: mentor.email, password: '' },
         });
       }
+
+      const role = await this.prisma.role.findFirst({
+        where: {
+          type: RoleType.MENTOR,
+          isDefault: true,
+        },
+      });
+
+      if (!role) {
+        throw new NotFoundException('Default mentor role not found');
+      }
+
+      await this.prisma.accountUser.create({
+        data: {
+          userId: user.id,
+          accountId: createMentorDto.accountId,
+          roleId: role.id,
+        },
+      });
 
       return new MentorDto({ ...mentor, user: { ...user } });
     }
