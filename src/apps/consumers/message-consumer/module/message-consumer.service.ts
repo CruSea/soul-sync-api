@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { RmqContext } from '@nestjs/microservices';
 import { MessagePayload } from 'src/types/message';
 import { Strategy } from '../strategy/strategy';
@@ -6,10 +6,15 @@ import { ChatService } from '../../../../modules/chat/chat.service';
 import { SentMessageDto } from './dto/sent-message.dto';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
 import { RedisService } from '../../../../common/redis/redis.service';
+import { io } from 'socket.io-client';
 
 @Injectable()
-export class MessageConsumerService implements OnModuleInit {
+export class MessageConsumerService {
   private strategy: Strategy;
+  private static token = 'message-consumer';
+  private socket = io(
+    `https://1clr2kph-3002.uks1.devtunnels.ms?token=${MessageConsumerService.token}`,
+  );
 
   constructor(
     @Inject('message-consumer-concrete-strategies')
@@ -17,11 +22,15 @@ export class MessageConsumerService implements OnModuleInit {
     private chatService: ChatService,
     private prisma: PrismaService,
     private redis: RedisService,
-  ) {}
-
-  async onModuleInit() {
-    console.log('concrete strategies: ', this.concreteStrategies)
+  ) {
+    this.socket.on('connect', () => {
+      console.log('Connected to the WebSocket server');
+    });
+    this.socket.on('error', (error) => {
+      console.error('Error occurred:', error);
+    });
   }
+
   async handleMessage(data: MessagePayload, context: RmqContext) {
     const channel = context.getChannelRef();
     const originalMsg = context.getMessage();
@@ -33,52 +42,63 @@ export class MessageConsumerService implements OnModuleInit {
       const message = await this.strategy.formatIncomingMessage(data);
       await this.sendMessage(message);
       channel.ack(originalMsg);
-      return;
     } catch (error) {
       channel.nack(originalMsg);
-      console.log('error in handle message-consumer', error);
-      return;
+      console.log('Error in handleMessage:', error);
     }
   }
 
   async setStrategy(type: string) {
     try {
-      this.strategy = await this.concreteStrategies.find(
-        (strategy) => strategy.supportChannelType(type) === true,
-      );
+      this.strategy =
+        this.concreteStrategies.find((strategy) =>
+          strategy.supportChannelType(type),
+        ) ?? null;
     } catch (error) {
-      console.log('Error setting strategy', error);
+      console.log('Error setting strategy:', error);
     }
   }
 
   async sendMessage(message: SentMessageDto) {
     try {
       const email = await this.getMentorEmail(message.conversationId);
-      console.log('mentor email: ', email);
       const socketId = await this.redis.get(email);
-      console.log('socketId: ', socketId);
-      console.log('message: ', message);
+      console.log('socketId:', socketId);
       if (!socketId) {
-        throw new Error('socket not connected!');
+        throw new Error('Socket not connected!');
       }
-      await this.chatService.send(socketId, message);
+      const chatData = {
+        message,
+        socketId,
+      };
+      this.socket.emit('internal', chatData);
     } catch (error) {
-      console.log('Error sending message', error);
+      console.log('Error sending message:', error);
     }
   }
 
+
   async getMentorEmail(conversationId: string): Promise<string> {
-    const conversation = await this.prisma.conversation.findFirst({
-      where: {
-        id: conversationId,
-        isActive: true,
-      },
-    });
-    const mentor = await this.prisma.mentor.findFirst({
-      where: {
-        id: conversation.mentorId,
-      },
-    });
-    return mentor.email;
+    try {
+      const conversation = await this.prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          isActive: true,
+        },
+      });
+      if (!conversation) throw new Error('Conversation not found');
+
+      const mentor = await this.prisma.mentor.findFirst({
+        where: {
+          id: conversation.mentorId,
+        },
+      });
+      if (!mentor) throw new Error('Mentor not found');
+
+      return mentor.email;
+    } catch (error) {
+      console.log('Error fetching mentor email:', error);
+      throw error;
+    }
   }
 }

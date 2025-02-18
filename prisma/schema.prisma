@@ -20,6 +20,25 @@ enum RoleType {
   USER
   MENTOR
 }
+model Mentor {
+  id           String     @id @default(uuid())
+  accountId    String
+  name         String
+  email        String
+  expertise    String?
+  availability Json?
+  age          Int?
+  gender       GenderType @default(MALE)
+  location     String?
+  isActive     Boolean    @default(true)
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  Conversation Conversation[]
+  Account      Account        @relation(fields: [accountId], references: [id])
+}
 
 model Account {
   id     String  @id @default(uuid())
@@ -70,25 +89,6 @@ model AccountUser {
   Role    Role    @relation(fields: [roleId], references: [id])
 }
 
-model Mentor {
-  id           String     @id @default(uuid())
-  accountId    String
-  name         String
-  email        String
-  expertise    String?
-  availability Json?
-  age          Int?
-  gender       GenderType @default(MALE)
-  location     String?
-  isActive     Boolean    @default(true)
-
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  Conversation Conversation[]
-  Account      Account        @relation(fields: [accountId], references: [id])
-}
 
 model Conversation {
   id        String  @id @default(uuid())
@@ -139,7 +139,8 @@ model Channel {
   name          String
   type          ChannelType @default(NEGARIT)
   configuration Json?
-  isOn         Boolean     @default(false)
+  isOn          Boolean @default(false)
+
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
