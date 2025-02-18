@@ -21,7 +21,7 @@ export class RabbitmqService {
   async getMessageEchangeData(
     channelId: string,
     payload: TelegramChat,
-  ): Promise<Chat> {
+  ): Promise<any> {
     let channelType;
 
     try {
