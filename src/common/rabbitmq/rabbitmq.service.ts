@@ -29,7 +29,7 @@ export class RabbitmqService {
       metadata: {
         channelId: payload.channelId,
         address: payload.address,
-        conversationId: payload.conversationId,
+        conversationId: payload?.conversationId,
       },
       payload: payload.body,
     };
