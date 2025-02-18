@@ -6,18 +6,24 @@ import { MessagePayload } from 'src/types/message';
 @Injectable()
 export class RabbitmqService {
   constructor(private readonly prisma: PrismaService) {}
-  getChatEchangeData(chat: Chat): MessagePayload {
+  async getChatEchangeData(chat: Chat): Promise<MessagePayload> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        id: chat.metadata.conversationId,
+      },
+    });
     return {
       type: 'CHAT',
       metadata: {
-        type: 'CHAT',
-        conversationId: chat.metadata.conversationId,
+        conversationId: conversation?.id,
+        channelId: conversation.channelId,
+        address: conversation.address,
       },
       payload: chat.payload,
     };
   }
 
-  async getMessageEchangeData(payload: any): Promise<any> {
+  async getMessageEchangeData(payload: any): Promise<Chat> {
     return {
       type: 'MESSAGE',
       metadata: {
