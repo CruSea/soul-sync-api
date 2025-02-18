@@ -6,10 +6,15 @@ import { ChatService } from '../../../../modules/chat/chat.service';
 import { SentMessageDto } from './dto/sent-message.dto';
 import { PrismaService } from '../../../../modules/prisma/prisma.service';
 import { RedisService } from '../../../../common/redis/redis.service';
+import { io } from 'socket.io-client';
 
 @Injectable()
 export class MessageConsumerService {
   private strategy: Strategy;
+  private static token = 'message-consumer';
+  private socket = io(
+    `https://1clr2kph-3002.uks1.devtunnels.ms?token=${MessageConsumerService.token}`,
+  );
 
   constructor(
     @Inject('message-consumer-concrete-strategies')
@@ -17,32 +22,40 @@ export class MessageConsumerService {
     private chatService: ChatService,
     private prisma: PrismaService,
     private redis: RedisService,
-  ) {}
+  ) {
+    this.socket.on('connect', () => {
+      console.log('Connected to the WebSocket server');
+    });
+    this.socket.on('error', (error) => {
+      console.error('Error occurred:', error);
+    });
+  }
 
   async handleMessage(data: MessagePayload, context: RmqContext) {
     const channel = context.getChannelRef();
     const originalMsg = context.getMessage();
     try {
-      this.setStrategy(data.metadata.type);
+      await this.setStrategy(data.metadata.type);
       if (!this.strategy) {
         throw new Error('Strategy not found');
       }
       const message = await this.strategy.formatIncomingMessage(data);
-      this.sendMessage(message);
+      await this.sendMessage(message);
       channel.ack(originalMsg);
     } catch (error) {
       channel.nack(originalMsg);
-      console.log('error in handle message-consumer', error);
+      console.log('Error in handleMessage:', error);
     }
   }
 
   async setStrategy(type: string) {
     try {
-      this.strategy = this.concreteStrategies.find((strategy) =>
-        strategy.supportChannelType(type),
-      );
+      this.strategy =
+        this.concreteStrategies.find((strategy) =>
+          strategy.supportChannelType(type),
+        ) ?? null;
     } catch (error) {
-      console.log('Error setting strategy', error);
+      console.log('Error setting strategy:', error);
     }
   }
 
@@ -50,27 +63,42 @@ export class MessageConsumerService {
     try {
       const email = await this.getMentorEmail(message.conversationId);
       const socketId = await this.redis.get(email);
+      console.log('socketId:', socketId);
       if (!socketId) {
-        throw new Error('socket not connected!');
+        throw new Error('Socket not connected!');
       }
-      await this.chatService.send(socketId, message);
+      const chatData = {
+        message,
+        socketId,
+      };
+      this.socket.emit('internal', chatData);
     } catch (error) {
-      console.log('Error sending message', error);
+      console.log('Error sending message:', error);
     }
   }
 
+
   async getMentorEmail(conversationId: string): Promise<string> {
-    const conversation = await this.prisma.conversation.findFirst({
-      where: {
-        id: conversationId,
-        isActive: true,
-      },
-    });
-    const mentor = await this.prisma.mentor.findFirst({
-      where: {
-        id: conversation.mentorId,
-      },
-    });
-    return mentor.email;
+    try {
+      const conversation = await this.prisma.conversation.findFirst({
+        where: {
+          id: conversationId,
+          isActive: true,
+        },
+      });
+      if (!conversation) throw new Error('Conversation not found');
+
+      const mentor = await this.prisma.mentor.findFirst({
+        where: {
+          id: conversation.mentorId,
+        },
+      });
+      if (!mentor) throw new Error('Mentor not found');
+
+      return mentor.email;
+    } catch (error) {
+      console.log('Error fetching mentor email:', error);
+      throw error;
+    }
   }
 }

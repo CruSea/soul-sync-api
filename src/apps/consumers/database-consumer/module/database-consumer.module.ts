@@ -23,7 +23,7 @@ import { ChatStrategyService } from '../concrete-strategies/chat-strategy.servic
       provide: 'database-consumer-concrete-strategies',
 
       useFactory: () => [
-        new TelegramStrategyService(),
+        new TelegramStrategyService(new PrismaService()),
         new ChatStrategyService(new PrismaService()),
       ],
     },

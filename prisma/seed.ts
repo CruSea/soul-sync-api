@@ -120,8 +120,8 @@ async function seedBatchThree() {
 
 async function main() {
   await seedBatchOne();
-  await seedBatchTwo();
-  await seedBatchThree();
+  // await seedBatchTwo();
+  // await seedBatchThree();
 }
 
 main()

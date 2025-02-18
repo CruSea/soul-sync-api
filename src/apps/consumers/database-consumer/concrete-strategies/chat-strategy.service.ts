@@ -21,6 +21,7 @@ export class ChatStrategyService implements Strategy {
       body: payload.payload,
       address: conversation.address,
       channelId: conversation.channelId,
+      conversationId: conversation.id
     };
   }
 }
