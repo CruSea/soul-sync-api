@@ -19,6 +19,18 @@ export class MessageService {
     accountId: string,
     query: Record<string, any>,
   ): Promise<PaginationResult<Message>> {
+    if (!accountId) {
+      throw new Error('Account ID is required');
+    }
+
+    const accountExists = await this.prisma.account.findUnique({
+      where: { id: accountId },
+    });
+
+    if (!accountExists) {
+      throw new Error('Account does not exist');
+    }
+
     const paginationDto = new PaginationDto();
     paginationDto.page = query.page ? parseInt(query.page) : 1;
     paginationDto.limit = query.limit ? parseInt(query.limit) : 10;
