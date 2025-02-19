@@ -2,49 +2,36 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { Chat } from 'src/types/chat';
 import { MessagePayload } from 'src/types/message';
-import { TelegramChat } from 'src/types/telegram';
 
 @Injectable()
 export class RabbitmqService {
   constructor(private readonly prisma: PrismaService) {}
-  getChatEchangeData(chat: Chat): MessagePayload {
+  async getChatEchangeData(chat: Chat): Promise<MessagePayload> {
+    const conversation = await this.prisma.conversation.findFirst({
+      where: {
+        id: chat.metadata.conversationId,
+      },
+    });
     return {
       type: 'CHAT',
       metadata: {
-        type: 'CHAT',
-        conversationId: chat.metadata.conversationId,
+        conversationId: conversation?.id,
+        channelId: conversation.channelId,
+        address: conversation.address,
       },
       payload: chat.payload,
     };
   }
 
-  async getMessageEchangeData(
-    channelId: string,
-    payload: TelegramChat,
-  ): Promise<any> {
-    let channelType;
-
-    try {
-      const channel = await this.prisma.channel.findUnique({
-        where: { id: channelId },
-      });
-
-      if (!channel) {
-        throw new Error(`Channel with ID ${channelId} not found`);
-      }
-
-      channelType = channel.type;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to retrieve channel type');
-    }
+  async getMessageEchangeData(payload: any): Promise<Chat> {
     return {
       type: 'MESSAGE',
       metadata: {
-        type: channelType,
-        channelId: channelId,
+        channelId: payload.channelId,
+        address: payload.address,
+        conversationId: payload?.conversationId,
       },
-      payload: payload,
+      payload: payload.body,
     };
   }
 }
