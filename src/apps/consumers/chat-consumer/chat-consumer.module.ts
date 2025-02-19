@@ -4,6 +4,7 @@ import { ChatConsumerService } from './chat-consumer.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from 'src/modules/prisma/prisma.module';
 import { ClientService } from './strategy/client.service';
+import { TelegramConcreteStrategy } from './concrete-strategies/telegram-concrete-strategy.service';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { ClientService } from './strategy/client.service';
     PrismaModule,
   ],
   controllers: [ChatConsumerController],
-  providers: [ChatConsumerService, ClientService],
+  providers: [ChatConsumerService, ClientService, TelegramConcreteStrategy],
 })
 export class ChatConsumerModule {}
