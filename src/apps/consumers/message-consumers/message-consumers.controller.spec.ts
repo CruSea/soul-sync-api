@@ -9,7 +9,9 @@ describe('MessageConsumersController', () => {
       controllers: [MessageConsumersController],
     }).compile();
 
-    controller = module.get<MessageConsumersController>(MessageConsumersController);
+    controller = module.get<MessageConsumersController>(
+      MessageConsumersController,
+    );
   });
 
   it('should be defined', () => {

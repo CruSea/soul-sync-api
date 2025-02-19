@@ -11,7 +11,6 @@ import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exch
 import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { ChatService } from './chat.service';
-import { RedisService } from 'src/common/redis/redis.service';
 import { SocketService } from './socket.service';
 
 @WebSocketGateway(Number(process.env.CHAT_PORT), {
