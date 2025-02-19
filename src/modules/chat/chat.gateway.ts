@@ -23,12 +23,12 @@ import { SocketService } from './socket.service';
 })
 export class ChatGateway {
   @WebSocketServer() server: Server;
+  private connectedClients = new Map<string, string>();
 
   constructor(
     private readonly chatExchangeService: ChatExchangeService,
     private readonly rabbitmqService: RabbitmqService,
     private readonly chatService: ChatService,
-    private readonly reddisService: RedisService,
     private readonly socketService: SocketService,
   ) {}
 
@@ -43,7 +43,7 @@ export class ChatGateway {
       if (!user) {
         throw new NotFoundException('User not found');
       }
-      await this.reddisService.set(user.email, client.id);
+      await this.connectedClients.set(user.email, client.id);
       console.log('Client connected:', client.id);
     } catch (error) {
       console.log('error in handle connection', error);
@@ -54,7 +54,7 @@ export class ChatGateway {
   async handleDisconnect(client: any) {
     const user = await this.chatService.getUserFromToken(client);
     if (user) {
-      await this.reddisService.delete(user.email);
+      await this.connectedClients.delete(user.email);
     }
     console.log('Client disconnected:', client.id);
   }
@@ -80,7 +80,8 @@ export class ChatGateway {
     try {
       const chatData = typeof data ? data : JSON.parse(data);
       console.log('Received Internal Chat Data:', chatData);
-      const socket = this.server.sockets.sockets.get(chatData.socketId);
+      const socketId = this.connectedClients.get(chatData.email);
+      const socket = this.server.sockets.sockets.get(socketId);
       if (!socket) {
         throw new NotFoundException('Socket not found');
       }

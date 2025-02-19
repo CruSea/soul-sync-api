@@ -7,7 +7,7 @@ import { RedisModule } from 'src/common/redis/redis.module';
 import { SocketService } from './socket.service';
 
 @Module({
-  imports: [RabbitmqModule, JwtModule, RedisModule],
+  imports: [RabbitmqModule, JwtModule],
   providers: [ChatGateway, ChatService, SocketService],
   exports: [ChatService],
 })
