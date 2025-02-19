@@ -85,5 +85,21 @@ services:
        DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
     command: ["node", "dist/src/apps/consumers/database-consumer/main.js"]
 
+  message-consumer:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    platform: linux/amd64
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
+    command: ["node", "dist/src/apps/consumers/message-consumer/main.js"]
+
 volumes:
   postgres_data:
