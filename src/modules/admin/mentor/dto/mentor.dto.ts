@@ -32,6 +32,9 @@ export class MentorDto {
   @Expose()
   availability?: any;
 
+  @Expose()
+  isActive?: boolean;
+
   constructor(partial: Partial<MentorDto>) {
     console.log('partial', partial);
     Object.assign(this, {
@@ -40,6 +43,9 @@ export class MentorDto {
       email: partial.email,
       age: partial.age,
       location: partial.location,
+      expertise: partial.expertise,
+      availability: partial.availability,
+      isActive: partial.isActive,
       user: partial.user ? new UserDto(partial.user) : null,
     });
   }

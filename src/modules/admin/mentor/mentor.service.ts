@@ -108,16 +108,48 @@ export class MentorService {
   }
 
   async update(id: string, updateMentor: UpdateMentorDto): Promise<MentorDto> {
-    const mentor = await this.prisma.mentor.update({
+    if (!id) {
+      throw new Error('Mentor ID is required for update.');
+    }
+
+    const mentor = await this.prisma.mentor.findUnique({
       where: { id: id },
-      data: updateMentor,
     });
+
+    if (!mentor) {
+      throw new NotFoundException('Mentor not found');
+    }
 
     const user = await this.prisma.user.findFirst({
       where: { email: mentor.email },
     });
 
-    return new MentorDto({ ...mentor, user: { ...user } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (updateMentor.email && updateMentor.email !== mentor.email) {
+      await this.prisma.user.update({
+        where: { email: mentor.email },
+        data: { email: updateMentor.email },
+      });
+    }
+
+    const updatedMentor = await this.prisma.mentor.update({
+      where: { id: id },
+      data: {
+        ...updateMentor,
+        availability: updateMentor.availability
+          ? JSON.parse(updateMentor.availability)
+          : undefined,
+      },
+    });
+
+    const updatedUser = await this.prisma.user.findFirst({
+      where: { email: updateMentor.email || mentor.email },
+    });
+
+    return new MentorDto({ ...updatedMentor, user: { ...updatedUser } });
   }
 
   async delete(id: string): Promise<{ status: boolean }> {

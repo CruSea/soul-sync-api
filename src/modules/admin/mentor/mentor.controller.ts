@@ -40,7 +40,7 @@ export class MentorController {
     return this.mentorService.create(createMentor);
   }
 
-  @Patch()
+  @Patch(':id')
   async update(@Param('id') id, @Body() updateMentor: UpdateMentorDto) {
     return this.mentorService.update(id, updateMentor);
   }
