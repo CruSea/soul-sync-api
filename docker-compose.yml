@@ -55,12 +55,20 @@ services:
   chat-consumer:
     build:
       context: .
+    volumes:
+      - .:/app
     platform: linux/amd64
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
     environment:
-      - RABBITMQ_URL=${RABBITMQ_URL}
-      - DATABASE_URL=${DATABASE_URL}
+       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
     command: ["node", "dist/src/apps/consumers/chat-consumer/main.js"]
 
+    
   database-consumer:
     build:
       context: .
