@@ -27,7 +27,8 @@ export class DatabaseConsumerService {
   async formatMessage(data: any): Promise<CreateMessageDto> {
     try {
       let type: MessageType;
-      const message = await typeof data === 'string' ?  JSON.parse(data): data;
+      const message =
+        (await typeof data) === 'string' ? JSON.parse(data) : data;
       if (message.type === 'MESSAGE') {
         type = MessageType.RECEIVED;
       } else {
