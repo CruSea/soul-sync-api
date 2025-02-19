@@ -78,15 +78,21 @@ export class ChatGateway {
   @SubscribeMessage('internal')
   async handleChat(@MessageBody() data: string): Promise<string> {
     try {
-      const chatData = typeof data ? data : JSON.parse(data);
+      const chatData = typeof data === 'string' ? JSON.parse(data) : data;
       console.log('Received Internal Chat Data:', chatData);
       const socketId = this.connectedClients.get(chatData.email);
       const socket = this.server.sockets.sockets.get(socketId);
       if (!socket) {
         throw new NotFoundException('Socket not found');
       }
-      socket.emit('message', chatData.message);
-      console.log('Message Sent: ', chatData.message);
+      const chat = {
+        conversationId: chatData.conversationId,
+        type: chatData.type,
+        body: chatData.body,
+        createdAt: chatData.createdAt,
+      };
+      socket.emit('message', chat);
+      console.log('Message Sent: ', chat);
       return 'AKG';
     } catch (e) {
       console.log(e);
