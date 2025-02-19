@@ -8,7 +8,7 @@ import { io } from 'socket.io-client';
 export class MessageConsumersService {
   private static token = 'message-consumer';
   private socket = io(
-    `https://1clr2kph-3002.uks1.devtunnels.ms?token=${MessageConsumersService.token}`,
+    `${process.env.WEBSOCKET_URL}?token=${MessageConsumersService.token}`,
   );
 
   constructor(private prisma: PrismaService) {
