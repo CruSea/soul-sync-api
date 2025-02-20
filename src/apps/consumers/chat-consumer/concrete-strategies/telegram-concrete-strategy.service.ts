@@ -28,6 +28,7 @@ export class TelegramConcreteStrategy implements Strategy {
         },
       );
 
+      console.log('data', data);
       console.log('response', response);
       console.log('config', config);
 

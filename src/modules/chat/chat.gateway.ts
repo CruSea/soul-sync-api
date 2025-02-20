@@ -65,6 +65,7 @@ export class ChatGateway {
       const chatData: Chat = JSON.parse(data);
       if (chatData.type === 'CHAT') {
         const data = await this.rabbitmqService.getChatEchangeData(chatData);
+        console.log('data', data);
         await this.chatExchangeService.send('chat', data);
         return 'AKC';
       }
