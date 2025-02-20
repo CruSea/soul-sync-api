@@ -27,6 +27,7 @@ export class TelegramMessageStrategy implements MessageStrategy {
     const body = message.message.text;
     const conversation = await this.prisma.conversation.findFirst({
       where: {
+        channelId,
         address: address,
       },
     });
