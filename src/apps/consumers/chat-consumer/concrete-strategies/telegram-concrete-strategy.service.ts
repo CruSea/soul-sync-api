@@ -28,6 +28,9 @@ export class TelegramConcreteStrategy implements Strategy {
         },
       );
 
+      console.log('response', response);
+      console.log('config', config);
+
       if (!response.ok) {
         throw new Error(
           `Error sending message to Telegram: ${response.status} ${response.statusText}`,
