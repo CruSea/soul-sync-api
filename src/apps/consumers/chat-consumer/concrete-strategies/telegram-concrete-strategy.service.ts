@@ -9,7 +9,7 @@ export class TelegramConcreteStrategy implements Strategy {
     try {
       const channel = await this.prisma.channel.findFirst({
         where: {
-          id: data.channelId,
+          id: data.metadata.channelId,
         },
       });
 
