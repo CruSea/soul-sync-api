@@ -9,7 +9,7 @@ async function bootstrap() {
       transport: Transport.RMQ,
       options: {
         urls: [process.env.RABBITMQ_URL],
-        queue: 'database',
+        queue: 'message',
         queueOptions: {
           durable: true,
           messageTtl: 60000,
