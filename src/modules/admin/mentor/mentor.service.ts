@@ -139,9 +139,12 @@ export class MentorService {
       where: { id: id },
       data: {
         ...updateMentor,
-        availability: updateMentor.availability
-          ? JSON.parse(updateMentor.availability)
-          : undefined,
+        availability:
+          typeof updateMentor.availability === 'string'
+            ? JSON.parse(updateMentor.availability)
+            : updateMentor.availability,
+        expertise: updateMentor.expertise ? updateMentor.expertise : undefined,
+        capacity: updateMentor.capacity ? updateMentor.capacity : undefined,
       },
     });
 
