@@ -75,19 +75,21 @@ model Mentor {
   accountId    String
   name         String
   email        String
-  expertise    String?
+  expertise    String[]  @default([])
+  capacity     Int?    
   availability Json?
   age          Int?
   gender       GenderType @default(MALE)
   location     String?
   isActive     Boolean    @default(true)
+  isBot        Boolean    @default(false)
 
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   Conversation Conversation[]
-  Account      Account        @relation(fields: [accountId], references: [id])
+  Account      Account   @relation(fields: [accountId], references: [id])
 }
 
 model Conversation {
