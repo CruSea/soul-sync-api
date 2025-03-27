@@ -6,7 +6,7 @@
 
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -126,13 +126,20 @@ model Thread {
   Message      Message      @relation(fields: [messageId], references: [id])
 }
 
+enum ChannelType {
+  NEGARIT
+  TELEGRAM
+  WHATSAPP
+  TWILIO
+}
+
 model Channel {
-  id            String @id @default(uuid())
+  id            String      @id @default(uuid())
   accountId     String
   name          String
-  metadata      Json?
+  type          ChannelType @default(NEGARIT)
   configuration Json?
-
+  isOn         Boolean     @default(false)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

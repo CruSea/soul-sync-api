@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - '3000:3000'
+      - '5555:5555'
+      - '3002:3002'
     volumes:
       - .:/app
     depends_on:
@@ -18,7 +20,7 @@ services:
       DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
 
   postgres:
     image: postgres
@@ -31,7 +33,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -49,6 +51,54 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
+
+  chat-consumer:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    platform: linux/amd64
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+      DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
+    command: ['node', 'dist/src/apps/consumers/chat-consumer/main.js']
+
+  database-consumer:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    platform: linux/amd64
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+      DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
+    command: ['node', 'dist/src/apps/consumers/database-consumer/main.js']
+
+  message-consumer:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    platform: linux/amd64
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    environment:
+      RABBITMQ_URL: amqp://user:password@rabbitmq:5672
+      DATABASE_URL: postgres://postgres:password@postgres:5432/mydb?schema=public
+    command: ['node', 'dist/src/apps/consumers/message-consumers/main.js']
 
 volumes:
   postgres_data:

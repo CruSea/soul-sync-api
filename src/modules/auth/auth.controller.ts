@@ -28,6 +28,16 @@ export class AuthController {
     res.redirect(`${process.env.WEB_CALLBACK_URL}?token=${req.user}`);
   }
 
+  @Get('google-local')
+  @UseGuards(AuthGuard('google-local'))
+  async googleLocalAuth() {}
+
+  @Get('google/local-callback')
+  @UseGuards(AuthGuard('google-local'))
+  async googleLocalAuthRedirect(@Req() req, @Res() res: Response) {
+    res.redirect(`${process.env.LOCAL_WEB_CALLBACK_URL}?token=${req.user}`);
+  }
+
   @Post('sign-in')
   async signIn(@Body() signInUserDto: SignInUserDto): Promise<AuthDto> {
     return await this.authService.signIn(signInUserDto);

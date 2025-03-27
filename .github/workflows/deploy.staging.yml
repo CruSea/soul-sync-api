@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Preparing Dev Server
+    name: Preparing Dev
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -31,3 +31,12 @@ jobs:
             npx prisma migrate reset --force
             pm2 delete dev-soul-sync-api
             pm2 start dist/src/main.js --name dev-soul-sync-api
+
+            pm2 delete dev-chat-consumer
+            pm2 start dist/src/apps/consumers/chat-consumer/main.js --name dev-chat-consumer
+
+            pm2 delete dev-database-consumer
+            pm2 start dist/src/apps/consumers/database-consumer/main.js --name dev-database-consumer
+
+            pm2 delete dev-message-consumer
+            pm2 start dist/src/apps/consumers/message-consumers/main.js --name dev-message-consumer

@@ -11,6 +11,9 @@ export class UserDto {
   email: string;
 
   @Expose()
+  imageUrl: string;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()
@@ -22,6 +25,7 @@ export class UserDto {
     this.id = partial.id;
     this.name = partial.name;
     this.email = partial.email;
+    this.imageUrl = partial.imageUrl;
     this.createdAt = partial.createdAt;
     this.updatedAt = partial.updatedAt;
   }

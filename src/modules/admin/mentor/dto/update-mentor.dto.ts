@@ -1,11 +1,42 @@
-import { IsEmail, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsInt,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
+import { GenderType } from '@prisma/client';
 
 export class UpdateMentorDto {
-  @IsEmail()
   @IsOptional()
-  name: string;
+  @IsString()
+  name?: string;
 
-  @IsEmail()
   @IsOptional()
-  email: string;
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  expertise?: string;
+
+  @IsOptional()
+  availability?: string;
+
+  @IsOptional()
+  @IsInt()
+  age?: number;
+
+  @IsOptional()
+  @IsEnum(GenderType)
+  gender?: GenderType;
+
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
