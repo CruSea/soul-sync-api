@@ -5,17 +5,14 @@ import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
 
 @Injectable()
 export class AdminProfileService {
-  constructor(
-    private prisma: PrismaService,
-  ) { }
-  
-  async findOne(id: string): Promise<AdminDto> {
+  constructor(private prisma: PrismaService) {}
 
+  async findOne(id: string): Promise<AdminDto> {
     const admin = await this.prisma.user.findFirst({
       where: {
         id: id,
         deletedAt: null,
-      }
+      },
     });
 
     if (!admin) {
@@ -25,7 +22,10 @@ export class AdminProfileService {
     return new AdminDto({ ...admin });
   }
 
-  async update(id: string, updateAdminProfileDto: UpdateAdminProfileDto): Promise<AdminDto> {
+  async update(
+    id: string,
+    updateAdminProfileDto: UpdateAdminProfileDto,
+  ): Promise<AdminDto> {
     console.log('Updating admin with ID:', id);
 
     const existingAdmin = await this.prisma.user.findFirst({
@@ -59,7 +59,7 @@ export class AdminProfileService {
         deletedAt: null,
         AccountUser: {
           some: {
-            accountId: accountId, 
+            accountId: accountId,
             Role: {
               name: 'Admin',
             },
@@ -77,19 +77,17 @@ export class AdminProfileService {
 
     console.log('Filtered Admin Data:', JSON.stringify(admins, null, 2));
 
-    return admins.map(admin => {
-
+    return admins.map((admin) => {
       return new AdminDto({
         id: admin.id,
         name: admin.name,
         email: admin.email,
-        isActive: admin.isActive
+        isActive: admin.isActive,
       });
     });
   }
-  
-  async toggleActiveStatus(id: string): Promise<AdminDto> {
 
+  async toggleActiveStatus(id: string): Promise<AdminDto> {
     const existingAdmin = await this.prisma.user.findFirst({
       where: {
         id: id,
@@ -109,9 +107,5 @@ export class AdminProfileService {
     });
 
     return new AdminDto({ ...updatedAdmin });
-
-
-
   }
-  
 }

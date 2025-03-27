@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param, UseGuards, } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 import { AdminProfileService } from './admin-profile.service';
 import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
@@ -12,25 +12,25 @@ export class AdminProfileController {
 
   @Get(':id')
   @UseGuards(RoleGuard)
-  @Roles('OWNER','ADMIN')
-  findOne(
-  @Param('id') id){
-  return this.adminProfileService.findOne(id);
-}
-
+  @Roles('OWNER', 'ADMIN')
+  findOne(@Param('id') id) {
+    return this.adminProfileService.findOne(id);
+  }
 
   @Patch(':id')
   @UseGuards(RoleGuard)
-  @Roles('OWNER','ADMIN')
-  update(@Param('id') id: string, @Body() updateAdminProfileDto: UpdateAdminProfileDto) {
+  @Roles('OWNER', 'ADMIN')
+  update(
+    @Param('id') id: string,
+    @Body() updateAdminProfileDto: UpdateAdminProfileDto,
+  ) {
     return this.adminProfileService.update(id, updateAdminProfileDto);
   }
 
   @Get('all/:accountId')
   @UseGuards(RoleGuard)
   @Roles('OWNER')
-  findAll(
-    @Param('accountId') accountId) {
+  findAll(@Param('accountId') accountId) {
     return this.adminProfileService.findAll(accountId);
   }
 
@@ -40,6 +40,4 @@ export class AdminProfileController {
   activate(@Param('id') id: string) {
     return this.adminProfileService.toggleActiveStatus(id);
   }
-
 }
-

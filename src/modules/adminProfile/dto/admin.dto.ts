@@ -22,14 +22,13 @@ export class AdminDto {
   roleName: string; // Add the roleName field
 
   constructor(partial: Partial<AdminDto>) {
-   // console.log('partial', partial);
+    // console.log('partial', partial);
     Object.assign(this, {
       id: partial.id,
       name: partial.name,
       email: partial.email,
       isActive: partial.isActive,
-      AccountUser: partial.AccountUser
+      AccountUser: partial.AccountUser,
     });
   }
 }
-
