@@ -7,11 +7,18 @@ import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
 export class AdminProfileService {
   constructor(private prisma: PrismaService) {}
 
-  async findOne(id: string): Promise<AdminDto> {
+  async findOne(userId: string, accountId: string): Promise<AdminDto> {
     const admin = await this.prisma.user.findFirst({
       where: {
-        id: id,
+        id: userId,
         deletedAt: null,
+      },
+      include: {
+        AccountUser: {
+          where: {
+            accountId: accountId,
+          },
+        },
       },
     });
 
@@ -19,7 +26,16 @@ export class AdminProfileService {
       throw new NotFoundException('Admin not found');
     }
 
-    return new AdminDto({ ...admin });
+    const accountUser = admin.AccountUser.find(
+      (au) => au.accountId === accountId,
+    );
+
+    return new AdminDto({
+      id: admin.id,
+      name: admin.name,
+      email: admin.email,
+      isActive: accountUser?.isActive,
+    });
   }
 
   async update(
@@ -52,19 +68,31 @@ export class AdminProfileService {
   }
 
   async findAll(accountId: string): Promise<AdminDto[]> {
-    console.log('accountId:', accountId);
-
     const admins = await this.prisma.user.findMany({
       where: {
         deletedAt: null,
-        AccountUser: {
-          some: {
-            accountId: accountId,
-            Role: {
-              name: 'Admin',
+        OR: [
+          {
+            AccountUser: {
+              some: {
+                accountId: accountId,
+                Role: {
+                  name: 'Admin',
+                },
+              },
             },
           },
-        },
+          {
+            AccountUser: {
+              some: {
+                accountId: accountId,
+                Role: {
+                  name: 'Owner',
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         AccountUser: {
@@ -78,34 +106,62 @@ export class AdminProfileService {
     console.log('Filtered Admin Data:', JSON.stringify(admins, null, 2));
 
     return admins.map((admin) => {
+      const accountUser = admin.AccountUser.find(
+        (au) => au.accountId === accountId,
+      );
+
       return new AdminDto({
         id: admin.id,
         name: admin.name,
         email: admin.email,
-        isActive: admin.isActive,
+        isActive: accountUser?.isActive,
       });
     });
   }
 
-  async toggleActiveStatus(id: string): Promise<AdminDto> {
-    const existingAdmin = await this.prisma.user.findFirst({
+  async toggleActiveStatus(
+    accountId: string,
+    userId: string,
+  ): Promise<AdminDto> {
+    const accountUser = await this.prisma.accountUser.findFirst({
       where: {
-        id: id,
+        accountId: accountId,
+        userId: userId,
+      },
+    });
+
+    const updatedAccountUser = await this.prisma.accountUser.update({
+      where: {
+        id: accountUser.id,
+      },
+      data: {
+        isActive: !accountUser.isActive,
+      },
+    });
+
+    const updatedUser = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
         deletedAt: null,
       },
-    });
-
-    if (!existingAdmin) {
-      throw new NotFoundException('Admin not found');
-    }
-
-    const updatedAdmin = await this.prisma.user.update({
-      where: { id: id },
-      data: {
-        isActive: !existingAdmin.isActive,
+      include: {
+        AccountUser: {
+          where: {
+            accountId: accountId,
+          },
+        },
       },
     });
 
-    return new AdminDto({ ...updatedAdmin });
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return new AdminDto({
+      id: updatedUser.id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isActive: updatedAccountUser.isActive,
+    });
   }
 }

@@ -47,7 +47,6 @@ model User {
   email    String  @unique
   password String
   imageUrl String?
-  isActive Boolean @default(true)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -61,6 +60,7 @@ model AccountUser {
   userId    String
   roleId    String
   accountId String
+  isActive Boolean @default(true)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())

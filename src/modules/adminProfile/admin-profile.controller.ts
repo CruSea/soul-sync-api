@@ -10,11 +10,14 @@ import { Roles } from '../auth/auth.decorator';
 export class AdminProfileController {
   constructor(private readonly adminProfileService: AdminProfileService) {}
 
-  @Get(':id')
+  @Get(':accountId/:userId/')
   @UseGuards(RoleGuard)
   @Roles('OWNER', 'ADMIN')
-  findOne(@Param('id') id) {
-    return this.adminProfileService.findOne(id);
+  findOne(
+    @Param('userId') userId: string,
+    @Param('accountId') accountId: string,
+  ) {
+    return this.adminProfileService.findOne(userId, accountId);
   }
 
   @Patch(':id')
@@ -34,10 +37,13 @@ export class AdminProfileController {
     return this.adminProfileService.findAll(accountId);
   }
 
-  @Patch(':id/activate')
+  @Patch(':userId/activate/:accountId')
   @UseGuards(RoleGuard)
   @Roles('OWNER')
-  activate(@Param('id') id: string) {
-    return this.adminProfileService.toggleActiveStatus(id);
+  activate(
+    @Param('userId') userId: string,
+    @Param('accountId') accountId: string,
+  ) {
+    return this.adminProfileService.toggleActiveStatus(userId, accountId);
   }
 }

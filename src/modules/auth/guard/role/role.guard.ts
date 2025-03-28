@@ -1,14 +1,16 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Observable } from 'rxjs';
 import { ROLE_KEY } from '../../auth.decorator';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  constructor(
+    private reflector: Reflector,
+    private prisma: PrismaService,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLE_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -16,10 +18,24 @@ export class RoleGuard implements CanActivate {
 
     const user = context.switchToHttp().getRequest().user;
 
-    return user.accounts?.some((account) =>
-      requiredRoles.some(
-        (role) => account.role?.name.toLowerCase() === role.toLowerCase(),
-      ),
+    const activeAccounts = await this.prisma.accountUser.findMany({
+      where: {
+        userId: user.sub,
+        isActive: true,
+      },
+      select: {
+        accountId: true,
+      },
+    });
+
+    const activeAccountIds = activeAccounts.map((account) => account.accountId);
+
+    return user.accounts.some(
+      (account) =>
+        activeAccountIds.includes(account.id) &&
+        requiredRoles.some(
+          (role) => account.role?.name.toLowerCase() === role.toLowerCase(),
+        ),
     );
   }
 }
