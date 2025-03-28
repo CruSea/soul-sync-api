@@ -19,8 +19,6 @@ export class RoleGuard implements CanActivate {
 
     const user: User = context.switchToHttp().getRequest().user;
 
-    console.log('User:', user);
-
     const activeAccounts = await this.prisma.accountUser.findMany({
       where: {
         userId: user.sub,
