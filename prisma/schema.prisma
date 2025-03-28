@@ -75,7 +75,7 @@ model Mentor {
   accountId    String
   name         String
   email        String
-  expertise    String[]  @default([])
+  expertise    Json?
   capacity     Int?    
   availability Json?
   age          Int?
