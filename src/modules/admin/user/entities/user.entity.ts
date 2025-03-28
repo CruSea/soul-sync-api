@@ -1,7 +1,7 @@
 export class User {
-  id?: string;
+  id: string;
   sub?: string;
   name: string;
   email: string;
-  accounts: any
+  accounts: any;
 }
