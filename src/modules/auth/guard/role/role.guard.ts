@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLE_KEY } from '../../auth.decorator';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { User } from 'src/modules/admin/user/entities/user.entity';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -16,7 +17,9 @@ export class RoleGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    const user = context.switchToHttp().getRequest().user;
+    const user: User = context.switchToHttp().getRequest().user;
+
+    console.log('User:', user);
 
     const activeAccounts = await this.prisma.accountUser.findMany({
       where: {
