@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLE_KEY } from '../../auth.decorator';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
@@ -33,12 +39,28 @@ export class RoleGuard implements CanActivate {
 
     const activeAccountIds = activeAccounts.map((account) => account.accountId);
 
-    return user.accounts.some(
+    const hasActiveAccount = user.accounts.some((account) =>
+      activeAccountIds.includes(account.id),
+    );
+
+    if (!hasActiveAccount) {
+      throw new ForbiddenException(
+        "Your organization's owner has disabled your account",
+      );
+    }
+
+    const hasRequiredRole = user.accounts.some(
       (account) =>
         activeAccountIds.includes(account.id) &&
         requiredRoles.some(
           (role) => account.role?.name.toLowerCase() === role.toLowerCase(),
         ),
     );
+
+    if (!hasRequiredRole) {
+      throw new NotFoundException('Forbidden resource');
+    }
+
+    return true;
   }
 }
