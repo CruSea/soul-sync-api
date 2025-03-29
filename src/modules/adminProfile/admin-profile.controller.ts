@@ -30,7 +30,7 @@ export class AdminProfileController {
     return this.adminProfileService.update(id, updateAdminProfileDto);
   }
 
-  @Get('all/:accountId')
+  @Get(':accountId')
   @UseGuards(RoleGuard)
   @Roles('OWNER')
   findAll(@Param('accountId') accountId) {
