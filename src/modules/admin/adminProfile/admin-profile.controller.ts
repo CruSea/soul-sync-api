@@ -3,7 +3,7 @@ import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 import { AdminProfileService } from './admin-profile.service';
 import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
 import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
-import { Roles } from '../auth/auth.decorator';
+import { Roles } from '../../auth/auth.decorator';
 
 @Controller('admin/profile')
 @UseGuards(AuthGuard)
@@ -41,9 +41,9 @@ export class AdminProfileController {
   @UseGuards(RoleGuard)
   @Roles('OWNER')
   activate(
-    @Param('userId') userId: string,
     @Param('accountId') accountId: string,
+    @Param('userId') userId: string,
   ) {
-    return this.adminProfileService.toggleActiveStatus(userId, accountId);
+    return this.adminProfileService.toggleActiveStatus(accountId, userId);
   }
 }
