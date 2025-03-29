@@ -2,14 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UpdateMentorDto } from 'src/modules/admin/mentor/dto/update-mentor.dto';
 import { MentorDto } from 'src/modules/admin/mentor/dto/mentor.dto';
+import { GetMentorDto } from 'src/modules/admin/mentor/dto/get-mentor.dto';
 
 @Injectable()
 export class MentorProfileService {
   constructor(private prisma: PrismaService) {}
 
-  async getProfile(email: string): Promise<MentorDto> {
+  async getProfile(email: string, getMentor: GetMentorDto): Promise<MentorDto> {
     const mentor = await this.prisma.mentor.findFirst({
-      where: { email, deletedAt: null },
+      where: { email, accountId: getMentor.accountId, deletedAt: null },
     });
 
     if (!mentor) {
@@ -26,9 +27,10 @@ export class MentorProfileService {
   async updateProfile(
     email: string,
     updateMentor: UpdateMentorDto,
+    getMentor: GetMentorDto,
   ): Promise<MentorDto> {
     const mentor = await this.prisma.mentor.findFirst({
-      where: { email },
+      where: { email, accountId: getMentor.accountId },
     });
 
     if (!mentor) {
