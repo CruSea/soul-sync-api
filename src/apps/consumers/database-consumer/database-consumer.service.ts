@@ -60,6 +60,7 @@ export class DatabaseConsumerService {
         if (!message.conversationId) {
           const mentor = await tx.mentor.findFirst({
             where: {
+              isBot: true,
               Account: {
                 Channel: {
                   some: {
