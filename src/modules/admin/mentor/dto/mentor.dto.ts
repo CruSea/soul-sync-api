@@ -27,7 +27,7 @@ export class MentorDto {
   gender?: string;
 
   @Expose()
-  expertise?: string[];
+  expertise?: any;
 
   @Expose()
   capacity?: number;
