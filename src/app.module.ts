@@ -9,6 +9,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { RabbitmqModule } from './common/rabbitmq/rabbitmq.module';
 import { MessageModule } from './modules/message/message.module';
 import { AdminProfileModule } from './modules/adminProfile/admin-profile.module';
+import { RoleModule } from './modules/admin/role/role.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AdminProfileModule } from './modules/adminProfile/admin-profile.module'
     RabbitmqModule,
     MessageModule,
     AdminProfileModule,
+    RoleModule,
   ],
   providers: [PrismaService],
   controllers: [],
