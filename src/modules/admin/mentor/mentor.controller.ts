@@ -13,13 +13,14 @@ import {
 import { MentorService } from './mentor.service';
 import { Roles } from 'src/modules/auth/auth.decorator';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
 
 @Controller('admin/mentor')
-@UseGuards(AuthGuard)
-@Roles('OWNER')
+@UseGuards(AuthGuard, RoleGuard)
+@Roles('OWNER', 'ADMIN')
 export class MentorController {
   constructor(private readonly mentorService: MentorService) {}
 

@@ -16,10 +16,11 @@ import { UpdateChannelDto } from './dto/update-channel.dto';
 import { GetChannelDto } from './dto/get-channel.dto';
 import { Roles } from 'src/modules/auth/auth.decorator';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
 
 @Controller('admin/channel')
-@UseGuards(AuthGuard)
-@Roles('OWNER')
+@UseGuards(AuthGuard, RoleGuard)
+@Roles('OWNER', 'ADMIN')
 export class ChannelController {
   constructor(private readonly channelService: ChannelService) {}
 

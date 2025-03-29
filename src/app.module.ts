@@ -8,6 +8,7 @@ import { MentorModule } from './modules/mentor/mentor.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { RabbitmqModule } from './common/rabbitmq/rabbitmq.module';
 import { MessageModule } from './modules/message/message.module';
+import { AdminProfileModule } from './modules/adminProfile/admin-profile.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MessageModule } from './modules/message/message.module';
     ChatModule,
     RabbitmqModule,
     MessageModule,
+    AdminProfileModule,
   ],
   providers: [PrismaService],
   controllers: [],
