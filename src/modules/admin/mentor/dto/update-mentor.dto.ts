@@ -5,6 +5,8 @@ import {
   IsInt,
   IsBoolean,
   IsEnum,
+  IsObject,
+  Min,
 } from 'class-validator';
 import { GenderType } from '@prisma/client';
 
@@ -18,11 +20,17 @@ export class UpdateMentorDto {
   email?: string;
 
   @IsOptional()
-  @IsString()
-  expertise?: string;
+  @IsObject()
+  expertise?: Record<string, string>;
 
   @IsOptional()
-  availability?: string;
+  @IsInt()
+  @Min(1)
+  capacity?: number;
+
+  @IsOptional()
+  @IsObject()
+  availability?: Record<string, string[]>;
 
   @IsOptional()
   @IsInt()

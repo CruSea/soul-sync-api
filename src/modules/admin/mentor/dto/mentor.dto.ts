@@ -30,6 +30,9 @@ export class MentorDto {
   expertise?: any;
 
   @Expose()
+  capacity?: number;
+
+  @Expose()
   availability?: any;
 
   @Expose()
@@ -44,6 +47,7 @@ export class MentorDto {
       age: partial.age,
       location: partial.location,
       expertise: partial.expertise,
+      capacity: partial.capacity,
       availability: partial.availability,
       isActive: partial.isActive,
       user: partial.user ? new UserDto(partial.user) : null,
