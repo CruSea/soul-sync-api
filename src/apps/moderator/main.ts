@@ -13,7 +13,7 @@ async function bootstrap() {
         queueOptions: {
           durable: true,
           messageTtl: 60000,
-          deadLetterExchange: 'message',
+          deadLetterExchange: 'moderator',
           deadLetterRoutingKey: 'dead',
         },
         noAck: false,

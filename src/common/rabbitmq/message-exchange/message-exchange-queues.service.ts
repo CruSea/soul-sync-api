@@ -27,7 +27,7 @@ export class MessageExchangeQueuesService {
         await this.channel.assertQueue(queueName, {
           durable: true,
           messageTtl: 60000,
-          deadLetterExchange: 'message',
+          deadLetterExchange: routingKey,
           deadLetterRoutingKey: 'dead',
         });
         await this.channel.bindQueue(queueName, exchangeName, routingKey);
