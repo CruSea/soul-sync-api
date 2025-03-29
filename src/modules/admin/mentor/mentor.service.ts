@@ -107,13 +107,17 @@ export class MentorService {
     return new MentorDto({ ...mentor, user: { ...user } });
   }
 
-  async update(id: string, updateMentor: UpdateMentorDto): Promise<MentorDto> {
+  async update(
+    id: string,
+    updateMentor: UpdateMentorDto,
+    getMentor: GetMentorDto,
+  ): Promise<MentorDto> {
     if (!id) {
       throw new Error('Mentor ID is required for update.');
     }
 
     const mentor = await this.prisma.mentor.findUnique({
-      where: { id: id },
+      where: { id: id, accountId: getMentor.accountId },
     });
 
     if (!mentor) {
@@ -155,9 +159,37 @@ export class MentorService {
     return new MentorDto({ ...updatedMentor, user: { ...updatedUser } });
   }
 
-  async delete(id: string): Promise<{ status: boolean }> {
-    const mentor = await this.prisma.mentor.update({
+  async toggleMentorStatus(
+    id: string,
+    getMentor: GetMentorDto,
+  ): Promise<MentorDto> {
+    const mentor = await this.prisma.mentor.findFirst({
+      where: {
+        id: id,
+        accountId: getMentor.accountId,
+        deletedAt: null,
+      },
+    });
+
+    if (!mentor) {
+      throw new NotFoundException('Mentor not found for this account');
+    }
+
+    // Toggle the isActive field
+    const updatedMentor = await this.prisma.mentor.update({
       where: { id: id },
+      data: { isActive: !mentor.isActive },
+    });
+
+    return new MentorDto({ ...updatedMentor });
+  }
+
+  async delete(
+    id: string,
+    getMentor: GetMentorDto,
+  ): Promise<{ status: boolean }> {
+    const mentor = await this.prisma.mentor.update({
+      where: { id: id, accountId: getMentor.accountId },
       data: { deletedAt: new Date() },
     });
 
