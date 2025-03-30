@@ -20,11 +20,11 @@ export class ModeratorService {
     });
   }
 
-  async handleMessage(message: any, context: RmqContext) {
+  async handleMessage(data: any, context: RmqContext) {
     const channel = context.getChannelRef();
     const orgMsg = context.getMessage();
     try {
-      console.log({ message: message, context: context });
+      const message = typeof data == 'string' ? JSON.parse(data) : data;
 
       const conversationId =
         message.metadata.conversationId ??
@@ -33,6 +33,7 @@ export class ModeratorService {
             where: { address: message.metadata.address },
           })
         )?.id;
+      console.log(conversationId);
 
       const messageHistory = await this.prisma.message.findMany({
         where: {
