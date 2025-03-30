@@ -61,7 +61,7 @@ export class ModeratorService {
         metadata: {
           conversationId,
         },
-        payload: response,
+        payload: response.text,
       };
 
       const formattedData = await this.rabbitmqService.getChatEchangeData(chat);
