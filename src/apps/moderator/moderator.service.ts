@@ -33,7 +33,6 @@ export class ModeratorService {
             where: { address: message.metadata.address },
           })
         )?.id;
-      console.log(conversationId);
 
       const messageHistory = await this.prisma.message.findMany({
         where: {
