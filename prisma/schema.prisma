@@ -78,7 +78,7 @@ model Mentor {
   name         String
   email        String
   expertise    Json?
-  embedding    Unsupported("vector(768)")
+  embedding    Unsupported("vector(768)")?
   capacity     Int?    
   availability Json?
   age          Int?
@@ -101,7 +101,7 @@ model Conversation {
   address   String
   channelId String
   isActive  Boolean
-  embedding Unsupported("vector(768)")
+  embedding Unsupported("vector(768)")?
 
   Mentor  Mentor   @relation(fields: [mentorId], references: [id])
   Channel Channel  @relation(fields: [channelId], references: [id])
