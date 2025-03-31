@@ -10,6 +10,7 @@ export class EmbeddingService {
 
   public constructor(private readonly prisma: PrismaService) {
     this.embedding = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GOOGLE_GENAI_API_KEY,
       model: 'text-embedding-004',
     });
   }
