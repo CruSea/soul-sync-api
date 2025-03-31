@@ -67,8 +67,6 @@ export class ModeratorService {
         content: message.payload,
       });
 
-      console.log(messages);
-
       const response = await this.llm.invoke(messages);
       const chat: Chat = {
         type: 'CHAT',
