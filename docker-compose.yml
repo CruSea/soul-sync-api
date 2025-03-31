@@ -23,7 +23,7 @@ services:
       RABBITMQ_URL: amqp://user:password@rabbitmq:5672
 
   postgres:
-    image: postgres
+    image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
