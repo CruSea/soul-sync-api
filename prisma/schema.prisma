@@ -6,12 +6,14 @@
 
 generator client {
   provider      = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 enum RoleType {
@@ -76,6 +78,7 @@ model Mentor {
   name         String
   email        String
   expertise    Json?
+  embedding    Unsupported("vector(768)")
   capacity     Int?    
   availability Json?
   age          Int?
@@ -98,6 +101,7 @@ model Conversation {
   address   String
   channelId String
   isActive  Boolean
+  embedding Unsupported("vector(768)")
 
   Mentor  Mentor   @relation(fields: [mentorId], references: [id])
   Channel Channel  @relation(fields: [channelId], references: [id])
