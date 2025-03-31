@@ -5,7 +5,7 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import { ScoreThresholdRetriever } from 'langchain/retrievers/score_threshold';
 
 @Injectable()
-export default class EmbeddingService {
+export class EmbeddingService {
   private embedding: GoogleGenerativeAIEmbeddings;
 
   public constructor(private readonly prisma: PrismaService) {
