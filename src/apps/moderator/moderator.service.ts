@@ -46,6 +46,7 @@ export class ModeratorService {
           createdAt: 'asc',
         },
       });
+
       let messages: any[] = [];
 
       messages.push({
@@ -56,10 +57,17 @@ export class ModeratorService {
 
       messages = messageHistory.map(({ type, body }) => {
         return {
-          role: `${type === 'RECEIVED' ? 'assistant' : 'user'}`,
+          role: `${type === 'RECEIVED' ? 'user' : 'assistant'}`,
           content: body,
         };
       });
+
+      messages.push({
+        role: 'user',
+        content: message.payload,
+      });
+
+      console.log(messages);
 
       const response = await this.llm.invoke(messages);
       const chat: Chat = {
