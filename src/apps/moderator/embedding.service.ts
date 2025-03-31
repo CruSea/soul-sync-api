@@ -51,8 +51,7 @@ export class EmbeddingService {
       if (matchedMentors.length === 0) {
         return null;
       }
-      const matchedMentor = await retriever.invoke(summary);
-      return matchedMentor;
+      return matchedMentors;
     } catch (error) {
       console.log(error.message);
     }
