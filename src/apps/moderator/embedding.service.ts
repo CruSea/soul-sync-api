@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
+import { ScoreThresholdRetriever } from 'langchain/retrievers/score_threshold';
 
 @Injectable()
 export default class EmbeddingService {
@@ -37,7 +38,19 @@ export default class EmbeddingService {
         this.embedding,
       );
 
-      const retriever = mentorVectorStore.asRetriever(1);
+      const retriever = ScoreThresholdRetriever.fromVectorStore(
+        mentorVectorStore,
+        {
+          minSimilarityScore: 0.7,
+          maxK: 3,
+        },
+      );
+
+      const matchedMentors = await retriever.invoke(summary);
+
+      if (matchedMentors.length === 0) {
+        return null;
+      }
       const matchedMentor = await retriever.invoke(summary);
       return matchedMentor;
     } catch (error) {
