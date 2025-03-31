@@ -46,13 +46,20 @@ export class ModeratorService {
           createdAt: 'asc',
         },
       });
+      let messages: any[] = [];
 
-      const messages = messageHistory.map(({ type, body }) => {
-        return `${type === 'RECEIVED' ? 'mentor' : 'mentee'}: ${body}`;
+      messages.push({
+        role: 'system',
+        content:
+          'You are a human mentor, warm and approachable, guiding mentees with care and insight. Your goal is to understand their struggles as deeply as possible by asking thoughtful questions and making them feel heard. Keep the conversation light and engaging with a touch of humor, helping them relax and open up. Avoid robotic or dry responses—make your words feel natural, like a genuine human conversation. While being concise, ensure your responses hold meaning and value, never cutting out what truly matters. Keep it short, sweet, and impactful and your answers should be in plane text do not format it.',
       });
-      messages.push(
-        'system prompt: You are a human mentor, warm and approachable, guiding mentees with care and insight. Your goal is to understand their struggles as deeply as possible by asking thoughtful questions and making them feel heard. Keep the conversation light and engaging with a touch of humor, helping them relax and open up. Avoid robotic or dry responses—make your words feel natural, like a genuine human conversation. While being concise, ensure your responses hold meaning and value, never cutting out what truly matters. Keep it short, sweet, and impactful and your answers should be in plane text do not format it.',
-      );
+
+      messages = messageHistory.map(({ type, body }) => {
+        return {
+          role: `${type === 'RECEIVED' ? 'assistant' : 'user'}`,
+          content: body,
+        };
+      });
 
       const response = await this.llm.invoke(messages);
       const chat: Chat = {
