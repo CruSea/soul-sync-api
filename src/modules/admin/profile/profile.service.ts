@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { AdminDto } from './dto/profile.dto';
+import { ProfileDto } from './dto/profile.dto';
 import { UpdateAdminProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class ProfileService {
   constructor(private prisma: PrismaService) {}
 
-  async findOne(userId: string, accountId: string): Promise<AdminDto> {
+  async findOne(userId: string, accountId: string): Promise<ProfileDto> {
     const admin = await this.prisma.user.findFirst({
       where: {
         id: userId,
@@ -30,7 +30,7 @@ export class ProfileService {
       (au) => au.accountId === accountId,
     );
 
-    return new AdminDto({
+    return new ProfileDto({
       id: admin.id,
       name: admin.name,
       email: admin.email,
@@ -41,7 +41,7 @@ export class ProfileService {
   async update(
     id: string,
     updateAdminProfileDto: UpdateAdminProfileDto,
-  ): Promise<AdminDto> {
+  ): Promise<ProfileDto> {
     console.log('Updating admin with ID:', id);
 
     const existingAdmin = await this.prisma.user.findFirst({
@@ -64,10 +64,10 @@ export class ProfileService {
 
     console.log('Updated admin:', updatedAdmin);
 
-    return new AdminDto({ ...updatedAdmin });
+    return new ProfileDto({ ...updatedAdmin });
   }
 
-  async findAll(accountId: string): Promise<AdminDto[]> {
+  async findAll(accountId: string): Promise<ProfileDto[]> {
     const admins = await this.prisma.user.findMany({
       where: {
         deletedAt: null,
@@ -110,7 +110,7 @@ export class ProfileService {
         (au) => au.accountId === accountId,
       );
 
-      return new AdminDto({
+      return new ProfileDto({
         id: admin.id,
         name: admin.name,
         email: admin.email,
@@ -122,7 +122,7 @@ export class ProfileService {
   async toggleActiveStatus(
     accountId: string,
     userId: string,
-  ): Promise<AdminDto> {
+  ): Promise<ProfileDto> {
     const accountUser = await this.prisma.accountUser.findFirst({
       where: {
         accountId: accountId,
@@ -157,7 +157,7 @@ export class ProfileService {
       throw new NotFoundException('User not found');
     }
 
-    return new AdminDto({
+    return new ProfileDto({
       id: updatedUser.id,
       name: updatedUser.name,
       email: updatedUser.email,
