@@ -8,7 +8,7 @@ import { MentorModule } from './modules/mentor/mentor.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { RabbitmqModule } from './common/rabbitmq/rabbitmq.module';
 import { MessageModule } from './modules/message/message.module';
-import { AdminProfileModule } from './modules/admin/adminProfile/admin-profile.module';
+import { ProfileModule } from './modules/admin/profile/profile.module';
 import { RoleModule } from './modules/admin/role/role.module';
 
 @Module({
@@ -27,7 +27,7 @@ import { RoleModule } from './modules/admin/role/role.module';
     ChatModule,
     RabbitmqModule,
     MessageModule,
-    AdminProfileModule,
+    ProfileModule,
     RoleModule,
   ],
   providers: [PrismaService],
