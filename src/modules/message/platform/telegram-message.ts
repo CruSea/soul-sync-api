@@ -17,7 +17,22 @@ export class TelegramMessageStrategy implements MessageStrategy {
     const data = JSON.stringify(
       await this.rabbitmqService.getMessageEchangeData(formattedMessage),
     );
-    this.messageExchangeService.send('message', data);
+    if (!formattedMessage.conversationId) {
+      await this.messageExchangeService.send('moderator', data);
+    } else {
+      const mentor = await this.prisma.mentor.findFirst({
+        where: {
+          Conversation: {
+            some: {
+              id: formattedMessage.conversationId,
+            },
+          },
+        },
+      });
+      mentor.isBot
+        ? await this.messageExchangeService.send('moderator', data)
+        : await this.messageExchangeService.send('message', data);
+    }
 
     return 'ok';
   }
