@@ -1,5 +1,3 @@
-// src/posts/dto/post.dto.ts
-
 import { Expose } from 'class-transformer';
 
 export class ProfileDto {
