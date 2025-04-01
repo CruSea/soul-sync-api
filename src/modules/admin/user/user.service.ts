@@ -91,7 +91,10 @@ export class UserService {
       AccountUser: {
         some: {
           accountId: accountId,
-          ...(roleId ? { roleId: roleId } : {}),
+          OR: [
+            { Role: { name: 'Owner' } },
+            ...(roleId ? [{ roleId: roleId }] : []),
+          ],
         },
       },
     };
