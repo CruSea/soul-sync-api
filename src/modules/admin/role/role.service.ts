@@ -17,6 +17,6 @@ export class RoleService {
         accountId: true,
       },
     });
-    return roles.map(role => new RoleDto(role));
+    return roles.map((role) => new RoleDto(role));
   }
 }
