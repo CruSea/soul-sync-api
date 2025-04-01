@@ -14,18 +14,20 @@ export class UserDto {
   imageUrl: string;
 
   @Expose()
+  role?: string;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()
   updatedAt: Date;
-
-  roles?: string[];
 
   constructor(partial: Partial<UserDto>) {
     this.id = partial.id;
     this.name = partial.name;
     this.email = partial.email;
     this.imageUrl = partial.imageUrl;
+    this.role = partial.role;
     this.createdAt = partial.createdAt;
     this.updatedAt = partial.updatedAt;
   }

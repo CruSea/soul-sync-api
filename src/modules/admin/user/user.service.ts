@@ -1,4 +1,4 @@
-import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
+import { Inject, ForbiddenException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
@@ -6,8 +6,9 @@ import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from 'src/modules/auth/auth.service';
-
-@Injectable()
+import { paginate } from 'src/common/helpers/pagination';
+import { User, AccountUser, Role } from '@prisma/client'; // Assuming User is from Prisma model@Injectable()
+import { GetAllUsersQueryDto } from './dto/get-all-users-query.dto';
 export class UserService {
   constructor(
     @Inject(REQUEST) private readonly request: any,
@@ -81,18 +82,60 @@ export class UserService {
     return new UserDto(userData);
   }
 
-  async findAllUsers(accountId: string) {
+  async findAllUsers(query: GetAllUsersQueryDto) {
+    const { accountId, roleId, page, limit } = query;
+
     await this.validateAccountAccess(accountId);
 
-    return this.prisma.user.findMany({
-      where: {
-        AccountUser: {
-          some: {
-            accountId: accountId,
-          },
+    const whereCondition = {
+      AccountUser: {
+        some: {
+          accountId: accountId,
+          ...(roleId ? { roleId: roleId } : {}),
         },
       },
-    });
+    };
+
+    const includeCondition = {
+      AccountUser: {
+        include: {
+          Role: true,
+        },
+      },
+    };
+
+    const { data, meta } = await paginate<User>(
+      this.prisma,
+      this.prisma.user,
+      whereCondition,
+      page,
+      limit,
+      includeCondition,
+    );
+
+    const users = data.map(
+      (user: User & { AccountUser: (AccountUser & { Role: Role })[] }) => {
+        const role =
+          user.AccountUser.length > 0 && user.AccountUser[0].Role
+            ? user.AccountUser[0].Role.name
+            : '';
+
+        return new UserDto({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          imageUrl: user.imageUrl,
+          role: role,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        });
+      },
+    );
+
+    return {
+      data: users,
+      meta: meta,
+    };
   }
 
   async updateUser(
@@ -156,5 +199,28 @@ export class UserService {
     }
 
     return account;
+  }
+
+  async toggleActiveStatus(userId: string, accountId: string) {
+    const accountUser = await this.prisma.accountUser.findFirst({
+      where: {
+        accountId: accountId,
+        userId: userId,
+      },
+    });
+
+    const updatedStatus = await this.prisma.accountUser.update({
+      where: {
+        id: accountUser.id,
+      },
+      data: {
+        isActive: !accountUser.isActive,
+      },
+    });
+
+    return {
+      message: updatedStatus.isActive ? 'Activated' : 'Deactivated',
+      isActive: updatedStatus.isActive,
+    };
   }
 }
