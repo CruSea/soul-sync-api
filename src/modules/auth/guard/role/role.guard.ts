@@ -37,7 +37,7 @@ export class RoleGuard implements CanActivate {
 
     const activeAccountIds = activeAccounts.map((account) => account.accountId);
 
-    const hasActiveAccount = user.accounts.some((account) =>
+    const hasActiveAccount = user.accounts.filter((account) =>
       activeAccountIds.includes(account.id),
     );
 
