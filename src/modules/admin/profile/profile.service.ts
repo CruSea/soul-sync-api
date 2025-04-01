@@ -12,6 +12,14 @@ export class ProfileService {
       where: {
         id: userId,
         deletedAt: null,
+        AccountUser: {
+          some: {
+            accountId: accountId,
+            Role: {
+              name: 'Admin',
+            },
+          },
+        },
       },
       include: {
         AccountUser: {
