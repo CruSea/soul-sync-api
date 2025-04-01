@@ -1,8 +1,9 @@
 // src/posts/dto/post.dto.ts
 
+import { ro } from '@faker-js/faker/.';
 import { Expose } from 'class-transformer';
 
-export class AdminDto {
+export class ProfileDto {
   @Expose()
   id: string;
 
@@ -19,14 +20,15 @@ export class AdminDto {
   AccountUser: any;
 
   @Expose()
-  roleName: string; // Add the roleName field
+  role: string; // Add the roleName field
 
-  constructor(partial: Partial<AdminDto>) {
+  constructor(partial: Partial<ProfileDto>) {
     // console.log('partial', partial);
     Object.assign(this, {
       id: partial.id,
       name: partial.name,
       email: partial.email,
+      //role: partial.AccountUser.Role.name,
       isActive: partial.isActive,
       AccountUser: partial.AccountUser,
     });
