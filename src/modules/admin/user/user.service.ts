@@ -1,11 +1,14 @@
-import { Inject, ForbiddenException } from '@nestjs/common';
+import {
+  Inject,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { UserDto } from './dto/user.dto';
 import { REQUEST } from '@nestjs/core';
-import * as bcrypt from 'bcryptjs';
-import { AuthService } from 'src/modules/auth/auth.service';
 import { paginate } from 'src/common/helpers/pagination';
 import { User, AccountUser, Role } from '@prisma/client'; // Assuming User is from Prisma model@Injectable()
 import { GetAllUsersQueryDto } from './dto/get-all-users-query.dto';
@@ -14,6 +17,7 @@ export class UserService {
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
   ) {}
+
   async create(createUserDto: CreateUserDto) {
     const account = await this.prisma.account.findUnique({
       where: { id: createUserDto.accountId },
@@ -25,24 +29,54 @@ export class UserService {
 
     await this.validateAccountAccess(createUserDto.accountId);
 
+    const role = await this.prisma.role.findFirst({
+      where: {
+        id: createUserDto.roleId,
+      },
+    });
+
+    if (role?.name === 'Owner') {
+      throw new HttpException(
+        'You cannot create a user with owner role!',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
     const existingUser = await this.prisma.user.findUnique({
       where: { email: createUserDto.email },
     });
 
     if (existingUser) {
-      throw new Error('Email already in use');
-    }
+      const existingRelation = await this.prisma.accountUser.findFirst({
+        where: {
+          userId: existingUser.id,
+          accountId: createUserDto.accountId,
+        },
+      });
 
-    const hashedPassword = await bcrypt.hash(
-      createUserDto.password,
-      AuthService.saltRounds,
-    );
+      if (existingRelation) {
+        throw new HttpException(
+          'The user already exists in your organization!',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      await this.prisma.accountUser.create({
+        data: {
+          userId: existingUser.id,
+          accountId: createUserDto.accountId,
+          roleId: createUserDto.roleId,
+        },
+      });
+
+      return { message: 'User added to the organization successfully!' }; // Stop here
+    }
 
     const userData = await this.prisma.user.create({
       data: {
         name: createUserDto.name,
         email: createUserDto.email,
-        password: hashedPassword,
+        password: '',
         AccountUser: {
           create: {
             accountId: createUserDto.accountId,
@@ -89,13 +123,16 @@ export class UserService {
 
     const whereCondition = {
       AccountUser: {
-        some: {
-          accountId: accountId,
-          OR: [
-            { Role: { name: 'Owner' } },
-            ...(roleId ? [{ roleId: roleId }] : []),
-          ],
-        },
+        some: roleId
+          ? {
+              accountId: accountId,
+              deletedAt: null,
+              OR: [{ Role: { name: 'Owner' } }, { roleId: roleId }],
+            }
+          : {
+              accountId: accountId,
+              deletedAt: null,
+            },
       },
     };
 
@@ -123,12 +160,15 @@ export class UserService {
             ? user.AccountUser[0].Role.name
             : '';
 
+        const isActive = user.AccountUser[0].isActive;
+
         return new UserDto({
           id: user.id,
           name: user.name,
           email: user.email,
           imageUrl: user.imageUrl,
           role: role,
+          status: isActive,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         });
@@ -169,6 +209,7 @@ export class UserService {
       include: { AccountUser: true },
     });
 
+
     if (!userToDelete) {
       throw new Error('User not found or you do not have access.');
     }
@@ -176,10 +217,11 @@ export class UserService {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
+        deletedAt: new Date(),
         AccountUser: {
           updateMany: {
             where: { accountId },
-            data: { deletedAt: Date() },
+            data: { deletedAt: new Date() },
           },
         },
       },

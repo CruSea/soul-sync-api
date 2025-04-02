@@ -17,6 +17,9 @@ export class UserDto {
   role?: string;
 
   @Expose()
+  status?: boolean;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()
@@ -28,6 +31,7 @@ export class UserDto {
     this.email = partial.email;
     this.imageUrl = partial.imageUrl;
     this.role = partial.role;
+    this.status = partial.status;
     this.createdAt = partial.createdAt;
     this.updatedAt = partial.updatedAt;
   }

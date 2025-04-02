@@ -6,11 +6,8 @@ import { RoleDto } from './dto/role.dto';
 export class RoleService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(accountId: string): Promise<RoleDto[]> {
+  async findAll(): Promise<RoleDto[]> {
     const roles = await this.prisma.role.findMany({
-      where: {
-        accountId: accountId,
-      },
       select: {
         id: true,
         name: true,
