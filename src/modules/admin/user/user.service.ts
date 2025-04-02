@@ -209,7 +209,6 @@ export class UserService {
       include: { AccountUser: true },
     });
 
-
     if (!userToDelete) {
       throw new Error('User not found or you do not have access.');
     }
