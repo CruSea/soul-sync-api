@@ -31,7 +31,11 @@ export class AuthGuard implements CanActivate {
 
       const user = await this.jwtService.verifyAsync(token, options);
 
-      request.user = user;
+      request.user = {
+        ...user,
+        id: user.sub,
+      };
+
       return true;
     } catch (error) {
       console.error(`AuthGuard Error: ${error.message}`);
