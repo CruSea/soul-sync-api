@@ -251,7 +251,17 @@ export class UserService {
         accountId: accountId,
         userId: userId,
       },
+      include: {
+        Role: true,
+      },
     });
+
+    if (accountUser.Role.name === 'Owner') {
+      throw new HttpException(
+        'You can not deactivate your own account!',
+        HttpStatus.CONFLICT,
+      );
+    }
 
     const updatedStatus = await this.prisma.accountUser.update({
       where: {
