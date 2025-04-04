@@ -18,6 +18,11 @@ async function seedBatchOne() {
         type: RoleType.MENTOR,
         isDefault: true,
       },
+      {
+        name: 'Admin',
+        type: RoleType.ADMIN,
+        isDefault: true,
+      },
     ],
     skipDuplicates: true, // Prevent duplicate seeding
   });

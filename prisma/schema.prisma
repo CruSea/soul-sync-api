@@ -60,6 +60,7 @@ model AccountUser {
   userId    String
   roleId    String
   accountId String
+  isActive Boolean @default(true)
 
   deletedAt DateTime?
   createdAt DateTime  @default(now())
