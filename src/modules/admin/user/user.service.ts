@@ -117,7 +117,8 @@ export class UserService {
   }
 
   async findAllUsers(query: GetAllUsersQueryDto) {
-    const { accountId, roleId, page, limit } = query;
+    const { accountId, roleId, page, limit, isActive } = query;
+    console.log('Is active value', isActive);
 
     await this.validateAccountAccess(accountId);
 
@@ -126,11 +127,13 @@ export class UserService {
         some: roleId
           ? {
               accountId: accountId,
+              isActive: isActive !== undefined ? isActive : undefined,
               deletedAt: null,
               OR: [{ Role: { name: 'Owner' } }, { roleId: roleId }],
             }
           : {
               accountId: accountId,
+              isActive: isActive !== undefined ? isActive : undefined,
               deletedAt: null,
             },
       },
