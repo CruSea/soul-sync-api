@@ -2,10 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { REQUEST } from '@nestjs/core';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { RoleType } from '@prisma/client';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginate } from 'src/common/helpers/pagination';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { paginate } from '../../../common/helpers/pagination';
 
 @Injectable()
 export class AccountService {
