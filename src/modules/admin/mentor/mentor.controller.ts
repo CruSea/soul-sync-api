@@ -9,6 +9,7 @@ import {
   Patch,
   Delete,
   ValidationPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import { MentorService } from './mentor.service';
 import { Roles } from 'src/modules/auth/auth.decorator';
@@ -17,6 +18,7 @@ import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
 import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
+import { MentorDto } from './dto/mentor.dto';
 
 @Controller('admin/mentor')
 @UseGuards(AuthGuard, RoleGuard)
@@ -32,7 +34,17 @@ export class MentorController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id, @Query() getMentor: GetMentorDto) {
+  async findOne(
+    @Param('id', new ValidationPipe({ transform: true })) id: string,
+    @Query(new ValidationPipe({ transform: true })) getMentor: GetMentorDto,
+  ): Promise<MentorDto> {
+    const mentorExists = await this.mentorService.findByIdAndAccount(
+      id,
+      getMentor.accountId,
+    );
+    if (!mentorExists) {
+      throw new NotFoundException('Mentor not found for this account');
+    }
     return this.mentorService.findOne(id, getMentor);
   }
 
@@ -43,23 +55,32 @@ export class MentorController {
 
   @Patch(':id')
   async update(
-    @Param('id') id,
+    @Param('id', new ValidationPipe({ transform: true })) id: string,
     @Body() updateMentor: UpdateMentorDto,
     @Query() getMentor: GetMentorDto,
-  ) {
+  ): Promise<MentorDto> {
+    const mentorExists = await this.mentorService.findByIdAndAccount(
+      id,
+      getMentor.accountId,
+    );
+    if (!mentorExists) {
+      throw new NotFoundException('Mentor not found for this account');
+    }
     return this.mentorService.update(id, updateMentor, getMentor);
   }
 
-  @Patch(':id/toggle-status')
-  async toggleMentorStatus(
-    @Param('id') id: string,
+  @Delete(':id')
+  async delete(
+    @Param('id', new ValidationPipe({ transform: true })) id: string,
     @Query() getMentor: GetMentorDto,
   ) {
-    return this.mentorService.toggleMentorStatus(id, getMentor);
-  }
-
-  @Delete(':id')
-  async delete(@Param('id') id: string, @Query() getMentor: GetMentorDto) {
+    const mentorExists = await this.mentorService.findByIdAndAccount(
+      id,
+      getMentor.accountId,
+    );
+    if (!mentorExists) {
+      throw new NotFoundException('Mentor not found for this account');
+    }
     return this.mentorService.delete(id, getMentor);
   }
 }
