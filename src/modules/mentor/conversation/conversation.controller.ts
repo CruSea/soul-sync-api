@@ -1,4 +1,13 @@
-import { Controller, Get, Body, Patch, Param, Delete, ValidationPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ValidationPipe,
+  Query,
+} from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 
@@ -29,5 +38,13 @@ export class ConversationController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.conversationService.remove(id);
+  }
+
+  @Patch(':conversationId/:mentorId')
+  changeMentor(
+    @Param('conversationId') conversationId: string,
+    @Param('mentorId') mentorId: string,
+  ) {
+    return this.conversationService.changeMentor(conversationId, mentorId);
   }
 }

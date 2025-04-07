@@ -10,9 +10,7 @@ import { GetConversationDto } from './dto/get-conversation.dto';
 export class ConversationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(
-    query: Record<string, any>,
-  ){
+  async findAll(query: Record<string, any>) {
     const getConversationDto = new GetConversationDto();
     getConversationDto.accountId = query.accountId;
 
@@ -50,7 +48,7 @@ export class ConversationService {
       mentorName: conversation.Mentor?.name,
       conversationId: conversation.id,
       platform: conversation.Channel?.type,
-      channelName: conversation.Channel?.name
+      channelName: conversation.Channel?.name,
     }));
 
     return {
@@ -95,5 +93,22 @@ export class ConversationService {
 
   remove(id: string) {
     return this.prisma.conversation.delete({ where: { id: id } });
+  }
+
+  async changeMentor(conversationId: string, mentorId: string) {
+    const conversation = await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        mentorId: mentorId,
+      },
+      include: {
+        Mentor: true,
+      },
+    });
+
+    return {
+      mentorName: conversation.Mentor.name,
+      message: 'Mentor updated successfully!',
+    };
   }
 }
