@@ -15,20 +15,26 @@ export class EmbeddingService {
     });
   }
 
-  async handleEmbedding(conversationId: string, summary: string) {
+  async handleEmbedding(topic: string, conversationId: string) {
     try {
       const mentors = await this.prisma.mentor.findMany({
         where: {
-          Conversation:{
-            some: {
-              id: conversationId
-            }
-          }
+          accountId: {
+            equals: (
+              await this.prisma.conversation.findUnique({
+                where: { id: conversationId },
+                select: { Mentor: { select: { accountId: true } } },
+              })
+            )?.Mentor.accountId,
+          },
+          isBot: false
         },
       });
 
       const mentorDocuments: any[] = mentors.map((mentor) => ({
-        pageContent: mentor.expertise,
+        pageContent: Array.isArray(mentor.expertise)
+          ? mentor.expertise.join(' ') 
+          : mentor.expertise, 
         metadata: { mentorId: mentor.id },
       }));
 
@@ -40,19 +46,18 @@ export class EmbeddingService {
       const retriever = ScoreThresholdRetriever.fromVectorStore(
         mentorVectorStore,
         {
-          minSimilarityScore: 0.7,
+          minSimilarityScore: 0.1,
           maxK: 3,
         },
       );
-
-      const matchedMentors = await retriever.invoke(summary);
+      const matchedMentors = await retriever.invoke(topic);
 
       if (matchedMentors.length === 0) {
         return null;
       }
       return matchedMentors;
     } catch (error) {
-      console.log(error.message);
+      console.log({"error: ":error.message});
     }
   }
 }
