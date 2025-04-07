@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, ValidationPipe, Query } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 
@@ -7,8 +7,10 @@ export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
   @Get()
-  findAll() {
-    return this.conversationService.findAll();
+  findAll(
+    @Query(new ValidationPipe({ transform: true })) query: Record<string, any>,
+  ) {
+    return this.conversationService.findAll(query);
   }
 
   @Get(':id')
