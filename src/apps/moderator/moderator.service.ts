@@ -10,6 +10,7 @@ import { EmbeddingService } from './embedding.service';
 @Injectable()
 export class ModeratorService {
   private llm: ChatGoogleGenerativeAI;
+  private conversationId;
   public constructor(
     private prisma: PrismaService,
     private chatExchangeService: ChatExchangeService,
@@ -29,7 +30,7 @@ export class ModeratorService {
     try {
       const message = typeof data == 'string' ? JSON.parse(data) : data;
 
-      let conversationId =
+      this.conversationId =
         message.metadata.conversationId ??
         (
           await this.prisma.conversation.findFirst({
@@ -41,7 +42,7 @@ export class ModeratorService {
         where: {
           Threads: {
             some: {
-              conversationId,
+              conversationId: this.conversationId,
             },
           },
         },
@@ -98,10 +99,7 @@ export class ModeratorService {
 
       const aiMessage = await this.llm.invoke(messages);
       let response: any = aiMessage.text;
-      console.log(response);
-      console.log(response == 'done');
       if (response.trim().toLowerCase() === 'done') {
-        console.log('response == done');
         messages[0] = {
           role: 'system',
           content: `You are a data extractor for a mentorship platform called LeyuChat.
@@ -138,30 +136,35 @@ export class ModeratorService {
             You must behave like a raw data extractor function. Your ONLY response should be a single-line JSON as shown above. Nothing more.`,
         };
         const summary = await this.llm.invoke(messages);
-        response = summary.text;
-      }
-      const mentor = await this.embeddingService.handleEmbedding(
-        response.topic,
-        conversationId,
-      );
-      if (mentor) {
-        const conversation = await this.prisma.conversation.update({
-          where: { id: conversationId },
-          data: { isActive: false },
-        });
+        response = JSON.parse(summary.text);
+        const mentor = await this.embeddingService.handleEmbedding(
+          response.topic,
+          this.conversationId,
+        );
+        if (mentor) {
+          const conversation = await this.prisma.conversation.update({
+            where: { id: this.conversationId },
+            data: { isActive: false },
+            select: { address: true, channelId: true },
+          });
 
-        conversationId = (await this.prisma.conversation.create({
-          data: {
-            mentorId: mentor[0].id,
-            ...conversation,
-          },
-        })).id;
-        response = "I've matched you with a mentor that best fits you, I wish you all the best";
+          this.conversationId = (
+            await this.prisma.conversation.create({
+              data: {
+                mentorId: mentor[0].metadata.mentorId,
+                ...conversation,
+                isActive: true,
+              },
+            })
+          ).id;
+          response =
+            "I've matched you with a mentor that best fits you, I wish you all the best";
+        }
       }
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
-          conversationId,
+          conversationId: this.conversationId,
         },
         payload: response,
       };
