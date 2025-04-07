@@ -54,8 +54,8 @@ export class ModeratorService {
 
       messages = [
         {
-        role: 'system',
-        content: `prompt: You are a data collection agent** for the LeyuChat platform.
+          role: 'system',
+          content: `prompt: You are a data collection agent for the LeyuChat platform.
           DO NOT act like a chatbot.
           You are to EXTRACT only two pieces of information
           1. The TOPIC the mentee seeks mentorship on.
@@ -96,18 +96,82 @@ export class ModeratorService {
         },
       ];
 
-      const response = await this.llm.invoke(messages);
+      const aiMessage = await this.llm.invoke(messages);
+      let response = aiMessage.text;
+      console.log(response);
+      console.log(response == 'done');
+      if (response.trim().toLowerCase() === 'done') {
+        console.log('response == done');
+        messages[0] = {
+          role: 'system',
+          content: `You are a data extractor bot on a mentorship platform called LeyuChat.
 
+          Your role is NOT to chat. You are not a chatbot or assistant.  
+          You are a function that **reads message history** and extracts exactly two fields:
+
+          1. "topic"  what the mentee wants mentorship on  
+          2. "time" when the mentee is available for mentorship
+
+          Your job is to output a JSON object with the following format ONLY:
+
+          {
+            "topic": "<topic here>",
+            "time": "<time here>"
+          }
+
+            VERY IMPORTANT RULES 
+
+          - You MUST return ONLY the JSON object. No greetings, no explanations, no markdown, no bullet points.
+          - Your response MUST be valid JSON. No extra characters, comments, or text.
+          - If the topic or time is not found, use "null" for that field.
+          - All values must be plain strings. Do not infer or expand.
+          - Do NOT generate or suggest answers. Only extract what is clearly mentioned.
+          - Do NOT say “I think” or give any interpretation.
+          - Do NOT add any formatting, whitespace, or explanation before or after the JSON.
+          - Do NOT use any response longer than 40 tokens.
+          - You MUST follow this format even if the input seems incomplete.
+
+            Examples:
+
+          Example 1 (complete info found):
+          User: I want a mentor for marketing on weekends  
+          Output:  
+          {
+            "topic": "marketing",
+            "time": "weekends"
+          }
+
+          Example 2 (partial info found):  
+          User: I need help with frontend development  
+          Output:  
+          {
+            "topic": "frontend development",
+            "time": null
+          }
+
+          Example 3 (neither found):
+          User: hello  
+          Output:  
+          {
+            "topic": null,
+            "time": null
+          }
+
+          You must behave as a structured, robotic extractor that reads messages and outputs structured JSON only. Do Not add any formatting for text editors. Follow this format strictly.`,
+        };
+        const summary = await this.llm.invoke(messages);
+        response = summary.text;
+      }
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
           conversationId,
         },
-        payload: response.text,
+        payload: response,
       };
 
       const formattedData = await this.rabbitmqService.getChatEchangeData(chat);
-      this.chatExchangeService.send('chat', formattedData);
+      await this.chatExchangeService.send('chat', formattedData);
       channel.ack(orgMsg);
     } catch (error) {
       console.log(error.message);
