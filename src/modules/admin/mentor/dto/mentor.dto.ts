@@ -1,15 +1,8 @@
-// src/posts/dto/post.dto.ts
-
-import { Expose, Type } from 'class-transformer';
-import { UserDto } from 'src/modules/admin/user/dto/user.dto';
+import { Expose } from 'class-transformer';
 
 export class MentorDto {
   @Expose()
   id: string;
-
-  @Expose()
-  @Type(() => UserDto)
-  user?: UserDto;
 
   @Expose()
   name: string;
@@ -50,7 +43,6 @@ export class MentorDto {
       capacity: partial.capacity,
       availability: partial.availability,
       isActive: partial.isActive,
-      user: partial.user ? new UserDto(partial.user) : null,
     });
   }
 }
