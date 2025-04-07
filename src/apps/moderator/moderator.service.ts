@@ -97,7 +97,7 @@ export class ModeratorService {
       ];
 
       const aiMessage = await this.llm.invoke(messages);
-      let response = aiMessage.text;
+      let response: any = aiMessage.text;
       console.log(response);
       console.log(response == 'done');
       if (response.trim().toLowerCase() === 'done') {
@@ -140,6 +140,10 @@ export class ModeratorService {
         const summary = await this.llm.invoke(messages);
         response = summary.text;
       }
+      const mentor = await this.embeddingService.handleEmbedding(
+        response.topic,
+        conversationId
+      );
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
