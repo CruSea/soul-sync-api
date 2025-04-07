@@ -15,17 +15,15 @@ export class EmbeddingService {
     });
   }
 
-  async handleEmbedding(channelId: string, summary: string) {
+  async handleEmbedding(conversationId: string, summary: string) {
     try {
       const mentors = await this.prisma.mentor.findMany({
         where: {
-          Conversation: {
+          Conversation:{
             some: {
-              Channel: {
-                id: channelId,
-              },
-            },
-          },
+              id: conversationId
+            }
+          }
         },
       });
 
