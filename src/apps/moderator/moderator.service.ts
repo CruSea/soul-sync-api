@@ -29,7 +29,7 @@ export class ModeratorService {
     try {
       const message = typeof data == 'string' ? JSON.parse(data) : data;
 
-      const conversationId =
+      let conversationId =
         message.metadata.conversationId ??
         (
           await this.prisma.conversation.findFirst({
@@ -142,8 +142,22 @@ export class ModeratorService {
       }
       const mentor = await this.embeddingService.handleEmbedding(
         response.topic,
-        conversationId
+        conversationId,
       );
+      if (mentor) {
+        const conversation = await this.prisma.conversation.update({
+          where: { id: conversationId },
+          data: { isActive: false },
+        });
+
+        conversationId = (await this.prisma.conversation.create({
+          data: {
+            mentorId: mentor[0].id,
+            ...conversation,
+          },
+        })).id;
+        response = "I've matched you with a mentor that best fits you, I wish you all the best";
+      }
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
