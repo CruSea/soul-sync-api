@@ -6,12 +6,17 @@ import { ChatExchangeService } from '../../common/rabbitmq/chat-exchange/chat-ex
 import { RabbitmqService } from '../../common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { EmbeddingService } from './embedding.service';
+import { MODERATOR_MAIN_PROMPT, MODERATOR_EXTRACTION_PROMPT } from './prompt';
+import { waitForConversationToBeCreated } from 'src/common/helpers/waitForConversation';
+import { RedisService } from 'src/common/redis/redis.service';
 
 @Injectable()
 export class ModeratorService {
   private llm: ChatGoogleGenerativeAI;
+
   public constructor(
     private prisma: PrismaService,
+    private redis: RedisService,
     private chatExchangeService: ChatExchangeService,
     private rabbitmqService: RabbitmqService,
     private readonly embeddingService: EmbeddingService,
@@ -26,65 +31,47 @@ export class ModeratorService {
   async handleMessage(data: any, context: RmqContext) {
     const channel = context.getChannelRef();
     const orgMsg = context.getMessage();
+
     try {
       const message = typeof data == 'string' ? JSON.parse(data) : data;
 
       let conversationId =
         message.metadata.conversationId ??
-        (
-          await this.prisma.conversation.findFirst({
-            where: { address: message.metadata.address, isActive: true },
-          })
-        )?.id;
+        (await waitForConversationToBeCreated(
+          this.prisma,
+          message.metadata.address,
+        ));
 
-      const messageHistory = await this.prisma.message.findMany({
-        where: {
-          Threads: {
-            some: {
-              conversationId,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
+      if (!conversationId) {
+        throw new Error('Conversation not found after retries.');
+      }
+
+      const cacheKey = `message_history:${conversationId}`;
+
+      let messageHistory: any[] = JSON.parse(await this.redis.get(cacheKey));
+
+      if (!messageHistory) {
+        messageHistory = await this.prisma.message.findMany({
+          where: { Threads: { some: { conversationId } } },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        await this.redis.set(cacheKey, JSON.stringify(messageHistory), 1200);
+      }
+
+      messageHistory.push({
+        type: 'RECEIVED',
+        body: message.payload,
       });
+
+      await this.redis.set(cacheKey, JSON.stringify(messageHistory), 1200);
 
       let messages: any[] = [];
 
       messages = [
         {
           role: 'system',
-          content: `prompt: You are a data collection agent for the LeyuChat platform.
-          DO NOT act like a chatbot.
-          You are to EXTRACT only two pieces of information
-          1. The TOPIC the mentee seeks mentorship on.
-          2. The TIME they are available for mentorship.
-
-          Instructions:
-          1. Do NOT GREET!, ask for personal details, or provide opinions.
-          2. Ask only what is needed to collect the TOPIC! and TIME!.
-          3. Your responses must be no more than 10 WORDS! each.
-          4. After collecting both TOPIC and TIME, respond with ONLY: "done"
-          5. Do not add extra text, explanations, or encouragement.
-          6. If the user says "hello" or similar, immediately move to: "What topic do you want mentorship on?"
-          7. Stop the conversation as soon as both answers are collected.
-          8. Do not REASON or REFLECT on responses.
-          9. Your TASK is PURELY DATA COLLECTION. This is NOT a conversation.
-          10. You cannot respond to anything outside of collecting topic and time
-          11. Do not narrow down a response.
-          12. Do not ask for more elaboration.
-          12. Do not add any form of encouragement or admiration on your response. 
-
-          Example of how to proceed:
-          - Mentee: "hello"
-          - You: "hello there I am leyuchat moderatore I am here to match you with a mentor that best suits your needs, What topic do you want mentorship on?"
-          - Mentee: "I want a mentor for weight loss"
-          - You: "When are you available for mentorship sessions?"
-          - Mentee: "Weekends, in the mornings"
-          - You: "done"
-
-          Max output is capped at 40 tokens. Do not exceed this limit. Follow these instructions STRICTLY!!. DO NOT IMPROVISE.`,
+          content: MODERATOR_MAIN_PROMPT,
         },
         ...messageHistory.map(({ type, body }) => ({
           role: type === 'RECEIVED' ? 'user' : 'assistant',
@@ -98,66 +85,41 @@ export class ModeratorService {
 
       const aiMessage = await this.llm.invoke(messages);
       let response: any = aiMessage.text;
-      console.log(response);
-      console.log(response == 'done');
+
       if (response.trim().toLowerCase() === 'done') {
-        console.log('response == done');
         messages[0] = {
           role: 'system',
-          content: `You are a data extractor for a mentorship platform called LeyuChat.
-
-            Your task is to extract exactly two fields from the message history provided:
-
-            1. "topic"  what the user wants mentorship on  
-            2. "time"  when the user is available for mentorship
-
-            You must return a **single-line raw JSON object** with NO formatting.
-
-            Output format (STRICTLY this exact structure):
-            {"topic":"<topic>","time":"<time>"}
-
-            RULES  FOLLOW STRICTLY:
-            - Output MUST be valid JSON and appear as one single line.
-            - DO NOT use indentation, line breaks, spaces, or pretty-printing.
-            - DO NOT return any other text, explanation, or formatting.
-            - If a value is missing, use "null" for that field.
-            - Do NOT guess or elaborate — extract only what’s clearly mentioned.
-            - Do NOT say anything before or after the JSON.
-
-            Examples:
-
-            Input: I want mentorship for web design at 8pm  
-            Output: {"topic":"web design","time":"8pm"}
-
-            Input: I want help with NestJS  
-            Output: {"topic":"NestJS","time":null}
-
-            Input: hello  
-            Output: {"topic":null,"time":null}
-
-            You must behave like a raw data extractor function. Your ONLY response should be a single-line JSON as shown above. Nothing more.`,
+          content: MODERATOR_EXTRACTION_PROMPT,
         };
+
         const summary = await this.llm.invoke(messages);
         response = summary.text;
       }
+
       const mentor = await this.embeddingService.handleEmbedding(
         response.topic,
         conversationId,
       );
+
       if (mentor) {
         const conversation = await this.prisma.conversation.update({
           where: { id: conversationId },
           data: { isActive: false },
         });
 
-        conversationId = (await this.prisma.conversation.create({
-          data: {
-            mentorId: mentor[0].id,
-            ...conversation,
-          },
-        })).id;
-        response = "I've matched you with a mentor that best fits you, I wish you all the best";
+        conversationId = (
+          await this.prisma.conversation.create({
+            data: {
+              mentorId: mentor[0].id,
+              ...conversation,
+            },
+          })
+        ).id;
+
+        response =
+          "I've matched you with a mentor that best fits you, I wish you all the best";
       }
+
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
