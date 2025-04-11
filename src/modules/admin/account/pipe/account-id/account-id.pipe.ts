@@ -1,6 +1,6 @@
 import { Inject, Injectable, PipeTransform } from '@nestjs/common';
 import { User } from 'src/modules/admin/user/entities/user.entity';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PrismaService } from '../../../../../modules/prisma/prisma.service';
 
 @Injectable()
 export class AccountIdPipe implements PipeTransform {
