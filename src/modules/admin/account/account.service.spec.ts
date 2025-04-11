@@ -32,7 +32,6 @@ describe('AccountService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    // Add this mock implementation
     mockPrismaService.$transaction.mockImplementation(async (arg) => {
       if (typeof arg === 'function') {
         return arg(mockPrismaService);
@@ -166,8 +165,8 @@ describe('AccountService', () => {
 
       expect(result).toEqual({ message: 'Account deleted successfully' });
       expect(mockPrismaService.$transaction).toHaveBeenCalledWith([
-        expect.any(Object), // Account update
-        expect.any(Object), // AccountUser update
+        expect.any(Object),
+        expect.any(Object),
       ]);
     });
   });
