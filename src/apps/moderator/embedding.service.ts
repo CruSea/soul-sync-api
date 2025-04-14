@@ -27,14 +27,14 @@ export class EmbeddingService {
               })
             )?.Mentor.accountId,
           },
-          isBot: false
+          isBot: false,
         },
       });
 
       const mentorDocuments: any[] = mentors.map((mentor) => ({
         pageContent: Array.isArray(mentor.expertise)
-          ? mentor.expertise.join(' ') 
-          : mentor.expertise, 
+          ? mentor.expertise.join(' ')
+          : mentor.expertise,
         metadata: { mentorId: mentor.id },
       }));
 
@@ -55,9 +55,13 @@ export class EmbeddingService {
       if (matchedMentors.length === 0) {
         return null;
       }
-      return matchedMentors;
+      const selectedMentors = matchedMentors.map((match) =>
+        mentors.find((mentor) => mentor.id === match.metadata.mentorId),
+      );
+
+      return selectedMentors;
     } catch (error) {
-      console.log({"error: ":error.message});
+      console.log({ 'error: ': error.message });
     }
   }
 }
