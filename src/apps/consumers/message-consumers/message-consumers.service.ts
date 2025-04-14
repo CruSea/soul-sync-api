@@ -28,9 +28,7 @@ export class MessageConsumersService {
     const channel = context.getChannelRef();
     const originalMsg = context.getMessage();
     try {
-      console.log('this is the data: ', data);
       const sentMessageDto = await this.formatMessage(data);
-      console.log('this is sentMessageDto: ', sentMessageDto);
       await this.sendMessage(sentMessageDto);
       channel.ack(originalMsg);
     } catch (error) {
@@ -53,7 +51,8 @@ export class MessageConsumersService {
             });
         }
       }
-      if (this.moderatorConversationCheck(data.metadata.conversationId)) {
+
+      if (await this.moderatorConversationCheck(data.metadata.conversationId)) {
         await this.messageExchangeService.send('moderator', data);
       }
         return {
