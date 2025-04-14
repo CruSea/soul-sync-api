@@ -8,7 +8,7 @@ import { Chat } from 'src/types/chat';
 import { EmbeddingService } from './embedding.service';
 import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
-import { MODERATOR_MAIN_PROMPT, MODERATOR_EXTRACTION_PROMPT } from './prompt';
+import { MODERATOR_MAIN_PROMPT } from './prompt';
 import { RedisService } from 'src/common/redis/redis.service';
 import { BufferMemory } from 'langchain/memory';
 import { RedisChatMessageHistory } from '@langchain/community/stores/message/ioredis';
@@ -22,6 +22,7 @@ import {
 @Injectable()
 export class ModeratorService {
   private llm: ChatGoogleGenerativeAI;
+  private conversationId;
 
   public constructor(
     private prisma: PrismaService,
@@ -44,34 +45,35 @@ export class ModeratorService {
     try {
       const message = typeof data == 'string' ? JSON.parse(data) : data;
 
-      let conversationId = message.metadata.conversationId;
+      this.conversationId = message.metadata.conversationId;
 
-      while (!conversationId) {
+      while (!this.conversationId) {
         const conversation = await this.prisma.conversation.findFirst({
           where: { address: message.metadata.address, isActive: true },
           select: { id: true },
         });
 
-        conversationId = conversation?.id;
+        this.conversationId = conversation?.id;
       }
 
       const memory = new BufferMemory({
         chatHistory: new RedisChatMessageHistory({
-          sessionId: conversationId,
-          sessionTTL: process.env.SESSION_TTL,
+          sessionId: this.conversationId,
           client: this.redis.getClient(),
         }),
         returnMessages: true,
       });
 
       const existingMessages = await memory.chatHistory.getMessages();
+
+      // Load initial system message and DB history only once
       if (!existingMessages || existingMessages.length === 0) {
         await memory.chatHistory.addMessage(
           new SystemMessage(MODERATOR_MAIN_PROMPT),
         );
 
         const dbHistory = await this.prisma.message.findMany({
-          where: { Threads: { some: { conversationId } } },
+          where: { Threads: { some: { conversationId: this.conversationId } } },
           orderBy: { createdAt: 'asc' },
         });
 
@@ -84,20 +86,14 @@ export class ModeratorService {
         }
       }
 
-      const chain = new ConversationChain({ llm: this.llm, memory });
-
-      let response: any;
-
       const topicTimeExtractorSchema = z.object({
         operation: z
           .enum(['tech', 'agri'])
-          .describe(
-            'The topic area of the conversation should only be tech or agri. only this fields are valid else from that are not valid topics so it should come down to these topics.',
-          ),
+          .describe('The topic must be either "tech" or "agri".'),
         topic: z
           .string()
           .describe(
-            'The topic extracted from the conversation. currently valid inputs for this field will be only "tech" and "agri"',
+            'Extracted topic. Valid values are only "tech" and "agri".',
           ),
         time: z.string().describe('The time mentioned in the conversation.'),
       });
@@ -105,64 +101,44 @@ export class ModeratorService {
       const mentorSelectorTool = tool(async () => {}, {
         name: 'mentorSelectorTool',
         description:
-          'Extracts the topic and time from the conversation with the mentee so that it can match them with the right mentor.',
+          'Extracts topic and time from conversation to help match with a mentor.',
         schema: topicTimeExtractorSchema,
       });
 
       const llmWithTools = this.llm.bindTools([mentorSelectorTool]);
-      const res = await llmWithTools.invoke(messages);
 
-      if (res.tool_calls && res.tool_calls.length > 0) {
-        const toolCall = res.tool_calls[0];
-        response = await this.assignMentor(toolCall.args.topic);
-      } else {
-        response = res.content;
-      }
+      const chain = new ConversationChain({
+        llm: llmWithTools,
+        memory,
+      });
 
-      const res = await chain.invoke({ input: message.payload });
-      let response = res.response;
+      const inputText = message.payload || message.body || 'Hello';
+      const aiResponse = await chain.call({ input: inputText });
 
-      if (response.trim().toLowerCase() === 'done') {
-        await memory.chatHistory.addMessage(
-          new SystemMessage(MODERATOR_EXTRACTION_PROMPT),
-        );
-        const summaryRes = await chain.invoke({ input: message.payload });
-
-        const summaryText = summaryRes.response;
-
-        response = JSON.parse(summaryText);
-
-        const mentor = await this.embeddingService.handleEmbedding(
-          response.topic,
-          conversationId,
-        );
-        if (mentor) {
-          const conversation = await this.prisma.conversation.update({
-            where: { id: conversationId },
-            data: { isActive: false },
-            select: { address: true, channelId: true },
-          });
-
-          conversationId = (
-            await this.prisma.conversation.create({
-              data: {
-                mentorId: mentor[0].metadata.mentorId,
-                ...conversation,
-                isActive: true,
-              },
-            })
-          ).id;
-          response =
-            "I've matched you with a mentor that best fits you, I wish you all the best";
+      let response: any;
+      let parsedResponse: any;
+      try {
+        parsedResponse = JSON.parse(aiResponse.response);
+        if (
+          parsedResponse[0]?.functionCall
+        ) {
+          response = await this.assignMentor(
+            parsedResponse[0].functionCall.args.topic,
+          );
+        } else {
+          response = aiResponse.response || aiResponse.text || aiResponse;
         }
+      } catch (error) {
+       
+        response = aiResponse.response;
       }
-
+      
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
-          conversationId,
+          conversationId: this.conversationId,
         },
-        payload: JSON.stringify(response),
+        payload: response,
       };
 
       const formattedData = await this.rabbitmqService.getChatEchangeData(chat);
@@ -170,7 +146,7 @@ export class ModeratorService {
 
       channel.ack(orgMsg);
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
       channel.nack(orgMsg);
     }
   }
