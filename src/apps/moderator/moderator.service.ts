@@ -56,7 +56,7 @@ export class ModeratorService {
       const memory = new BufferMemory({
         chatHistory: new RedisChatMessageHistory({
           sessionId: conversationId,
-          sessionTTL: 60,
+          sessionTTL: process.env.SESSION_TTL,
           client: this.redis.getClient(),
         }),
         returnMessages: true,
