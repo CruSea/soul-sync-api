@@ -3,6 +3,7 @@ import { RmqContext } from '@nestjs/microservices';
 import { SentMessageDto } from './dto/sent-message.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { io } from 'socket.io-client';
+import { MessageExchangeService } from 'src/common/rabbitmq/message-exchange/message-exchange.service';
 
 @Injectable()
 export class MessageConsumersService {
@@ -11,7 +12,10 @@ export class MessageConsumersService {
     `${process.env.WEBSOCKET_URL}?token=${MessageConsumersService.token}`,
   );
 
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private readonly messageExchangeService: MessageExchangeService,
+    private prisma: PrismaService
+  ) {
     this.socket.on('connect', () => {
       console.log('Connected to the WebSocket server');
     });
@@ -39,22 +43,26 @@ export class MessageConsumersService {
     try {
       const data = typeof message === 'string' ? JSON.parse(message) : message;
       if (!data.metadata?.conversationId) {
-        data.metadata.conversationId = await this.prisma.conversation.findFirst(
-          {
-            where: {
-              address: data.metadata?.address,
-              isActive: true,
-            },
-          },
-        );
+        while (!data.metadata?.conversationId) {
+          data.metadata.conversationId =
+            await this.prisma.conversation.findFirst({
+              where: {
+                address: data.metadata?.address,
+                isActive: true,
+              },
+            });
+        }
       }
-      return {
-        conversationId: data.metadata?.conversationId,
-        type: 'RECEIVED',
-        body: data.payload,
-        createdAt: new Date().toISOString(),
-        email: await this.getMentorEmail(data.metadata.conversationId),
-      };
+      if (this.moderatorConversationCheck(data.metadata.conversationId)) {
+        await this.messageExchangeService.send('moderator', data);
+      }
+        return {
+          conversationId: data.metadata?.conversationId,
+          type: 'RECEIVED',
+          body: data.payload,
+          createdAt: new Date().toISOString(),
+          email: await this.getMentorEmail(data.metadata.conversationId),
+        };
     } catch (error) {
       console.log('Error formatting message', error);
     }
@@ -90,5 +98,17 @@ export class MessageConsumersService {
       console.log('Error fetching mentor email:', error);
       throw error;
     }
+  }
+
+  async moderatorConversationCheck(conversationId) {
+    return (await this.prisma.mentor.findFirst({
+      where: {
+        Conversation: {
+          some: {
+            id: conversationId,
+          },
+        },
+      },
+    })).isBot ? true : false;
   }
 }
