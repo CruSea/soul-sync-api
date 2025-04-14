@@ -27,14 +27,14 @@ export class EmbeddingService {
               })
             )?.Mentor.accountId,
           },
-          isBot: false
+          isBot: false,
         },
       });
 
       const mentorDocuments: any[] = mentors.map((mentor) => ({
         pageContent: Array.isArray(mentor.expertise)
-          ? mentor.expertise.join(' ') 
-          : mentor.expertise, 
+          ? mentor.expertise.join(' ')
+          : mentor.expertise,
         metadata: { mentorId: mentor.id },
       }));
 
@@ -57,7 +57,7 @@ export class EmbeddingService {
       }
       return matchedMentors;
     } catch (error) {
-      console.log({"error: ":error.message});
+      console.log({ 'error: ': error.message });
     }
   }
 }

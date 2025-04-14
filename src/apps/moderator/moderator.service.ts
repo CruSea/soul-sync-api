@@ -7,13 +7,19 @@ import { RabbitmqService } from '../../common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { EmbeddingService } from './embedding.service';
 import { MODERATOR_MAIN_PROMPT, MODERATOR_EXTRACTION_PROMPT } from './prompt';
-import { waitForConversationToBeCreated } from 'src/common/helpers/waitForConversation';
 import { RedisService } from 'src/common/redis/redis.service';
+import { BufferMemory } from 'langchain/memory';
+import { RedisChatMessageHistory } from '@langchain/community/stores/message/ioredis';
+import { ConversationChain } from 'langchain/chains';
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} from '@langchain/core/messages';
 
 @Injectable()
 export class ModeratorService {
   private llm: ChatGoogleGenerativeAI;
-  private conversationId: string;
 
   public constructor(
     private prisma: PrismaService,
@@ -36,76 +42,73 @@ export class ModeratorService {
     try {
       const message = typeof data == 'string' ? JSON.parse(data) : data;
 
-      this.conversationId =
-        message.metadata.conversationId ??
-        (await waitForConversationToBeCreated(
-          this.prisma,
-          message.metadata.address,
-        ));
+      let conversationId = message.metadata.conversationId;
 
-      if (!this.conversationId) {
-        throw new Error('Conversation not found after retries.');
+      while (!conversationId) {
+        const conversation = await this.prisma.conversation.findFirst({
+          where: { address: message.metadata.address, isActive: true },
+          select: { id: true },
+        });
+
+        conversationId = conversation?.id;
       }
 
-      const cacheKey = `message_history:${this.conversationId}`;
+      const memory = new BufferMemory({
+        chatHistory: new RedisChatMessageHistory({
+          sessionId: conversationId,
+          sessionTTL: 60,
+          client: this.redis.getClient(),
+        }),
+        returnMessages: true,
+      });
 
-      let messageHistory: any[] = JSON.parse(await this.redis.get(cacheKey));
+      const existingMessages = await memory.chatHistory.getMessages();
+      if (!existingMessages || existingMessages.length === 0) {
+        await memory.chatHistory.addMessage(
+          new SystemMessage(MODERATOR_MAIN_PROMPT),
+        );
 
-      if (!messageHistory) {
-        messageHistory = await this.prisma.message.findMany({
-          where: { Threads: { some: { conversationId: this.conversationId } } },
+        const dbHistory = await this.prisma.message.findMany({
+          where: { Threads: { some: { conversationId } } },
           orderBy: { createdAt: 'asc' },
         });
 
-        await this.redis.set(cacheKey, JSON.stringify(messageHistory), 1200);
+        for (const msg of dbHistory) {
+          if (msg.type === 'RECEIVED') {
+            await memory.chatHistory.addMessage(new HumanMessage(msg.body));
+          } else {
+            await memory.chatHistory.addMessage(new AIMessage(msg.body));
+          }
+        }
       }
 
-      messageHistory.push({
-        type: 'RECEIVED',
-        body: message.payload,
-      });
+      const chain = new ConversationChain({ llm: this.llm, memory });
 
-      await this.redis.set(cacheKey, JSON.stringify(messageHistory), 1200);
+      const res = await chain.invoke({ input: message.payload });
+      let response = res.response;
 
-      let messages: any[] = [];
-
-      messages = [
-        {
-          role: 'system',
-          content: MODERATOR_MAIN_PROMPT,
-        },
-        ...messageHistory.map(({ type, body }) => ({
-          role: type === 'RECEIVED' ? 'user' : 'assistant',
-          content: body,
-        })),
-        {
-          role: 'user',
-          content: message.payload,
-        },
-      ];
-
-      const aiMessage = await this.llm.invoke(messages);
-      let response: any = aiMessage.text;
       if (response.trim().toLowerCase() === 'done') {
-        messages[0] = {
-          role: 'system',
-          content: MODERATOR_EXTRACTION_PROMPT,
-        };
+        await memory.chatHistory.addMessage(
+          new SystemMessage(MODERATOR_EXTRACTION_PROMPT),
+        );
+        const summaryRes = await chain.invoke({ input: message.payload });
 
-        const summary = await this.llm.invoke(messages);
-        response = JSON.parse(summary.text);
+        const summaryText = summaryRes.response;
+
+        response = JSON.parse(summaryText);
+
         const mentor = await this.embeddingService.handleEmbedding(
           response.topic,
-          this.conversationId,
+          conversationId,
         );
         if (mentor) {
           const conversation = await this.prisma.conversation.update({
-            where: { id: this.conversationId },
+            where: { id: conversationId },
             data: { isActive: false },
             select: { address: true, channelId: true },
           });
 
-          this.conversationId = (
+          conversationId = (
             await this.prisma.conversation.create({
               data: {
                 mentorId: mentor[0].metadata.mentorId,
@@ -122,9 +125,9 @@ export class ModeratorService {
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
-          conversationId: this.conversationId,
+          conversationId,
         },
-        payload: response,
+        payload: JSON.stringify(response),
       };
 
       const formattedData = await this.rabbitmqService.getChatEchangeData(chat);
