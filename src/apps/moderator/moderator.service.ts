@@ -47,15 +47,6 @@ export class ModeratorService {
 
       this.conversationId = message.metadata.conversationId;
 
-      while (!this.conversationId) {
-        const conversation = await this.prisma.conversation.findFirst({
-          where: { address: message.metadata.address, isActive: true },
-          select: { id: true },
-        });
-
-        this.conversationId = conversation?.id;
-      }
-
       const memory = new BufferMemory({
         chatHistory: new RedisChatMessageHistory({
           sessionId: this.conversationId,
@@ -66,7 +57,6 @@ export class ModeratorService {
 
       const existingMessages = await memory.chatHistory.getMessages();
 
-      // Load initial system message and DB history only once
       if (!existingMessages || existingMessages.length === 0) {
         await memory.chatHistory.addMessage(
           new SystemMessage(MODERATOR_MAIN_PROMPT),
