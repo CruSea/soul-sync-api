@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginate, PaginationResult } from 'src/common/helpers/pagination';
+import { PrismaService } from '../../prisma/prisma.service';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { paginate, PaginationResult } from '../../../common/helpers/pagination';
 import { Message } from '@prisma/client';
 
 type MessageWithChannel = Message & {
