@@ -8,13 +8,24 @@ import { Chat } from 'src/types/chat';
 import { EmbeddingService } from './embedding.service';
 import { z } from 'zod';
 import { tool } from '@langchain/core/tools';
+import { MODERATOR_MAIN_PROMPT, MODERATOR_EXTRACTION_PROMPT } from './prompt';
+import { RedisService } from 'src/common/redis/redis.service';
+import { BufferMemory } from 'langchain/memory';
+import { RedisChatMessageHistory } from '@langchain/community/stores/message/ioredis';
+import { ConversationChain } from 'langchain/chains';
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+} from '@langchain/core/messages';
 
 @Injectable()
 export class ModeratorService {
   private llm: ChatGoogleGenerativeAI;
-  private conversationId;
+
   public constructor(
     private prisma: PrismaService,
+    private redis: RedisService,
     private chatExchangeService: ChatExchangeService,
     private rabbitmqService: RabbitmqService,
     private readonly embeddingService: EmbeddingService,
@@ -29,50 +40,51 @@ export class ModeratorService {
   async handleMessage(data: any, context: RmqContext) {
     const channel = context.getChannelRef();
     const orgMsg = context.getMessage();
+
     try {
       const message = typeof data == 'string' ? JSON.parse(data) : data;
 
-      this.conversationId =
-        message.metadata.conversationId ??
-        (
-          await this.prisma.conversation.findFirst({
-            where: { address: message.metadata.address, isActive: true },
-          })
-        )?.id;
+      let conversationId = message.metadata.conversationId;
 
-      const messageHistory = await this.prisma.message.findMany({
-        where: {
-          Threads: {
-            some: {
-              conversationId: this.conversationId,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'asc',
-        },
+      while (!conversationId) {
+        const conversation = await this.prisma.conversation.findFirst({
+          where: { address: message.metadata.address, isActive: true },
+          select: { id: true },
+        });
+
+        conversationId = conversation?.id;
+      }
+
+      const memory = new BufferMemory({
+        chatHistory: new RedisChatMessageHistory({
+          sessionId: conversationId,
+          sessionTTL: process.env.SESSION_TTL,
+          client: this.redis.getClient(),
+        }),
+        returnMessages: true,
       });
 
-      let messages: any[] = [];
+      const existingMessages = await memory.chatHistory.getMessages();
+      if (!existingMessages || existingMessages.length === 0) {
+        await memory.chatHistory.addMessage(
+          new SystemMessage(MODERATOR_MAIN_PROMPT),
+        );
 
-      messages = [
-        {
-          role: 'system',
-          content: `
-            You are a friendly assistant on the LeyuChat platform. Your job is to chat naturally and guide users to find the right mentor. 
-            the topic, and a preferred time, extract those details.
-            Keep responses short, friendly, and helpful. When enough info is available, use the right tool to match them with a mentor.
-          `,
-        },
-        ...messageHistory.map(({ type, body }) => ({
-          role: type === 'RECEIVED' ? 'user' : 'assistant',
-          content: body,
-        })),
-        {
-          role: 'user',
-          content: message.payload,
-        },
-      ];
+        const dbHistory = await this.prisma.message.findMany({
+          where: { Threads: { some: { conversationId } } },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        for (const msg of dbHistory) {
+          if (msg.type === 'RECEIVED') {
+            await memory.chatHistory.addMessage(new HumanMessage(msg.body));
+          } else {
+            await memory.chatHistory.addMessage(new AIMessage(msg.body));
+          }
+        }
+      }
+
+      const chain = new ConversationChain({ llm: this.llm, memory });
 
       let response: any;
 
@@ -107,12 +119,50 @@ export class ModeratorService {
         response = res.content;
       }
 
+      const res = await chain.invoke({ input: message.payload });
+      let response = res.response;
+
+      if (response.trim().toLowerCase() === 'done') {
+        await memory.chatHistory.addMessage(
+          new SystemMessage(MODERATOR_EXTRACTION_PROMPT),
+        );
+        const summaryRes = await chain.invoke({ input: message.payload });
+
+        const summaryText = summaryRes.response;
+
+        response = JSON.parse(summaryText);
+
+        const mentor = await this.embeddingService.handleEmbedding(
+          response.topic,
+          conversationId,
+        );
+        if (mentor) {
+          const conversation = await this.prisma.conversation.update({
+            where: { id: conversationId },
+            data: { isActive: false },
+            select: { address: true, channelId: true },
+          });
+
+          conversationId = (
+            await this.prisma.conversation.create({
+              data: {
+                mentorId: mentor[0].metadata.mentorId,
+                ...conversation,
+                isActive: true,
+              },
+            })
+          ).id;
+          response =
+            "I've matched you with a mentor that best fits you, I wish you all the best";
+        }
+      }
+
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
-          conversationId: this.conversationId,
+          conversationId,
         },
-        payload: response,
+        payload: JSON.stringify(response),
       };
 
       const formattedData = await this.rabbitmqService.getChatEchangeData(chat);

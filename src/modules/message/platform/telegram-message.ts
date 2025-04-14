@@ -44,7 +44,7 @@ export class TelegramMessageStrategy implements MessageStrategy {
       where: {
         channelId,
         address: address,
-        isActive: true
+        isActive: true,
       },
     });
     const conversationId = conversation?.id;
