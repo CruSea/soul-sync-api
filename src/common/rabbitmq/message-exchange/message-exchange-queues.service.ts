@@ -4,7 +4,7 @@ import * as amqp from 'amqplib';
 @Injectable()
 export class MessageExchangeQueuesService {
   private readonly QUEUE_NAMES = ['message', 'database'];
-  private readonly PRE_CONV_QUEUE_NAMES = ['moderator', 'database'];
+  private readonly PRE_CONV_QUEUE_NAMES = ['moderator'];
   private channel: amqp.Channel;
 
   async init(channel: amqp.Channel, exchangeName: string) {
