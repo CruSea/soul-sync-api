@@ -6,6 +6,8 @@ import { ChatExchangeService } from '../../common/rabbitmq/chat-exchange/chat-ex
 import { RabbitmqService } from '../../common/rabbitmq/rabbitmq.service';
 import { Chat } from 'src/types/chat';
 import { EmbeddingService } from './embedding.service';
+import { z } from 'zod';
+import { tool } from '@langchain/core/tools';
 
 @Injectable()
 export class ModeratorService {
@@ -56,36 +58,11 @@ export class ModeratorService {
       messages = [
         {
           role: 'system',
-          content: `prompt: You are a data collection agent for the LeyuChat platform.
-          DO NOT act like a chatbot.
-          You are to EXTRACT only two pieces of information
-          1. The TOPIC the mentee seeks mentorship on.
-          2. The TIME they are available for mentorship.
-
-          Instructions:
-          1. Do NOT GREET!, ask for personal details, or provide opinions.
-          2. Ask only what is needed to collect the TOPIC! and TIME!.
-          3. Your responses must be no more than 10 WORDS! each.
-          4. After collecting both TOPIC and TIME, respond with ONLY: "done"
-          5. Do not add extra text, explanations, or encouragement.
-          6. If the user says "hello" or similar, immediately move to: "What topic do you want mentorship on?"
-          7. Stop the conversation as soon as both answers are collected.
-          8. Do not REASON or REFLECT on responses.
-          9. Your TASK is PURELY DATA COLLECTION. This is NOT a conversation.
-          10. You cannot respond to anything outside of collecting topic and time
-          11. Do not narrow down a response.
-          12. Do not ask for more elaboration.
-          12. Do not add any form of encouragement or admiration on your response. 
-
-          Example of how to proceed:
-          - Mentee: "hello"
-          - You: "hello there I am leyuchat moderatore I am here to match you with a mentor that best suits your needs, What topic do you want mentorship on?"
-          - Mentee: "I want a mentor for weight loss"
-          - You: "When are you available for mentorship sessions?"
-          - Mentee: "Weekends, in the mornings"
-          - You: "done"
-
-          Max output is capped at 40 tokens. Do not exceed this limit. Follow these instructions STRICTLY!!. DO NOT IMPROVISE.`,
+          content: `
+            You are a friendly assistant on the LeyuChat platform. Your job is to chat naturally and guide users to find the right mentor. 
+            the topic, and a preferred time, extract those details.
+            Keep responses short, friendly, and helpful. When enough info is available, use the right tool to match them with a mentor.
+          `,
         },
         ...messageHistory.map(({ type, body }) => ({
           role: type === 'RECEIVED' ? 'user' : 'assistant',
@@ -97,70 +74,39 @@ export class ModeratorService {
         },
       ];
 
-      const aiMessage = await this.llm.invoke(messages);
-      let response: any = aiMessage.text;
-      if (response.trim().toLowerCase() === 'done') {
-        messages[0] = {
-          role: 'system',
-          content: `You are a data extractor for a mentorship platform called LeyuChat.
+      let response: any;
 
-            Your task is to extract exactly two fields from the message history provided:
+      const topicTimeExtractorSchema = z.object({
+        operation: z
+          .enum(['tech', 'agri'])
+          .describe(
+            'The topic area of the conversation should only be tech or agri. only this fields are valid else from that are not valid topics so it should come down to these topics.',
+          ),
+        topic: z
+          .string()
+          .describe(
+            'The topic extracted from the conversation. currently valid inputs for this field will be only "tech" and "agri"',
+          ),
+        time: z.string().describe('The time mentioned in the conversation.'),
+      });
 
-            1. "topic"  what the user wants mentorship on  
-            2. "time"  when the user is available for mentorship
+      const mentorSelectorTool = tool(async () => {}, {
+        name: 'mentorSelectorTool',
+        description:
+          'Extracts the topic and time from the conversation with the mentee so that it can match them with the right mentor.',
+        schema: topicTimeExtractorSchema,
+      });
 
-            You must return a **single-line raw JSON object** with NO formatting.
+      const llmWithTools = this.llm.bindTools([mentorSelectorTool]);
+      const res = await llmWithTools.invoke(messages);
 
-            Output format (STRICTLY this exact structure):
-            {"topic":"<topic>","time":"<time>"}
-
-            RULES  FOLLOW STRICTLY:
-            - Output MUST be valid JSON and appear as one single line.
-            - DO NOT use indentation, line breaks, spaces, or pretty-printing.
-            - DO NOT return any other text, explanation, or formatting.
-            - If a value is missing, use "null" for that field.
-            - Do NOT guess or elaborate — extract only what’s clearly mentioned.
-            - Do NOT say anything before or after the JSON.
-
-            Examples:
-
-            Input: I want mentorship for web design at 8pm  
-            Output: {"topic":"web design","time":"8pm"}
-
-            Input: I want help with NestJS  
-            Output: {"topic":"NestJS","time":null}
-
-            Input: hello  
-            Output: {"topic":null,"time":null}
-
-            You must behave like a raw data extractor function. Your ONLY response should be a single-line JSON as shown above. Nothing more.`,
-        };
-        const summary = await this.llm.invoke(messages);
-        response = JSON.parse(summary.text);
-        const mentor = await this.embeddingService.handleEmbedding(
-          response.topic,
-          this.conversationId,
-        );
-        if (mentor) {
-          const conversation = await this.prisma.conversation.update({
-            where: { id: this.conversationId },
-            data: { isActive: false },
-            select: { address: true, channelId: true },
-          });
-
-          this.conversationId = (
-            await this.prisma.conversation.create({
-              data: {
-                mentorId: mentor[0].metadata.mentorId,
-                ...conversation,
-                isActive: true,
-              },
-            })
-          ).id;
-          response =
-            "I've matched you with a mentor that best fits you, I wish you all the best";
-        }
+      if (res.tool_calls && res.tool_calls.length > 0) {
+        const toolCall = res.tool_calls[0];
+        response = await this.assignMentor(toolCall.args.topic);
+      } else {
+        response = res.content;
       }
+
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
@@ -171,10 +117,48 @@ export class ModeratorService {
 
       const formattedData = await this.rabbitmqService.getChatEchangeData(chat);
       await this.chatExchangeService.send('chat', formattedData);
+
       channel.ack(orgMsg);
     } catch (error) {
       console.log(error.message);
       channel.nack(orgMsg);
+    }
+  }
+
+  async assignMentor(topic) {
+    try {
+      const mentor = await this.embeddingService.handleEmbedding(
+        topic,
+        this.conversationId,
+      );
+
+      if (!mentor || mentor.length === 0) {
+        return `Sorry, we couldn't find a suitable mentor at the moment.`;
+      }
+
+      const existingConversation = await this.prisma.conversation.update({
+        where: { id: this.conversationId },
+        data: { isActive: false },
+      });
+
+      const newMentor =
+        typeof mentor === 'string' ? JSON.parse(mentor)[0] : mentor[0];
+
+      this.conversationId = (
+        await this.prisma.conversation.create({
+          data: {
+            isActive: true,
+            address: existingConversation.address,
+            channelId: existingConversation.channelId,
+            mentorId: newMentor.id,
+          },
+        })
+      ).id;
+
+      return 'New conversation created. User is now connected with a mentor.';
+    } catch (error) {
+      console.error('Error during tool execution:', error);
+      return 'Something went wrong while assigning a mentor.';
     }
   }
 }
