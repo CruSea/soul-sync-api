@@ -2,13 +2,13 @@ import { HttpException, Inject, Injectable } from '@nestjs/common';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { REQUEST } from '@nestjs/core';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import { Channel } from './entities/channel.entity';
 import { GetChannelDto } from './dto/get-channel.dto';
 import { ChannelStrategy } from './interface/channelStrategy.interface';
 import { StrategyResolver } from './strategy/strategy';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginate, PaginationResult } from 'src/common/helpers/pagination';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { paginate, PaginationResult } from '../../../common/helpers/pagination';
 
 @Injectable()
 export class ChannelService {
