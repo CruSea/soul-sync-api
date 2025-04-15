@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { Chat } from 'src/types/chat';
-import { MessagePayload } from 'src/types/message';
+import { PrismaService } from './../../modules/prisma/prisma.service';
+import { Chat } from '../../types/chat';
+import { MessagePayload } from '../../types/message';
 
 @Injectable()
 export class RabbitmqService {
