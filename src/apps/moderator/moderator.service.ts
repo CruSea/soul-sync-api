@@ -119,9 +119,7 @@ export class ModeratorService {
       let parsedResponse: any;
       try {
         parsedResponse = JSON.parse(aiResponse.response);
-        if (
-          parsedResponse[0]?.functionCall
-        ) {
+        if (parsedResponse[0]?.functionCall) {
           response = await this.assignMentor(
             parsedResponse[0].functionCall.args.topic,
           );
@@ -129,10 +127,9 @@ export class ModeratorService {
           response = aiResponse.response || aiResponse.text || aiResponse;
         }
       } catch (error) {
-       
         response = aiResponse.response;
       }
-      
+
       const chat: Chat = {
         type: 'CHAT',
         metadata: {
