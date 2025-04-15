@@ -102,7 +102,7 @@ export class ModeratorService {
         memory,
       });
 
-      const inputText = message.payload || message.body || 'Hello';
+      const inputText = message.payload;
       const aiResponse = await chain.call({ input: inputText });
 
       let response: any;
@@ -116,7 +116,7 @@ export class ModeratorService {
             parsedResponse[0].functionCall.args.topic,
           );
         } else {
-          response = aiResponse.response || aiResponse.text || aiResponse;
+          response = aiResponse.response;
         }
       } catch (error) {
        
