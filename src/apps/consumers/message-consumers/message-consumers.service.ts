@@ -15,7 +15,7 @@ export class MessageConsumersService {
 
   constructor(
     private readonly messageExchangeService: MessageExchangeService,
-    private prisma: PrismaService
+    private prisma: PrismaService,
   ) {
     this.socket.on('connect', () => {
       console.log('Connected to the WebSocket server');
@@ -49,13 +49,14 @@ export class MessageConsumersService {
       this.data = typeof message === 'string' ? JSON.parse(message) : message;
       if (!this.data.metadata?.conversationId) {
         while (!this.data.metadata?.conversationId) {
-          this.data.metadata.conversationId =
-            (await this.prisma.conversation.findFirst({
+          this.data.metadata.conversationId = (
+            await this.prisma.conversation.findFirst({
               where: {
                 address: this.data.metadata?.address,
                 isActive: true,
               },
-            })).id;
+            })
+          ).id;
         }
       }
       return {
@@ -103,14 +104,18 @@ export class MessageConsumersService {
   }
 
   async moderatorConversationCheck(conversationId) {
-    return (await this.prisma.mentor.findFirst({
-      where: {
-        Conversation: {
-          some: {
-            id: conversationId,
+    return (
+      await this.prisma.mentor.findFirst({
+        where: {
+          Conversation: {
+            some: {
+              id: conversationId,
+            },
           },
         },
-      },
-    })).isBot ? true : false;
+      })
+    ).isBot
+      ? true
+      : false;
   }
 }
