@@ -7,9 +7,9 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { WsGuardGuard } from '../auth/guard/ws-guard/ws-guard.guard';
-import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
-import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
-import { Chat } from 'src/types/chat';
+import { ChatExchangeService } from '../../common/rabbitmq/chat-exchange/chat-exchange.service';
+import { RabbitmqService } from '../../common/rabbitmq/rabbitmq.service';
+import { Chat } from '../../types/chat';
 import { ChatService } from './chat.service';
 import { SocketService } from './socket.service';
 
