@@ -8,6 +8,7 @@ import { MessageExchangeService } from 'src/common/rabbitmq/message-exchange/mes
 @Injectable()
 export class MessageConsumersService {
   private static token = 'message-consumer';
+  private data;
   private socket = io(
     `${process.env.WEBSOCKET_URL}?token=${MessageConsumersService.token}`,
   );
@@ -29,7 +30,13 @@ export class MessageConsumersService {
     const originalMsg = context.getMessage();
     try {
       const sentMessageDto = await this.formatMessage(data);
-      await this.sendMessage(sentMessageDto);
+      if (
+        await this.moderatorConversationCheck(sentMessageDto.conversationId)
+      ) {
+        await this.messageExchangeService.send('moderator', this.data);
+      } else {
+        await this.sendMessage(sentMessageDto);
+      }
       channel.ack(originalMsg);
     } catch (error) {
       channel.nack(originalMsg);
@@ -39,29 +46,25 @@ export class MessageConsumersService {
 
   async formatMessage(message: any): Promise<SentMessageDto> {
     try {
-      const data = typeof message === 'string' ? JSON.parse(message) : message;
-      if (!data.metadata?.conversationId) {
-        while (!data.metadata?.conversationId) {
-          data.metadata.conversationId =
-            await this.prisma.conversation.findFirst({
+      this.data = typeof message === 'string' ? JSON.parse(message) : message;
+      if (!this.data.metadata?.conversationId) {
+        while (!this.data.metadata?.conversationId) {
+          this.data.metadata.conversationId =
+            (await this.prisma.conversation.findFirst({
               where: {
-                address: data.metadata?.address,
+                address: this.data.metadata?.address,
                 isActive: true,
               },
-            });
+            })).id;
         }
       }
-
-      if (await this.moderatorConversationCheck(data.metadata.conversationId)) {
-        await this.messageExchangeService.send('moderator', data);
-      }
-        return {
-          conversationId: data.metadata?.conversationId,
-          type: 'RECEIVED',
-          body: data.payload,
-          createdAt: new Date().toISOString(),
-          email: await this.getMentorEmail(data.metadata.conversationId),
-        };
+      return {
+        conversationId: this.data.metadata?.conversationId,
+        type: 'RECEIVED',
+        body: this.data.payload,
+        createdAt: new Date().toISOString(),
+        email: await this.getMentorEmail(this.data.metadata.conversationId),
+      };
     } catch (error) {
       console.log('Error formatting message', error);
     }
