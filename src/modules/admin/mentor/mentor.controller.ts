@@ -11,8 +11,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { MentorService } from './mentor.service';
-import { Roles } from 'src/modules/auth/auth.decorator';
-import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { Roles } from '../../auth/auth.decorator';
+import { AuthGuard } from '../../auth/guard/auth/auth.guard';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
