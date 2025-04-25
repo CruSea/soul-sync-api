@@ -4,12 +4,11 @@ import { MentorService } from './mentor.service';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
 import { GetMentorDto } from './dto/get-mentor.dto';
-import { NotFoundException, ExecutionContext } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '../../auth/guard/auth/auth.guard';
 
 describe('MentorController', () => {
   let controller: MentorController;
-  let service: MentorService;
 
   const mockMentorService = {
     findAll: jest.fn(),
@@ -20,7 +19,7 @@ describe('MentorController', () => {
   };
 
   const mockAuthGuard = {
-    canActivate: jest.fn((context: ExecutionContext) => true),
+    canActivate: jest.fn(() => true),
   };
 
   beforeEach(async () => {
@@ -38,7 +37,6 @@ describe('MentorController', () => {
       .compile();
 
     controller = module.get<MentorController>(MentorController);
-    service = module.get<MentorService>(MentorService);
   });
 
   afterEach(() => {

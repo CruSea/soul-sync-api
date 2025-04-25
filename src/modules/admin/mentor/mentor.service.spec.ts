@@ -78,14 +78,6 @@ describe('MentorService (Integration)', () => {
       },
     });
 
-    const mentor = await prismaService.mentor.create({
-      data: {
-        name: 'Test Mentor',
-        email: 'findone@mentor.com',
-        accountId: account.id,
-      },
-    });
-
     const user = await prismaService.user.create({
       data: {
         name: 'Test Mentor',
@@ -94,12 +86,20 @@ describe('MentorService (Integration)', () => {
       },
     });
 
+    const mentor = await prismaService.mentor.create({
+      data: {
+        name: 'Test Mentor',
+        email: 'findone@mentor.com',
+        accountId: account.id,
+      },
+    });
+
     const result = await service.findOne(mentor.id, { accountId: account.id });
 
     expect(result).toBeDefined();
     expect(result.id).toBe(mentor.id);
     expect(result.user).toBeDefined();
-    expect(result.user.email).toBe('findone@mentor.com');
+    expect(result.user.email).toBe(user.email);
   });
 
   it('should return a paginated list of mentors for the given accountId', async () => {
