@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { channel } from 'diagnostics_channel';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { paginate, PaginationResult } from 'src/common/helpers/pagination';
+import { paginate } from 'src/common/helpers/pagination';
 import { GetConversationDto } from './dto/get-conversation.dto';
 
 @Injectable()
