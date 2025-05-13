@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
+import { CreateAccountDto } from 'src/modules/admin/account/dto/create-account.dto';
+import { UpdateAccountDto } from 'src/modules/admin/account/dto/update-account.dto';
 import { REQUEST } from '@nestjs/core';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { RoleType } from '@prisma/client';

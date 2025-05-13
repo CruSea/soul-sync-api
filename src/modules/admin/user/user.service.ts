@@ -1,8 +1,8 @@
 import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from 'src/modules/admin/user/dto/create-user.dto';
+import { UpdateUserDto } from 'src/modules/admin/user/dto/update-user.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { UserDto } from './dto/user.dto';
+import { UserDto } from 'src/modules/admin/user/dto/user.dto';
 import { REQUEST } from '@nestjs/core';
 import * as bcrypt from 'bcryptjs';
 import { AuthService } from 'src/modules/auth/auth.service';
