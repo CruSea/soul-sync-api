@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ChatGateway } from './chat.gateway';
-import { ChatExchangeService } from '../../common/rabbitmq/chat-exchange/chat-exchange.service';
-import { RabbitmqService } from '../../common/rabbitmq/rabbitmq.service';
-import { ChatService } from './chat.service';
-import { SocketService } from './socket.service';
+import { ChatGateway } from 'src/modules/chat/chat.gateway';
+import { ChatExchangeService } from 'src/common/rabbitmq/chat-exchange/chat-exchange.service';
+import { RabbitmqService } from 'src/common/rabbitmq/rabbitmq.service';
+import { ChatService } from 'src/modules/chat/chat.service';
+import { SocketService } from 'src/modules/chat/socket.service';
 import { NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 describe('ChatGateway', () => {
