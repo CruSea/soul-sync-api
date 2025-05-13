@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MessageController } from './message.controller';
-import { MessageService } from './message.service';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
+import { MessageController } from 'src/modules/admin/message/message.controller';
+import { MessageService } from 'src/modules/admin/message/message.service';
+import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 
 describe('MessageController', () => {
   let controller: MessageController;
