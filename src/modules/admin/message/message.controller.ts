@@ -5,8 +5,8 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { MessageService } from './message.service';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
+import { MessageService } from 'src/modules/admin/message/message.service';
+import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 
 @Controller('admin/messages')
 @UseGuards(AuthGuard)
