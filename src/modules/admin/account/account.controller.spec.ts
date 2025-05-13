@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccountController } from './account.controller';
-import { AccountService } from './account.service';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
-import { PrismaService } from '../../../modules/prisma/prisma.service';
+import { AccountController } from 'src/modules/admin/account/account.controller';
+import { AccountService } from 'src/modules/admin/account/account.service';
+import { CreateAccountDto } from 'src/modules/admin/account/dto/create-account.dto';
+import { UpdateAccountDto } from 'src/modules/admin/account/dto/update-account.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 describe('AccountController', () => {
   let controller: AccountController;
