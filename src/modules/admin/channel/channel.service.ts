@@ -1,14 +1,14 @@
 import { HttpException, Inject, Injectable } from '@nestjs/common';
-import { CreateChannelDto } from './dto/create-channel.dto';
-import { UpdateChannelDto } from './dto/update-channel.dto';
+import { CreateChannelDto } from 'src/modules/admin/channel/dto/create-channel.dto';
+import { UpdateChannelDto } from 'src/modules/admin/channel/dto/update-channel.dto';
 import { REQUEST } from '@nestjs/core';
-import { PrismaService } from '../../prisma/prisma.service';
-import { Channel } from './entities/channel.entity';
-import { GetChannelDto } from './dto/get-channel.dto';
-import { ChannelStrategy } from './interface/channelStrategy.interface';
-import { StrategyResolver } from './strategy/strategy';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
-import { paginate, PaginationResult } from '../../../common/helpers/pagination';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { Channel } from 'src/modules/admin/channel/entities/channel.entity';
+import { GetChannelDto } from 'src/modules/admin/channel/dto/get-channel.dto';
+import { ChannelStrategy } from 'src/modules/admin/channel/interface/channelStrategy.interface';
+import { StrategyResolver } from 'src/modules/admin/channel/strategy/strategy';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { paginate, PaginationResult } from 'src/common/helpers/pagination';
 
 @Injectable()
 export class ChannelService {

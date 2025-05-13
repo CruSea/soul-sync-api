@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ChannelController } from './channel.controller';
-import { ChannelService } from './channel.service';
-import { CreateChannelDto } from './dto/create-channel.dto';
-import { UpdateChannelDto } from './dto/update-channel.dto';
-import { GetChannelDto } from './dto/get-channel.dto';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
-import { StrategyResolver } from './strategy/strategy';
-import { PrismaService } from '../../prisma/prisma.service';
+import { ChannelController } from 'src/modules/admin/channel/channel.controller';
+import { ChannelService } from 'src/modules/admin/channel/channel.service';
+import { CreateChannelDto } from 'src/modules/admin/channel/dto/create-channel.dto';
+import { UpdateChannelDto } from 'src/modules/admin/channel/dto/update-channel.dto';
+import { GetChannelDto } from 'src/modules/admin/channel/dto/get-channel.dto';
+import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { StrategyResolver } from 'src/modules/admin/channel/strategy/strategy';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { REQUEST } from '@nestjs/core';
 import { ChannelType } from '@prisma/client';
 
