@@ -10,12 +10,12 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
-import { ChannelService } from './channel.service';
-import { CreateChannelDto } from './dto/create-channel.dto';
-import { UpdateChannelDto } from './dto/update-channel.dto';
-import { GetChannelDto } from './dto/get-channel.dto';
-import { Roles } from 'src/modules/auth/auth.decorator';
-import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { ChannelService } from 'src/modules/admin/channel/channel.service';
+import { CreateChannelDto } from 'src/modules/admin/channel/dto/create-channel.dto';
+import { UpdateChannelDto } from 'src/modules/admin/channel/dto/update-channel.dto';
+import { GetChannelDto } from 'src/modules/admin/channel/dto/get-channel.dto';
+import { Roles } from '../../auth/auth.decorator';
+import { AuthGuard } from '../../auth/guard/auth/auth.guard';
 
 @Controller('admin/channel')
 @UseGuards(AuthGuard)
