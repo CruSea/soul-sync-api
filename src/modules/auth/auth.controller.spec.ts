@@ -1,12 +1,12 @@
 // auth.controller.spec.ts
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { SignInUserDto } from './dto/sign-in-auth.dto';
-import { SignUpUserDto } from './dto/sign-up-auth.dto';
-import { AuthDto } from './dto/auth.dto';
-import { UserDto } from '../admin/user/dto/user.dto';
+import { AuthController } from 'src/modules/auth/auth.controller';
+import { AuthService } from 'src/modules/auth/auth.service';
+import { SignInUserDto } from 'src/modules/auth/dto/sign-in-auth.dto';
+import { SignUpUserDto } from 'src/modules/auth/dto/sign-up-auth.dto';
+import { AuthDto } from 'src/modules/auth/dto/auth.dto';
+import { UserDto } from 'src/modules/admin/user/dto/user.dto';
 import { Response } from 'express';
 
 describe('AuthController', () => {
