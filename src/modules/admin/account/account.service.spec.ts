@@ -2,9 +2,9 @@ import { AccountService } from './account.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { REQUEST } from '@nestjs/core';
 import { RoleType } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
-import * as paginationHelper from '../../../common/helpers/pagination';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import * as paginationHelper from 'src/common/helpers/pagination';
 
 describe('AccountService', () => {
   let service: AccountService;
