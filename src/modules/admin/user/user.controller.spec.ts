@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserController } from './user.controller';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
+import { UserController } from 'src/modules/admin/user/user.controller';
+import { UserService } from 'src/modules/admin/user/user.service';
+import { CreateUserDto } from 'src/modules/admin/user/dto/create-user.dto';
+import { UpdateUserDto } from 'src/modules/admin/user/dto/update-user.dto';
+import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 import { Reflector } from '@nestjs/core';
 
 const mockAuthGuard = {
   canActivate: jest.fn(() => true),
 };
 
-jest.mock('../../auth/auth.decorator', () => ({
+jest.mock('src/modules/auth/auth.decorator', () => ({
   Roles: () => () => {},
 }));
 
