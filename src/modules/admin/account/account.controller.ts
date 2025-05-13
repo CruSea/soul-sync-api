@@ -10,12 +10,12 @@ import {
   UsePipes,
   Query,
 } from '@nestjs/common';
-import { AccountService } from './account.service';
-import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
-import { AccountIdPipe } from './pipe/account-id/account-id.pipe';
-import { AuthGuard } from '../../auth/guard/auth/auth.guard';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { AccountService } from 'src/modules/admin/account/account.service';
+import { CreateAccountDto } from 'src/modules/admin/account/dto/create-account.dto';
+import { UpdateAccountDto } from 'src/modules/admin/account/dto/update-account.dto';
+import { AccountIdPipe } from 'src/modules/admin/account/pipe/account-id/account-id.pipe';
+import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('admin/account')
 @UseGuards(AuthGuard)
