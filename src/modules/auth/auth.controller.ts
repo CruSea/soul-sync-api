@@ -7,12 +7,12 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { SignInUserDto } from './dto/sign-in-auth.dto';
-import { SignUpUserDto } from './dto/sign-up-auth.dto';
+import { AuthService } from 'src/modules/auth/auth.service';
+import { SignInUserDto } from 'src/modules/auth/dto/sign-in-auth.dto';
+import { SignUpUserDto } from 'src/modules/auth/dto/sign-up-auth.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
-import { AuthDto } from './dto/auth.dto';
+import { AuthDto } from 'src/modules/auth/dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
