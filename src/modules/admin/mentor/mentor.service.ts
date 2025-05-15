@@ -66,6 +66,7 @@ export class MentorService {
           email: createMentorDto.email,
           accountId: createMentorDto.accountId,
           expertise: createMentorDto.expertise,
+          availability: createMentorDto.availability
         },
       });
 

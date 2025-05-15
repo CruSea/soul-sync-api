@@ -134,10 +134,10 @@ export class ModeratorService {
       let messages: any[] = [];
       try {
         const toolCalls = JSON.parse(aiResponse.response);
-        
+
         for (const toolCall of toolCalls) {
-          const selectedTool = (await toolsByName[toolCall.functionCall.name]);
-          
+          const selectedTool = await toolsByName[toolCall.functionCall.name];
+
           const toolResult = await selectedTool.invoke(
             toolCall.functionCall.args,
           );
@@ -150,16 +150,13 @@ export class ModeratorService {
           aiResponse = await chain.invoke({
             input: JSON.stringify({ input: inputText, tools: messages }),
           });
-          
+
           response = aiResponse.response;
         }
-        
-      } catch {
+      } catch (error) {
+        console.error(error);
         response = aiResponse.response;
       }
-      
-      
-      
 
       const chat: Chat = {
         type: 'CHAT',
@@ -180,7 +177,6 @@ export class ModeratorService {
   }
   async assignMentor(topic) {
     try {
-      console.log("inside assignMentor")
       const mentor = await this.embeddingService.handleEmbedding(
         topic,
         this.conversationId,

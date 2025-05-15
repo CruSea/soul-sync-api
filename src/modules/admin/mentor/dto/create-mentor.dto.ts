@@ -14,4 +14,7 @@ export class CreateMentorDto {
 
   @IsOptional()
   expertise: any;
+
+  @IsOptional()
+  availability: any;
 }
