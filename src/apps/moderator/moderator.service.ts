@@ -17,6 +17,7 @@ import {
   SystemMessage,
   HumanMessage,
   AIMessage,
+  ToolMessage,
 } from '@langchain/core/messages';
 
 @Injectable()
@@ -76,26 +77,51 @@ export class ModeratorService {
         }
       }
 
-      const topicTimeExtractorSchema = z.object({
-        operation: z
-          .enum(['tech', 'agri'])
-          .describe('The topic must be either "tech" or "agri".'),
+      const topicExtractorSchema = z.object({
         topic: z
           .string()
-          .describe(
-            'Extracted topic. Valid values are only "tech" and "agri".',
-          ),
-        time: z.string().describe('The time mentioned in the conversation.'),
+          .describe('The topic of interest extracted from the conversation'),
       });
 
-      const mentorSelectorTool = tool(async () => {}, {
-        name: 'mentorSelectorTool',
-        description:
-          'Extracts topic and time from conversation to help match with a mentor.',
-        schema: topicTimeExtractorSchema,
+      const mentorIdExtractorSchema = z.object({
+        mentorId: z
+          .string()
+          .describe("The selected mentor id")
       });
 
-      const llmWithTools = this.llm.bindTools([mentorSelectorTool]);
+      const topicTool = tool(
+        async ({ topic }) => {
+          return this.assignMentor(topic);
+        },
+        {
+          name: 'conversationTopicExtractor',
+          description:
+            'Extracts topic from conversation to help match with a mentor...',
+          schema: topicExtractorSchema,
+        },
+      );
+
+      const mentorIdTool = tool(
+        async ({ mentorId }) => {
+          return this.createNewConversation(mentorId);
+        },
+        {
+          name: 'newConversation',
+          description:
+            'once the mentee chooses the mentor it desires, the chosen mentor id will be extracted and a new conversation with that mentor will be created.',
+          schema: mentorIdExtractorSchema,
+        },
+      );
+      
+      const toolsByName = {
+        conversationTopicExtractor: topicTool,
+        newConversation: mentorIdTool,
+      };
+
+      const llmWithTools = this.llm.bindTools([
+        ...Object.values(toolsByName),
+      ]);
+      
 
       const chain = new ConversationChain({
         llm: llmWithTools,
@@ -103,22 +129,37 @@ export class ModeratorService {
       });
 
       const inputText = message.payload;
-      const aiResponse = await chain.call({ input: inputText });
-
+      let aiResponse = await chain.invoke({ input: inputText });
       let response: any;
-      let parsedResponse: any;
+      let messages: any[] = [];
       try {
-        parsedResponse = JSON.parse(aiResponse.response);
-        if (parsedResponse[0]?.functionCall) {
-          response = await this.assignMentor(
-            parsedResponse[0].functionCall.args.topic,
+        const toolCalls = JSON.parse(aiResponse.response);
+        
+        for (const toolCall of toolCalls) {
+          const selectedTool = (await toolsByName[toolCall.functionCall.name]);
+          
+          const toolResult = await selectedTool.invoke(
+            toolCall.functionCall.args,
           );
-        } else {
+
+          messages.push({
+            tool_call: toolCall,
+            output: toolResult,
+          });
+
+          aiResponse = await chain.invoke({
+            input: JSON.stringify({ input: inputText, tools: messages }),
+          });
+          
           response = aiResponse.response;
         }
-      } catch (error) {
+        
+      } catch {
         response = aiResponse.response;
       }
+      
+      
+      
 
       const chat: Chat = {
         type: 'CHAT',
@@ -137,9 +178,9 @@ export class ModeratorService {
       channel.nack(orgMsg);
     }
   }
-
   async assignMentor(topic) {
     try {
+      console.log("inside assignMentor")
       const mentor = await this.embeddingService.handleEmbedding(
         topic,
         this.conversationId,
@@ -148,30 +189,33 @@ export class ModeratorService {
       if (!mentor || mentor.length === 0) {
         return `Sorry, we couldn't find a suitable mentor at the moment.`;
       }
+      return mentor;
 
-      const existingConversation = await this.prisma.conversation.update({
+     
+    } catch (error) {
+      console.error('Error during tool execution:', error);
+      return 'Something went wrong while assigning a mentor.';
+    }
+  }
+
+  async createNewConversation(mentorId) {
+    
+     const existingConversation = await this.prisma.conversation.update({
         where: { id: this.conversationId },
         data: { isActive: false },
-      });
-
-      const newMentor =
-        typeof mentor === 'string' ? JSON.parse(mentor)[0] : mentor[0];
-
+     });
+    
       this.conversationId = (
         await this.prisma.conversation.create({
           data: {
             isActive: true,
             address: existingConversation.address,
             channelId: existingConversation.channelId,
-            mentorId: newMentor.id,
+            mentorId,
           },
         })
       ).id;
 
       return 'New conversation created. User is now connected with a mentor.';
-    } catch (error) {
-      console.error('Error during tool execution:', error);
-      return 'Something went wrong while assigning a mentor.';
-    }
   }
 }
