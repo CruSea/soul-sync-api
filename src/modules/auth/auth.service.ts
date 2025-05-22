@@ -129,7 +129,7 @@ export class AuthService {
 
   async getUserAccounts(userId: string) {
     const accounts = await this.prisma.account.findMany({
-      where: { AccountUser: { some: { userId } } },
+      where: { AccountUser: { some: { userId, isActive: true } } },
       select: {
         id: true,
         name: true,

@@ -1,4 +1,13 @@
-import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ValidationPipe,
+  Query,
+} from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { UpdateConversationDto } from './dto/update-conversation.dto';
 
@@ -7,8 +16,10 @@ export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
   @Get()
-  findAll() {
-    return this.conversationService.findAll();
+  findAll(
+    @Query(new ValidationPipe({ transform: true })) query: Record<string, any>,
+  ) {
+    return this.conversationService.findAll(query);
   }
 
   @Get(':id')
@@ -27,5 +38,13 @@ export class ConversationController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.conversationService.remove(id);
+  }
+
+  @Patch(':conversationId/:mentorId')
+  changeMentor(
+    @Param('conversationId') conversationId: string,
+    @Param('mentorId') mentorId: string,
+  ) {
+    return this.conversationService.changeMentor(conversationId, mentorId);
   }
 }
