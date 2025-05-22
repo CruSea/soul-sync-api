@@ -9,8 +9,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { CreateDashboardDto } from './dto/create-dashboard.dto';
-import { UpdateDashboardDto } from './dto/update-dashboard.dto';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
 import { Roles } from 'src/modules/auth/auth.decorator';
