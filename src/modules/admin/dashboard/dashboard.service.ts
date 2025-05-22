@@ -132,7 +132,7 @@ export class DashboardService {
       userGrowth: Object.entries(growthMap).map(([monthYear, count]) => ({
         month: monthYear,
         count,
-      }))
+      })),
     };
   }
 }
