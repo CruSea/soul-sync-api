@@ -55,13 +55,16 @@ export class DashboardService {
       },
     });
 
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const currentYear = new Date().getFullYear();
+
+    const startOfYear = new Date(currentYear, 0, 1);
+    const startOfNextYear = new Date(currentYear + 1, 0, 1);
 
     const users = await this.prisma.accountUser.findMany({
       where: {
         createdAt: {
-          gte: sixMonthsAgo,
+          gte: startOfYear,
+          lt: startOfNextYear,
         },
         deletedAt: null,
         accountId,
@@ -73,15 +76,28 @@ export class DashboardService {
 
     const growthMap: Record<string, number> = {};
 
-    for (const { createdAt } of users) {
-      const date = createdAt.toISOString().split('T')[0];
-      growthMap[date] = (growthMap[date] || 0) + 1;
-    }
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
 
-    const groupedByDay = Object.entries(growthMap).map(([date, count]) => ({
-      createdAt: date,
-      _count: { id: count },
-    }));
+    for (const { createdAt } of users) {
+      const year = createdAt.getFullYear();
+      const month = monthNames[createdAt.getMonth()];
+      const monthYear = `${month} ${year}`; // e.g. "May 2025"
+
+      growthMap[monthYear] = (growthMap[monthYear] || 0) + 1;
+    }
 
     const mentor_by_expertise = await this.prisma.$queryRawUnsafe<
       MentorExpertiseRow[]
@@ -113,10 +129,10 @@ export class DashboardService {
         expertise: item.expertise,
         count: Number(item.count),
       })),
-      userGrowth: groupedByDay.map((item) => ({
-        date: item.createdAt,
-        count: item._count.id,
-      })),
+      userGrowth: Object.entries(growthMap).map(([monthYear, count]) => ({
+        month: monthYear,
+        count,
+      }))
     };
   }
 }
