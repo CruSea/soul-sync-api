@@ -4,6 +4,7 @@ import { UserModule } from './user/user.module';
 import { AccountModule } from './account/account.module';
 import { MentorModule } from './mentor/mentor.module';
 import { ChannelModule } from './channel/channel.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ChannelModule } from './channel/channel.module';
     MentorModule,
     ChannelModule,
     MessageModule,
+    DashboardModule,
   ],
 })
 export class AdminModule {}
