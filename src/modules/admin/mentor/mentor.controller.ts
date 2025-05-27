@@ -11,7 +11,7 @@ import {
   ValidationPipe,
   NotFoundException,
 } from '@nestjs/common';
-import { MentorService } from './mentor.service';
+import { MentorService } from 'src/modules/admin/mentor/mentor.service';
 import { Roles } from 'src/modules/auth/auth.decorator';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
 import { GetMentorDto } from './dto/get-mentor.dto';
