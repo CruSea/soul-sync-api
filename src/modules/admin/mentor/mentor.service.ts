@@ -1,10 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { REQUEST } from '@nestjs/core';
-import { MentorDto } from './dto/mentor.dto';
-import { GetMentorDto } from './dto/get-mentor.dto';
-import { CreateMentorDto } from './dto/create-mentor.dto';
-import { UpdateMentorDto } from './dto/update-mentor.dto';
+import { MentorDto } from 'src/modules/admin/mentor/dto/mentor.dto';
+import { GetMentorDto } from 'src/modules/admin/mentor/dto/get-mentor.dto';
+import { CreateMentorDto } from 'src/modules/admin/mentor/dto/create-mentor.dto';
+import { UpdateMentorDto } from 'src/modules/admin/mentor/dto/update-mentor.dto';
 import { RoleType } from '@prisma/client';
 import { PaginationResult, paginate } from 'src/common/helpers/pagination';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
@@ -64,6 +64,8 @@ export class MentorService {
           name: createMentorDto.name,
           email: createMentorDto.email,
           accountId: createMentorDto.accountId,
+          expertise: createMentorDto.expertise,
+          availability: createMentorDto.availability
         },
       });
 

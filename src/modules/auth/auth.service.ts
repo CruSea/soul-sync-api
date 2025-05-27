@@ -74,7 +74,22 @@ export class AuthService {
         throw new Error('Failed to create account');
       }
 
-      const role = await tx.role.findFirst({
+      let role = await tx.role.findFirst({
+        where: {
+          type: RoleType.MENTOR,
+        },
+      });
+
+      await tx.mentor.create({
+        data: {
+          name,
+          accountId: account.id,
+          email: `${account.id}@leyuchatbot.com`,
+          isBot: true,
+        },
+      });
+
+      role = await tx.role.findFirst({
         where: {
           type: RoleType.OWNER,
           isDefault: true,
