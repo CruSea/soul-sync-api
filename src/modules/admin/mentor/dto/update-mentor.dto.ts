@@ -1,28 +1,31 @@
 import {
-  IsEmail,
   IsOptional,
   IsString,
   IsInt,
-  IsBoolean,
   IsEnum,
+  IsObject,
+  Min,
+  IsEmail,
 } from 'class-validator';
 import { GenderType } from '@prisma/client';
 
 export class UpdateMentorDto {
   @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
   @IsEmail()
   email?: string;
 
   @IsOptional()
-  @IsString()
-  expertise?: string;
+  @IsObject()
+  expertise?: Record<string, string>;
 
   @IsOptional()
-  availability?: string;
+  @IsInt()
+  @Min(1)
+  capacity?: number;
+
+  @IsOptional()
+  @IsObject()
+  availability?: Record<string, string[]>;
 
   @IsOptional()
   @IsInt()
@@ -35,8 +38,4 @@ export class UpdateMentorDto {
   @IsOptional()
   @IsString()
   location?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }

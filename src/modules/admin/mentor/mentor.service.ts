@@ -1,10 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { REQUEST } from '@nestjs/core';
-import { MentorDto } from './dto/mentor.dto';
-import { GetMentorDto } from './dto/get-mentor.dto';
-import { CreateMentorDto } from './dto/create-mentor.dto';
-import { UpdateMentorDto } from './dto/update-mentor.dto';
+import { MentorDto } from 'src/modules/admin/mentor/dto/mentor.dto';
+import { GetMentorDto } from 'src/modules/admin/mentor/dto/get-mentor.dto';
+import { CreateMentorDto } from 'src/modules/admin/mentor/dto/create-mentor.dto';
+import { UpdateMentorDto } from 'src/modules/admin/mentor/dto/update-mentor.dto';
 import { RoleType } from '@prisma/client';
 import { PaginationResult, paginate } from 'src/common/helpers/pagination';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
@@ -14,6 +14,13 @@ export class MentorService {
     @Inject(REQUEST) private readonly request: any,
     private prisma: PrismaService,
   ) {}
+
+  async findByIdAndAccount(id: string, accountId: string): Promise<boolean> {
+    const mentor = await this.prisma.mentor.findFirst({
+      where: { id, accountId, deletedAt: null },
+    });
+    return !!mentor;
+  }
 
   async findAll(
     query: Record<string, any>,
@@ -43,15 +50,7 @@ export class MentorService {
       },
     });
 
-    if (!mentor) {
-      throw new NotFoundException('Mentor not found');
-    }
-
-    const user = await this.prisma.user.findFirst({
-      where: { email: mentor.email },
-    });
-
-    return new MentorDto({ ...mentor, user: { ...user } });
+    return new MentorDto({ ...mentor });
   }
 
   async create(createMentorDto: CreateMentorDto): Promise<MentorDto> {
@@ -65,6 +64,8 @@ export class MentorService {
           name: createMentorDto.name,
           email: createMentorDto.email,
           accountId: createMentorDto.accountId,
+          expertise: createMentorDto.expertise,
+          availability: createMentorDto.availability
         },
       });
 
@@ -97,64 +98,39 @@ export class MentorService {
         },
       });
 
-      return new MentorDto({ ...mentor, user: { ...user } });
+      return new MentorDto({ ...mentor });
     }
 
-    const user = await this.prisma.user.findFirst({
-      where: { email: mentor.email },
-    });
-
-    return new MentorDto({ ...mentor, user: { ...user } });
+    return new MentorDto({ ...mentor });
   }
 
-  async update(id: string, updateMentor: UpdateMentorDto): Promise<MentorDto> {
-    if (!id) {
-      throw new Error('Mentor ID is required for update.');
-    }
-
-    const mentor = await this.prisma.mentor.findUnique({
-      where: { id: id },
-    });
-
-    if (!mentor) {
-      throw new NotFoundException('Mentor not found');
-    }
-
-    const user = await this.prisma.user.findFirst({
-      where: { email: mentor.email },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (updateMentor.email && updateMentor.email !== mentor.email) {
-      await this.prisma.user.update({
-        where: { email: mentor.email },
-        data: { email: updateMentor.email },
-      });
-    }
-
+  async update(
+    id: string,
+    updateMentor: UpdateMentorDto,
+    getMentor: GetMentorDto,
+  ): Promise<MentorDto> {
     const updatedMentor = await this.prisma.mentor.update({
-      where: { id: id },
+      where: { id: id, accountId: getMentor.accountId },
       data: {
         ...updateMentor,
-        availability: updateMentor.availability
-          ? JSON.parse(updateMentor.availability)
-          : undefined,
+        availability:
+          typeof updateMentor.availability === 'string'
+            ? JSON.parse(updateMentor.availability)
+            : updateMentor.availability,
+        expertise: updateMentor.expertise ? updateMentor.expertise : undefined,
+        capacity: updateMentor.capacity ? updateMentor.capacity : undefined,
       },
     });
 
-    const updatedUser = await this.prisma.user.findFirst({
-      where: { email: updateMentor.email || mentor.email },
-    });
-
-    return new MentorDto({ ...updatedMentor, user: { ...updatedUser } });
+    return new MentorDto({ ...updatedMentor });
   }
 
-  async delete(id: string): Promise<{ status: boolean }> {
+  async delete(
+    id: string,
+    getMentor: GetMentorDto,
+  ): Promise<{ status: boolean }> {
     const mentor = await this.prisma.mentor.update({
-      where: { id: id },
+      where: { id: id, accountId: getMentor.accountId },
       data: { deletedAt: new Date() },
     });
 

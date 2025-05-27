@@ -1,15 +1,11 @@
 // src/posts/dto/post.dto.ts
 
 import { Expose, Type } from 'class-transformer';
-import { UserDto } from 'src/modules/admin/user/dto/user.dto';
+import { UserDto } from '../../user/dto/user.dto';
 
 export class MentorDto {
   @Expose()
   id: string;
-
-  @Expose()
-  @Type(() => UserDto)
-  user?: UserDto;
 
   @Expose()
   name: string;
@@ -30,6 +26,9 @@ export class MentorDto {
   expertise?: any;
 
   @Expose()
+  capacity?: number;
+
+  @Expose()
   availability?: any;
 
   @Expose()
@@ -44,9 +43,9 @@ export class MentorDto {
       age: partial.age,
       location: partial.location,
       expertise: partial.expertise,
+      capacity: partial.capacity,
       availability: partial.availability,
       isActive: partial.isActive,
-      user: partial.user ? new UserDto(partial.user) : null,
     });
   }
 }
