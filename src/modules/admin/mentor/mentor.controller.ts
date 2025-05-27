@@ -18,7 +18,6 @@ import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
-import { RoleGuard } from 'src/modules/auth/guard/role/role.guard';
 import { MentorDto } from './dto/mentor.dto';
 
 @Controller('admin/mentor')
