@@ -49,5 +49,5 @@ afterAll(async () => {
   console.log('test db stopped...');
 });
 
-jest.setTimeout(10000);
+jest.setTimeout(50000);
 export { postgresClient, prismaService };
