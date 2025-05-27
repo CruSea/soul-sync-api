@@ -64,6 +64,8 @@ export class MentorService {
           name: createMentorDto.name,
           email: createMentorDto.email,
           accountId: createMentorDto.accountId,
+          expertise: createMentorDto.expertise,
+          availability: createMentorDto.availability
         },
       });
 

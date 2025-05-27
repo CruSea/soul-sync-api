@@ -11,4 +11,10 @@ export class CreateMentorDto {
   @IsString()
   @IsOptional()
   name: string;
+
+  @IsOptional()
+  expertise: any;
+
+  @IsOptional()
+  availability: any;
 }

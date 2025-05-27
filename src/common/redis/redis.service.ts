@@ -40,4 +40,8 @@ export class RedisService {
     await this.redisClient.quit();
     console.log('Redis connection closed');
   }
+
+  getClient() {
+    return this.redisClient;
+  }
 }
