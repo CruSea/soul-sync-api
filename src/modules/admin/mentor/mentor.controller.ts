@@ -81,6 +81,7 @@ export class MentorController {
     if (!mentorExists) {
       throw new NotFoundException('Mentor not found for this account');
     }
+    
     return this.mentorService.delete(id, getMentor);
   }
 }

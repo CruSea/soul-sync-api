@@ -65,7 +65,7 @@ export class MentorService {
           email: createMentorDto.email,
           accountId: createMentorDto.accountId,
           expertise: createMentorDto.expertise,
-          availability: createMentorDto.availability
+          availability: createMentorDto.availability,
         },
       });
 
@@ -131,6 +131,11 @@ export class MentorService {
   ): Promise<{ status: boolean }> {
     const mentor = await this.prisma.mentor.update({
       where: { id: id, accountId: getMentor.accountId },
+      data: { deletedAt: new Date() },
+    });
+
+    await this.prisma.user.update({
+      where: { email: mentor.email, deletedAt: null },
       data: { deletedAt: new Date() },
     });
 
