@@ -1,13 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { REQUEST } from '@nestjs/core';
 import { MentorDto } from './dto/mentor.dto';
 import { GetMentorDto } from './dto/get-mentor.dto';
 import { CreateMentorDto } from './dto/create-mentor.dto';
 import { UpdateMentorDto } from './dto/update-mentor.dto';
 import { RoleType } from '@prisma/client';
-import { PaginationResult, paginate } from '../../../common/helpers/pagination';
-import { PaginationDto } from '../../../common/dto/pagination.dto';
+import { PaginationResult, paginate } from 'src/common/helpers/pagination';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 @Injectable()
 export class MentorService {
   constructor(
