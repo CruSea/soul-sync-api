@@ -10,12 +10,12 @@ import {
   Delete,
   ValidationPipe,
 } from '@nestjs/common';
-import { MentorService } from './mentor.service';
+import { MentorService } from 'src/modules/admin/mentor/mentor.service';
 import { Roles } from 'src/modules/auth/auth.decorator';
 import { AuthGuard } from 'src/modules/auth/guard/auth/auth.guard';
-import { GetMentorDto } from './dto/get-mentor.dto';
-import { CreateMentorDto } from './dto/create-mentor.dto';
-import { UpdateMentorDto } from './dto/update-mentor.dto';
+import { GetMentorDto } from 'src/modules/admin/mentor/dto/get-mentor.dto';
+import { CreateMentorDto } from 'src/modules/admin/mentor/dto/create-mentor.dto';
+import { UpdateMentorDto } from 'src/modules/admin/mentor/dto/update-mentor.dto';
 
 @Controller('admin/mentor')
 @UseGuards(AuthGuard)
