@@ -1,7 +1,7 @@
 // src/posts/dto/post.dto.ts
 
 import { Expose, Type } from 'class-transformer';
-import { UserDto } from '../../user/dto/user.dto';
+import { UserDto } from 'src/modules/admin/user/dto/user.dto';
 
 export class MentorDto {
   @Expose()
