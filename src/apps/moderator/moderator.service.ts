@@ -57,7 +57,7 @@ export class ModeratorService {
 
       const existingMessages = await memory.chatHistory.getMessages();
 
-      if (!existingMessages ) {
+      if (!existingMessages) {
         await memory.chatHistory.addMessage(
           new SystemMessage(MODERATOR_MAIN_PROMPT),
         );
@@ -83,9 +83,7 @@ export class ModeratorService {
       });
 
       const mentorIdExtractorSchema = z.object({
-        mentorId: z
-          .string()
-          .describe("The selected mentor id")
+        mentorId: z.string().describe('The selected mentor id'),
       });
 
       const topicTool = tool(
@@ -111,16 +109,13 @@ export class ModeratorService {
           schema: mentorIdExtractorSchema,
         },
       );
-      
+
       const toolsByName = {
         conversationTopicExtractor: topicTool,
         newConversation: mentorIdTool,
       };
 
-      const llmWithTools = this.llm.bindTools([
-        ...Object.values(toolsByName),
-      ]);
-      
+      const llmWithTools = this.llm.bindTools([...Object.values(toolsByName)]);
 
       const chain = new ConversationChain({
         llm: llmWithTools,
@@ -154,7 +149,6 @@ export class ModeratorService {
             response = aiResponse.response;
           }
         }
-        
       } catch {
         response = aiResponse.response;
       }
@@ -183,12 +177,10 @@ export class ModeratorService {
         this.conversationId,
       );
 
-      if (!mentor ) {
+      if (!mentor) {
         return `Sorry, we couldn't find a suitable mentor at the moment.`;
       }
       return mentor;
-
-     
     } catch (error) {
       console.error('Error during tool execution:', error);
       return 'Something went wrong while assigning a mentor.';
@@ -196,23 +188,22 @@ export class ModeratorService {
   }
 
   async createNewConversation(mentorId) {
-    
-     const existingConversation = await this.prisma.conversation.update({
-        where: { id: this.conversationId },
-        data: { isActive: false },
-     });
-    
-      this.conversationId = (
-        await this.prisma.conversation.create({
-          data: {
-            isActive: true,
-            address: existingConversation.address,
-            channelId: existingConversation.channelId,
-            mentorId,
-          },
-        })
-      ).id;
+    const existingConversation = await this.prisma.conversation.update({
+      where: { id: this.conversationId },
+      data: { isActive: false },
+    });
 
-      return 'New conversation created. User is now connected with a mentor.';
+    this.conversationId = (
+      await this.prisma.conversation.create({
+        data: {
+          isActive: true,
+          address: existingConversation.address,
+          channelId: existingConversation.channelId,
+          mentorId,
+        },
+      })
+    ).id;
+
+    return 'New conversation created. User is now connected with a mentor.';
   }
 }
