@@ -3,15 +3,20 @@ import { RmqContext } from '@nestjs/microservices';
 import { SentMessageDto } from './dto/sent-message.dto';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { io } from 'socket.io-client';
+import { MessageExchangeService } from 'src/common/rabbitmq/message-exchange/message-exchange.service';
 
 @Injectable()
 export class MessageConsumersService {
   private static token = 'message-consumer';
+  private data;
   private socket = io(
     `${process.env.WEBSOCKET_URL}?token=${MessageConsumersService.token}`,
   );
 
-  constructor(private prisma: PrismaService) {
+  constructor(
+    private readonly messageExchangeService: MessageExchangeService,
+    private prisma: PrismaService,
+  ) {
     this.socket.on('connect', () => {
       console.log('Connected to the WebSocket server');
     });
@@ -24,10 +29,14 @@ export class MessageConsumersService {
     const channel = context.getChannelRef();
     const originalMsg = context.getMessage();
     try {
-      console.log('this is the data: ', data);
       const sentMessageDto = await this.formatMessage(data);
-      console.log('this is sentMessageDto: ', sentMessageDto);
-      await this.sendMessage(sentMessageDto);
+      if (
+        await this.moderatorConversationCheck(sentMessageDto.conversationId)
+      ) {
+        await this.messageExchangeService.send('moderator', this.data);
+      } else {
+        await this.sendMessage(sentMessageDto);
+      }
       channel.ack(originalMsg);
     } catch (error) {
       channel.nack(originalMsg);
@@ -37,23 +46,25 @@ export class MessageConsumersService {
 
   async formatMessage(message: any): Promise<SentMessageDto> {
     try {
-      const data = typeof message === 'string' ? JSON.parse(message) : message;
-      if (!data.metadata?.conversationId) {
-        data.metadata.conversationId = await this.prisma.conversation.findFirst(
-          {
-            where: {
-              address: data.metadata?.address,
-              isActive: true,
-            },
-          },
-        );
+      this.data = typeof message === 'string' ? JSON.parse(message) : message;
+      if (!this.data.metadata?.conversationId) {
+        while (!this.data.metadata?.conversationId) {
+          this.data.metadata.conversationId = (
+            await this.prisma.conversation.findFirst({
+              where: {
+                address: this.data.metadata?.address,
+                isActive: true,
+              },
+            })
+          ).id;
+        }
       }
       return {
-        conversationId: data.metadata?.conversationId,
+        conversationId: this.data.metadata?.conversationId,
         type: 'RECEIVED',
-        body: data.payload,
+        body: this.data.payload,
         createdAt: new Date().toISOString(),
-        email: await this.getMentorEmail(data.metadata.conversationId),
+        email: await this.getMentorEmail(this.data.metadata.conversationId),
       };
     } catch (error) {
       console.log('Error formatting message', error);
@@ -90,5 +101,21 @@ export class MessageConsumersService {
       console.log('Error fetching mentor email:', error);
       throw error;
     }
+  }
+
+  async moderatorConversationCheck(conversationId) {
+    return (
+      await this.prisma.mentor.findFirst({
+        where: {
+          Conversation: {
+            some: {
+              id: conversationId,
+            },
+          },
+        },
+      })
+    ).isBot
+      ? true
+      : false;
   }
 }

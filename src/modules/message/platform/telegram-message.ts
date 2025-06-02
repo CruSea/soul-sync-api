@@ -17,7 +17,7 @@ export class TelegramMessageStrategy implements MessageStrategy {
     const data = JSON.stringify(
       await this.rabbitmqService.getMessageEchangeData(formattedMessage),
     );
-    this.messageExchangeService.send('message', data);
+    await this.messageExchangeService.send('message', data);
 
     return 'ok';
   }
@@ -29,6 +29,7 @@ export class TelegramMessageStrategy implements MessageStrategy {
       where: {
         channelId,
         address: address,
+        isActive: true,
       },
     });
     const conversationId = conversation?.id;
