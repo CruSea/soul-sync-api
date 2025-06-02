@@ -35,7 +35,6 @@ export class ModeratorService {
     this.llm = new ChatGoogleGenerativeAI({
       apiKey: process.env.GOOGLE_GENAI_API_KEY,
       model: 'gemini-2.0-flash',
-      maxOutputTokens: 50,
     });
   }
 
@@ -58,7 +57,7 @@ export class ModeratorService {
 
       const existingMessages = await memory.chatHistory.getMessages();
 
-      if (!existingMessages || existingMessages.length === 0) {
+      if (!existingMessages ) {
         await memory.chatHistory.addMessage(
           new SystemMessage(MODERATOR_MAIN_PROMPT),
         );
@@ -133,28 +132,30 @@ export class ModeratorService {
       let response: any;
       let messages: any[] = [];
       try {
-        const toolCalls = JSON.parse(aiResponse.response);
+        while (JSON.parse(aiResponse.response)) {
+          let toolCalls = JSON.parse(aiResponse.response);
 
-        for (const toolCall of toolCalls) {
-          const selectedTool = await toolsByName[toolCall.functionCall.name];
+          for (const toolCall of toolCalls) {
+            const selectedTool = await toolsByName[toolCall.functionCall.name];
 
-          const toolResult = await selectedTool.invoke(
-            toolCall.functionCall.args,
-          );
+            const toolResult = await selectedTool.invoke(
+              toolCall.functionCall.args,
+            );
 
-          messages.push({
-            tool_call: toolCall,
-            output: toolResult,
-          });
+            messages.push({
+              tool_call: toolCall,
+              output: toolResult,
+            });
 
-          aiResponse = await chain.invoke({
-            input: JSON.stringify({ input: inputText, tools: messages }),
-          });
+            aiResponse = await chain.invoke({
+              input: JSON.stringify({ input: inputText, tools: messages }),
+            });
 
-          response = aiResponse.response;
+            response = aiResponse.response;
+          }
         }
-      } catch (error) {
-        console.error(error);
+        
+      } catch {
         response = aiResponse.response;
       }
 
@@ -182,7 +183,7 @@ export class ModeratorService {
         this.conversationId,
       );
 
-      if (!mentor || mentor.length === 0) {
+      if (!mentor ) {
         return `Sorry, we couldn't find a suitable mentor at the moment.`;
       }
       return mentor;
